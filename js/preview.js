@@ -1,8 +1,5 @@
 // Canvas Preview Generation Module
 
-// Make generatePreview globally accessible
-window.generatePreview = generatePreview;
-
 // Generate preview function
 async function generatePreview() {
     try {
@@ -119,9 +116,9 @@ async function generatePreview() {
             }
         }
         
-        const loadingOverlayEnd = document.getElementById('loadingOverlay');
-        if (loadingOverlayEnd) {
-            loadingOverlayEnd.style.display = 'none';
+        // Hide loading overlay using the existing variable
+        if (loadingOverlay) {
+            loadingOverlay.style.display = 'none';
         }
         
         // Add click handler for canvas modal (non-mobile only)
@@ -140,7 +137,7 @@ async function generatePreview() {
         
     } catch (error) {
         console.error('❌ Error in generatePreview:', error);
-        const loadingOverlay = document.getElementById('loadingOverlay');
+        // Use existing loadingOverlay variable
         if (loadingOverlay) {
             loadingOverlay.style.display = 'none';
         }
@@ -826,7 +823,10 @@ function renderHighQualityPreview(ctx, canvasWidth, canvasHeight) {
     
     const wallOnlyOffsetX = (canvasWidth - scaledWallWidth) / 2;
     drawSection3_WallOnly(ctx, wallOnlyOffsetX, currentY, scaledWallWidth, scaledWallHeight, scale);
-}(label, x, offsetY - 8);
+}
+
+// Make generatePreview globally accessible
+window.generatePreview = generatePreview;(label, x, offsetY - 8);
         }
     }
     
