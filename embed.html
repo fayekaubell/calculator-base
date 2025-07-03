@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Wallpaper Calculator - Example Embed</title>
+    <title>Wallpaper Calculator - Embed Example</title>
     <style>
         body {
             font-family: Arial, sans-serif;
@@ -125,7 +125,7 @@
     <div class="container">
         <div class="header">
             <h1>Wallpaper Calculator</h1>
-            <p>Example of how to embed the calculator on your website</p>
+            <p>Simple preview calculator for wallpaper patterns</p>
         </div>
         
         <div class="calculator-embed">
@@ -172,9 +172,9 @@
                         <li>Wall dimension input (feet and inches)</li>
                         <li>Visual preview generation</li>
                         <li>Panel and yard pattern support</li>
-                        <li>PDF generation and download</li>
-                        <li>Quote request forms</li>
+                        <li>3-section canvas display</li>
                         <li>Mobile responsive design</li>
+                        <li>Click to zoom functionality</li>
                     </ul>
                 </div>
                 
@@ -185,20 +185,22 @@
                         <li>CSV file with pattern data</li>
                         <li>Pattern images (JPG/PNG)</li>
                         <li>Configuration file customization</li>
-                        <li>Optional: Google Sheets integration</li>
-                        <li>Optional: reCAPTCHA setup</li>
+                        <li>Enable GitHub Pages</li>
                     </ul>
                 </div>
                 
                 <div class="info-card">
-                    <h3>Customization Options</h3>
+                    <h3>CSV Data Format</h3>
+                    <p>Your patterns.csv should include these columns:</p>
                     <ul>
-                        <li>Business information and branding</li>
-                        <li>Color scheme and styling</li>
-                        <li>Text content and messaging</li>
-                        <li>PDF layout and design</li>
-                        <li>Form fields and requirements</li>
-                        <li>Calculation defaults and limits</li>
+                        <li><strong>pattern_name</strong> - Display name</li>
+                        <li><strong>sku</strong> - Product SKU</li>
+                        <li><strong>sale_type</strong> - "panel" or "yard"</li>
+                        <li><strong>repeat_width_inches</strong> - Pattern width</li>
+                        <li><strong>repeat_height_inches</strong> - Pattern height</li>
+                        <li><strong>material_width_inches</strong> - Panel width</li>
+                        <li><strong>available_lengths_feet</strong> - "9,12,15"</li>
+                        <li><strong>repeat_url</strong> - Image URL</li>
                     </ul>
                 </div>
                 
@@ -215,9 +217,7 @@
             </div>
             
             <h3>Getting Started</h3>
-            <p>
-                To create your own calculator:
-            </p>
+            <p>To create your own calculator:</p>
             <ol>
                 <li>Fork the <a href="https://github.com/fayekaubell/calculator-base" target="_blank">calculator-base repository</a></li>
                 <li>Update the <code>config.js</code> file with your business information</li>
