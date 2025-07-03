@@ -78,11 +78,21 @@ async function generatePreview() {
             formattedHeight: formattedHeight
         };
         
-        document.getElementById('previewTitle').textContent = 
-            `${pattern.name}: ${pattern.sku || 'N/A'}: ${formattedWidth}w x ${formattedHeight}h Wall`;
-        document.getElementById('loadingOverlay').style.display = 'flex';
-        document.getElementById('previewSection').style.display = 'block';
-        document.getElementById('previewSection').scrollIntoView({ behavior: 'smooth' });
+        const previewTitle = document.getElementById('previewTitle');
+        if (previewTitle) {
+            previewTitle.textContent = `${pattern.name}: ${pattern.sku || 'N/A'}: ${formattedWidth}w x ${formattedHeight}h Wall`;
+        }
+        
+        const loadingOverlay = document.getElementById('loadingOverlay');
+        if (loadingOverlay) {
+            loadingOverlay.style.display = 'flex';
+        }
+        
+        const previewSection = document.getElementById('previewSection');
+        if (previewSection) {
+            previewSection.style.display = 'block';
+            previewSection.scrollIntoView({ behavior: 'smooth' });
+        }
         
         console.log('🖼️ Preloading image:', pattern.imageUrl);
         await preloadPatternImage(pattern);
@@ -92,20 +102,24 @@ async function generatePreview() {
         
         // Show warnings if needed
         const warningElement = document.getElementById('panelLimitWarning');
-        
-        if (calculations.exceedsAvailableLength) {
-            warningElement.innerHTML = `<p><em>${CONFIG.ui.text.disclaimers.noRepeatHeight}</em></p>`;
-            warningElement.style.display = 'block';
-            warningElement.style.color = '#dc3545';
-        } else if (calculations.exceedsLimit) {
-            warningElement.innerHTML = `<p><em>${CONFIG.ui.text.disclaimers.panelLimit}</em></p>`;
-            warningElement.style.display = 'block';
-            warningElement.style.color = '#dc3545';
-        } else {
-            warningElement.style.display = 'none';
+        if (warningElement) {
+            if (calculations.exceedsAvailableLength) {
+                warningElement.innerHTML = `<p><em>${CONFIG.ui.text.disclaimers.noRepeatHeight}</em></p>`;
+                warningElement.style.display = 'block';
+                warningElement.style.color = '#dc3545';
+            } else if (calculations.exceedsLimit) {
+                warningElement.innerHTML = `<p><em>${CONFIG.ui.text.disclaimers.panelLimit}</em></p>`;
+                warningElement.style.display = 'block';
+                warningElement.style.color = '#dc3545';
+            } else {
+                warningElement.style.display = 'none';
+            }
         }
         
-        document.getElementById('loadingOverlay').style.display = 'none';
+        const loadingOverlay = document.getElementById('loadingOverlay');
+        if (loadingOverlay) {
+            loadingOverlay.style.display = 'none';
+        }
         
         // Add click handler for canvas modal (non-mobile only)
         const canvas = document.getElementById('previewCanvas');
@@ -123,7 +137,10 @@ async function generatePreview() {
         
     } catch (error) {
         console.error('❌ Error in generatePreview:', error);
-        document.getElementById('loadingOverlay').style.display = 'none';
+        const loadingOverlay = document.getElementById('loadingOverlay');
+        if (loadingOverlay) {
+            loadingOverlay.style.display = 'none';
+        }
         alert('An error occurred: ' + error.message);
     }
 }
@@ -134,56 +151,77 @@ function updatePreviewInfo() {
     
     console.log('📝 updatePreviewInfo called with:', calculations);
     
+    const orderQuantity = document.getElementById('orderQuantity');
+    const orderQuantityWithOverage = document.getElementById('orderQuantityWithOverage');
+    const yardagePerPanel = document.getElementById('yardagePerPanel');
+    const totalYardage = document.getElementById('totalYardage');
+    const yardagePerPanelOverage = document.getElementById('yardagePerPanelOverage');
+    const totalYardageOverage = document.getElementById('totalYardageOverage');
+    
     if (calculations.saleType === 'yard') {
         // Yard-based display
-        const totalYardage = calculations.totalYardage;
-        const overageTotalYardage = Math.ceil(totalYardage * 1.2);
+        const totalYardageValue = calculations.totalYardage;
+        const overageTotalYardage = Math.ceil(totalYardageValue * 1.2);
         
-        document.getElementById('orderQuantity').textContent = `Total yardage: ${totalYardage} yds`;
+        if (orderQuantity) {
+            orderQuantity.textContent = `Total yardage: ${totalYardageValue} yds`;
+        }
         
         // Hide panel-specific lines
-        const yardagePerPanelEl = document.getElementById('yardagePerPanel').parentElement;
-        const totalYardageEl = document.getElementById('totalYardage').parentElement;
+        const yardagePerPanelEl = yardagePerPanel ? yardagePerPanel.parentElement : null;
+        const totalYardageEl = totalYardage ? totalYardage.parentElement : null;
         if (yardagePerPanelEl) yardagePerPanelEl.style.display = 'none';
         if (totalYardageEl) totalYardageEl.style.display = 'none';
         
-        document.getElementById('orderQuantityWithOverage').textContent = `Total yardage: ${overageTotalYardage} yds`;
+        if (orderQuantityWithOverage) {
+            orderQuantityWithOverage.textContent = `Total yardage: ${overageTotalYardage} yds`;
+        }
         
-        const yardagePerPanelOverageEl = document.getElementById('yardagePerPanelOverage').parentElement;
-        const totalYardageOverageEl = document.getElementById('totalYardageOverage').parentElement;
+        const yardagePerPanelOverageEl = yardagePerPanelOverage ? yardagePerPanelOverage.parentElement : null;
+        const totalYardageOverageEl = totalYardageOverage ? totalYardageOverage.parentElement : null;
         if (yardagePerPanelOverageEl) yardagePerPanelOverageEl.style.display = 'none';
         if (totalYardageOverageEl) totalYardageOverageEl.style.display = 'none';
     } else {
         // Panel-based display
         const actualPanelLength = calculations.exceedsAvailableLength ? 
             calculations.actualPanelLength : calculations.panelLength;
-        const yardagePerPanel = Math.round(actualPanelLength / 3);
-        const totalYardage = calculations.panelsNeeded * yardagePerPanel;
+        const yardagePerPanelValue = Math.round(actualPanelLength / 3);
+        const totalYardageValue = calculations.panelsNeeded * yardagePerPanelValue;
         const overagePanels = Math.ceil(calculations.panelsNeeded * 1.2);
-        const overageTotalYardage = overagePanels * yardagePerPanel;
+        const overageTotalYardage = overagePanels * yardagePerPanelValue;
         
-        document.getElementById('orderQuantity').textContent = 
-            `[x${calculations.panelsNeeded}] ${actualPanelLength}' Panels`;
+        if (orderQuantity) {
+            orderQuantity.textContent = `[x${calculations.panelsNeeded}] ${actualPanelLength}' Panels`;
+        }
         
         // Show panel-specific lines
-        const yardagePerPanelEl = document.getElementById('yardagePerPanel').parentElement;
-        const totalYardageEl = document.getElementById('totalYardage').parentElement;
+        const yardagePerPanelEl = yardagePerPanel ? yardagePerPanel.parentElement : null;
+        const totalYardageEl = totalYardage ? totalYardage.parentElement : null;
         if (yardagePerPanelEl) yardagePerPanelEl.style.display = 'block';
         if (totalYardageEl) totalYardageEl.style.display = 'block';
         
-        document.getElementById('yardagePerPanel').textContent = `${yardagePerPanel} yds`;
-        document.getElementById('totalYardage').textContent = `${totalYardage} yds`;
+        if (yardagePerPanel) {
+            yardagePerPanel.textContent = `${yardagePerPanelValue} yds`;
+        }
+        if (totalYardage) {
+            totalYardage.textContent = `${totalYardageValue} yds`;
+        }
         
-        document.getElementById('orderQuantityWithOverage').textContent = 
-            `[x${overagePanels}] ${actualPanelLength}' Panels`;
+        if (orderQuantityWithOverage) {
+            orderQuantityWithOverage.textContent = `[x${overagePanels}] ${actualPanelLength}' Panels`;
+        }
         
-        const yardagePerPanelOverageEl = document.getElementById('yardagePerPanelOverage').parentElement;
-        const totalYardageOverageEl = document.getElementById('totalYardageOverage').parentElement;
+        const yardagePerPanelOverageEl = yardagePerPanelOverage ? yardagePerPanelOverage.parentElement : null;
+        const totalYardageOverageEl = totalYardageOverage ? totalYardageOverage.parentElement : null;
         if (yardagePerPanelOverageEl) yardagePerPanelOverageEl.style.display = 'block';
         if (totalYardageOverageEl) totalYardageOverageEl.style.display = 'block';
         
-        document.getElementById('yardagePerPanelOverage').textContent = `${yardagePerPanel} yds`;
-        document.getElementById('totalYardageOverage').textContent = `${overageTotalYardage} yds`;
+        if (yardagePerPanelOverage) {
+            yardagePerPanelOverage.textContent = `${yardagePerPanelValue} yds`;
+        }
+        if (totalYardageOverage) {
+            totalYardageOverage.textContent = `${overageTotalYardage} yds`;
+        }
     }
 }
 
