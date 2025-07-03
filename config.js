@@ -14,7 +14,7 @@ const CONFIG = {
   data: {
     patternsCSV: "./data/patterns.csv",
     // Set to relative path if hosting images locally, or full URL if using external CDN
-    imageBaseUrl: "https://raw.githubusercontent.com/fayekaubell/calculator-base/main/data/patterns/"
+    imageBaseUrl: "https://fayekaubell.github.io/calculator-base/data/patterns/"
   },
 
   // Calculator Settings
