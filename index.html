@@ -4,9 +4,51 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Wallpaper Calculator</title>
+    <meta name="description" content="Professional wallpaper calculator with visual preview - calculate panels and yardage needed for your wallpaper project">
+    <meta name="keywords" content="wallpaper calculator, wallpaper estimator, pattern preview, interior design">
+    
+    <!-- Preload critical resources -->
+    <link rel="preload" href="css/styles.css" as="style">
+    <link rel="preload" href="https://cdnjs.cloudflare.com/ajax/libs/PapaParse/5.4.1/papaparse.min.js" as="script">
+    
     <link rel="stylesheet" href="css/styles.css">
     <script src="https://cdnjs.cloudflare.com/ajax/libs/PapaParse/5.4.1/papaparse.min.js"></script>
     <script src="config.js"></script>
+    
+    <!-- Performance and SEO optimizations -->
+    <link rel="dns-prefetch" href="//cdnjs.cloudflare.com">
+    <meta name="theme-color" content="#3498db">
+    
+    <!-- Open Graph meta tags for better sharing -->
+    <meta property="og:title" content="Wallpaper Calculator">
+    <meta property="og:description" content="Professional wallpaper calculator with visual preview">
+    <meta property="og:type" content="website">
+    
+    <style>
+        /* Critical CSS for initial load */
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Oxygen, Ubuntu, Cantarell, sans-serif;
+            margin: 0;
+            background: linear-gradient(135deg, #f5f7fa 0%, #c3cfe2 100%);
+        }
+        
+        .container {
+            max-width: min(95vw, 1800px);
+            margin: 0 auto;
+            padding: 20px;
+        }
+        
+        /* Loading animation */
+        .loading-pulse {
+            animation: pulse 2s infinite;
+        }
+        
+        @keyframes pulse {
+            0% { opacity: 0.6; }
+            50% { opacity: 1; }
+            100% { opacity: 0.6; }
+        }
+    </style>
 </head>
 <body>
     <div class="container">
@@ -17,7 +59,9 @@
 
         <div class="measuring-guide">
             <details>
-                <summary><h3>Measuring Guide</h3></summary>
+                <summary>
+                    <h3>Measuring Guide</h3>
+                </summary>
                 <div class="guide-content">
                     <p><strong>Standard Walls & Connected Walls:</strong> <span id="standardWallsGuide">Measure total width across all walls and height at the tallest point. Include doors, windows, and other obstacles in your measurements.</span></p>
                     <p><strong>Stairway Walls:</strong> <span id="stairwayWallsGuide">Measure width at the broadest section and height from the first floor to the maximum height.</span></p>
@@ -29,11 +73,11 @@
         </div>
 
         <div class="calculator-section">
-            <div id="loadingMessage" class="loading-message">
+            <div id="loadingMessage" class="loading-message loading-pulse">
                 Loading wallpaper patterns...
             </div>
 
-            <div id="errorMessage" class="error-message" style="display: none;">
+            <div id="errorMessage" class="error-message" style="display: none;" role="alert">
                 Error loading patterns. Please refresh the page to try again.
             </div>
 
@@ -41,18 +85,33 @@
                 <div class="form-group">
                     <h3>Select Wallpaper Pattern</h3>
                     <div class="pattern-input">
-                        <select id="pattern" required>
+                        <select id="pattern" required aria-describedby="pattern-help">
                             <option value="">Choose a pattern...</option>
                         </select>
+                        <div id="pattern-help" class="sr-only">Select a wallpaper pattern from the dropdown to begin calculations</div>
                     </div>
                 </div>
 
                 <div class="form-group">
                     <h3>Wall Width</h3>
                     <div class="dimension-input">
-                        <input type="number" id="widthFeet" placeholder="Feet" min="0" max="50">
+                        <input type="number" 
+                               id="widthFeet" 
+                               placeholder="Feet" 
+                               min="0" 
+                               max="50" 
+                               aria-label="Wall width in feet"
+                               autocomplete="off">
                         <span>ft</span>
-                        <input type="number" id="widthInches" placeholder="Inches" min="0" max="11" step="0.25" value="0">
+                        <input type="number" 
+                               id="widthInches" 
+                               placeholder="Inches" 
+                               min="0" 
+                               max="11" 
+                               step="0.25" 
+                               value="0"
+                               aria-label="Wall width in inches"
+                               autocomplete="off">
                         <span>in</span>
                     </div>
                 </div>
@@ -60,37 +119,61 @@
                 <div class="form-group">
                     <h3>Wall Height</h3>
                     <div class="dimension-input">
-                        <input type="number" id="heightFeet" placeholder="Feet" min="0" max="20">
+                        <input type="number" 
+                               id="heightFeet" 
+                               placeholder="Feet" 
+                               min="0" 
+                               max="20"
+                               aria-label="Wall height in feet"
+                               autocomplete="off">
                         <span>ft</span>
-                        <input type="number" id="heightInches" placeholder="Inches" min="0" max="11" step="0.25" value="0">
+                        <input type="number" 
+                               id="heightInches" 
+                               placeholder="Inches" 
+                               min="0" 
+                               max="11" 
+                               step="0.25" 
+                               value="0"
+                               aria-label="Wall height in inches"
+                               autocomplete="off">
                         <span>in</span>
                     </div>
                 </div>
 
-                <button type="button" class="btn btn-primary" id="generatePreviewBtn">Generate Preview</button>
+                <button type="button" 
+                        class="btn btn-primary" 
+                        id="generatePreviewBtn"
+                        aria-describedby="generate-help">
+                    Generate Preview
+                </button>
+                <div id="generate-help" class="sr-only">Click to generate a visual preview of your wallpaper layout</div>
             </div>
         </div>
 
-        <div class="preview-section" id="previewSection">
+        <div class="preview-section" id="previewSection" role="region" aria-label="Wallpaper preview results">
             <div class="title-container">
                 <h2 id="previewTitle">Pattern Preview</h2>
-                <div id="panelLimitWarning" class="disclaimer" style="display: none; margin-top: 15px; color: #dc3545;">
+                <div id="panelLimitWarning" class="disclaimer" style="display: none; margin-top: 15px; color: #dc3545;" role="alert">
                     <p><em>Our panels typically do not print longer than 27'. However, problem solving is our specialty so feel free to contact us directly to see if we can come up with a solution.</em></p>
                 </div>
             </div>
 
             <div class="content-container">
                 <div class="canvas-container">
-                    <canvas id="previewCanvas" width="1400" height="1600"></canvas>
-                    <div class="loading-overlay" id="loadingOverlay" style="display: none;">
-                        Loading pattern...
+                    <canvas id="previewCanvas" 
+                            width="1400" 
+                            height="1200" 
+                            aria-label="Visual preview of wallpaper pattern layout">
+                    </canvas>
+                    <div class="loading-overlay" id="loadingOverlay" style="display: none;" aria-hidden="true">
+                        Loading pattern preview...
                     </div>
                 </div>
 
-                <div class="preview-info">
+                <div class="preview-info" role="complementary" aria-label="Order quantity information">
                     <div class="order-section">
                         <h3>Order quantity as shown:</h3>
-                        <div class="order-line" id="orderQuantity">
+                        <div class="order-line" id="orderQuantity" aria-live="polite">
                             [x0] 0' Panels
                         </div>
                         <div class="order-line">
@@ -105,7 +188,7 @@
 
                     <div class="order-section">
                         <h3>Order quantity with 20% overage added:</h3>
-                        <div class="order-line" id="orderQuantityWithOverage">
+                        <div class="order-line" id="orderQuantityWithOverage" aria-live="polite">
                             [x0] 0' Panels
                         </div>
                         <div class="order-line">
@@ -126,19 +209,175 @@
         </div>
     </div>
 
+    <!-- Screen reader only helper text -->
+    <div class="sr-only" aria-live="polite" id="announcements"></div>
+
+    <style>
+        .sr-only {
+            position: absolute;
+            width: 1px;
+            height: 1px;
+            padding: 0;
+            margin: -1px;
+            overflow: hidden;
+            clip: rect(0, 0, 0, 0);
+            white-space: nowrap;
+            border: 0;
+        }
+    </style>
+
     <script src="js/calculator.js"></script>
     <script src="js/preview.js"></script>
     <script>
-        // Initialize calculator when page loads
+        // Enhanced initialization with error handling and performance monitoring
         document.addEventListener('DOMContentLoaded', function() {
-            initializeCalculator();
+            console.log('🚀 Enhanced Wallpaper Calculator initializing...');
             
-            // Add event listener for generate preview button
-            const generateBtn = document.getElementById('generatePreviewBtn');
-            if (generateBtn) {
-                generateBtn.addEventListener('click', generatePreview);
+            // Performance monitoring
+            const startTime = performance.now();
+            
+            try {
+                // Initialize calculator
+                initializeCalculator();
+                
+                // Add enhanced event listeners
+                const generateBtn = document.getElementById('generatePreviewBtn');
+                if (generateBtn) {
+                    generateBtn.addEventListener('click', function() {
+                        // Add loading state
+                        generateBtn.disabled = true;
+                        generateBtn.textContent = 'Generating...';
+                        
+                        // Announce to screen readers
+                        announceToScreenReader('Generating wallpaper preview...');
+                        
+                        setTimeout(() => {
+                            generatePreview().finally(() => {
+                                generateBtn.disabled = false;
+                                generateBtn.textContent = 'Generate Preview';
+                            });
+                        }, 100);
+                    });
+                }
+                
+                // Add input validation and formatting
+                addInputEnhancements();
+                
+                // Add keyboard shortcuts
+                addKeyboardShortcuts();
+                
+                const endTime = performance.now();
+                console.log(`✅ Calculator initialized in ${Math.round(endTime - startTime)}ms`);
+                
+            } catch (error) {
+                console.error('❌ Failed to initialize calculator:', error);
+                showErrorMessage('Failed to initialize calculator. Please refresh the page.');
             }
         });
+        
+        // Enhanced input validation and formatting
+        function addInputEnhancements() {
+            const inputs = document.querySelectorAll('input[type="number"]');
+            
+            inputs.forEach(input => {
+                // Add real-time validation
+                input.addEventListener('input', function() {
+                    const value = parseFloat(this.value);
+                    const min = parseFloat(this.min);
+                    const max = parseFloat(this.max);
+                    
+                    if (value < min) {
+                        this.value = min;
+                    } else if (value > max) {
+                        this.value = max;
+                    }
+                    
+                    // Remove invalid class if value is now valid
+                    this.classList.remove('invalid');
+                });
+                
+                // Add blur formatting
+                input.addEventListener('blur', function() {
+                    if (this.value && !isNaN(this.value)) {
+                        this.value = parseFloat(this.value).toString();
+                    }
+                });
+                
+                // Prevent invalid characters
+                input.addEventListener('keypress', function(e) {
+                    const char = String.fromCharCode(e.which);
+                    if (!/[0-9.]/.test(char) && e.which !== 8 && e.which !== 0) {
+                        e.preventDefault();
+                    }
+                });
+            });
+        }
+        
+        // Keyboard shortcuts
+        function addKeyboardShortcuts() {
+            document.addEventListener('keydown', function(e) {
+                // Ctrl/Cmd + Enter to generate preview
+                if ((e.ctrlKey || e.metaKey) && e.key === 'Enter') {
+                    e.preventDefault();
+                    const generateBtn = document.getElementById('generatePreviewBtn');
+                    if (generateBtn && !generateBtn.disabled) {
+                        generateBtn.click();
+                    }
+                }
+                
+                // Escape to close modal
+                if (e.key === 'Escape') {
+                    const modal = document.querySelector('.canvas-modal-enhanced');
+                    if (modal) {
+                        modal.remove();
+                    }
+                }
+            });
+        }
+        
+        // Screen reader announcements
+        function announceToScreenReader(message) {
+            const announcements = document.getElementById('announcements');
+            if (announcements) {
+                announcements.textContent = message;
+                setTimeout(() => {
+                    announcements.textContent = '';
+                }, 1000);
+            }
+        }
+        
+        // Enhanced error handling
+        window.addEventListener('error', function(e) {
+            console.error('Global error:', e);
+            showErrorMessage('An unexpected error occurred. Please refresh the page.');
+        });
+        
+        // Service worker registration for offline functionality (optional)
+        if ('serviceWorker' in navigator) {
+            window.addEventListener('load', function() {
+                // Uncomment to enable service worker
+                // navigator.serviceWorker.register('/sw.js')
+                //     .then(registration => console.log('SW registered:', registration))
+                //     .catch(error => console.log('SW registration failed:', error));
+            });
+        }
+    </script>
+    
+    <!-- Schema.org structured data for SEO -->
+    <script type="application/ld+json">
+    {
+        "@context": "https://schema.org",
+        "@type": "WebApplication",
+        "name": "Wallpaper Calculator",
+        "description": "Professional wallpaper calculator with visual preview",
+        "applicationCategory": "DesignApplication",
+        "operatingSystem": "Web Browser",
+        "offers": {
+            "@type": "Offer",
+            "price": "0",
+            "priceCurrency": "USD"
+        }
+    }
     </script>
 </body>
 </html>
