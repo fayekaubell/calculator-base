@@ -1,5 +1,8 @@
 // Canvas Preview Generation Module
 
+// Make generatePreview globally accessible
+window.generatePreview = generatePreview;
+
 // Generate preview function
 async function generatePreview() {
     try {
@@ -116,9 +119,9 @@ async function generatePreview() {
             }
         }
         
-        const loadingOverlay = document.getElementById('loadingOverlay');
-        if (loadingOverlay) {
-            loadingOverlay.style.display = 'none';
+        const loadingOverlayEnd = document.getElementById('loadingOverlay');
+        if (loadingOverlayEnd) {
+            loadingOverlayEnd.style.display = 'none';
         }
         
         // Add click handler for canvas modal (non-mobile only)
