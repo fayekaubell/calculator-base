@@ -37,22 +37,10 @@ function applyConfiguration() {
     document.getElementById('stairwayWallsGuide').textContent = guide.stairwayWalls;
     document.getElementById('ceilingsGuide').textContent = guide.ceilings;
     document.getElementById('slopedCeilingsGuide').textContent = guide.slopedCeilings;
-    document.getElementById('measuringNote').textContent = guide.note.replace('info@fayebell.com', config.business.email);
+    document.getElementById('measuringNote').textContent = guide.note;
     
     // Update disclaimers
     document.getElementById('resultsDisclaimer').textContent = config.ui.text.disclaimers.results;
-    
-    // Set up reCAPTCHA if enabled
-    if (config.quotes.requireCaptcha && config.google.recaptchaSiteKey) {
-        document.querySelector('.g-recaptcha').setAttribute('data-sitekey', config.google.recaptchaSiteKey);
-    } else {
-        document.getElementById('captchaGroup').style.display = 'none';
-    }
-    
-    // Hide quote form if disabled
-    if (!config.quotes.enabled) {
-        document.querySelector('.btn-success').style.display = 'none';
-    }
 }
 
 // Load patterns from CSV file
@@ -196,9 +184,6 @@ function createPatternFromCSV(row) {
         rollWidth: row.sale_type === 'yard' ? defaults.rollWidth : null,
         minYardOrder: row.sale_type === 'yard' ? (row.min_yard_order || defaults.minYardOrder) : null,
         patternMatch: row.pattern_match || 'straight',
-        productDescription: '',
-        tearsheetUrl: '',
-        view360Url: '',
         handle: patternId
     };
 }
@@ -446,50 +431,6 @@ function calculateYardRequirements(pattern, wallWidth, wallHeight) {
     };
 }
 
-// Generate timestamp for preview numbers
-function generateTimestamp() {
-    const now = new Date();
-    const year = now.getFullYear();
-    const month = (now.getMonth() + 1).toString().padStart(2, '0');
-    const day = now.getDate().toString().padStart(2, '0');
-    const hours = now.getHours().toString().padStart(2, '0');
-    const minutes = now.getMinutes().toString().padStart(2, '0');
-    const seconds = now.getSeconds().toString().padStart(2, '0');
-    
-    return `${year}-${month}-${day}-${hours}-${minutes}-${seconds}`;
-}
-
-// Logging functions (optional - only if Google Sheets is configured)
-async function logCalculatorUsage(wallWidth, wallHeight, pattern, totalYardage) {
-    if (!CONFIG.google.sheetsUrl) {
-        console.log('📊 Google Sheets logging disabled');
-        return 20001 + Math.floor(Date.now() / 1000) % 10000;
-    }
-    
-    try {
-        const formData = new FormData();
-        formData.append('logType', 'preview');
-        formData.append('wallWidth', wallWidth);
-        formData.append('wallHeight', wallHeight);
-        formData.append('pattern', pattern);
-        formData.append('totalYardage', totalYardage);
-        formData.append('userAgent', navigator.userAgent);
-        
-        const response = await fetch(CONFIG.google.sheetsUrl, {
-            method: 'POST',
-            body: formData
-        });
-        
-        const result = await response.json();
-        console.log('📊 Calculator usage logged, preview number:', result.previewNumber);
-        return result.previewNumber;
-        
-    } catch (error) {
-        console.error('❌ Error logging calculator usage:', error);
-        return 20001 + Math.floor(Date.now() / 1000) % 10000;
-    }
-}
-
 // Export functions for other modules
 window.calculatorAPI = {
     patterns,
@@ -499,7 +440,5 @@ window.calculatorAPI = {
     getSelectedPattern,
     preloadPatternImage,
     calculatePanelRequirements,
-    calculateYardRequirements,
-    logCalculatorUsage,
-    generateTimestamp
+    calculateYardRequirements
 };
