@@ -120,7 +120,6 @@ async function generatePreview() {
             }
         }
         
-        // Hide loading overlay using the existing variable
         if (loadingOverlay) {
             loadingOverlay.style.display = 'none';
         }
@@ -141,7 +140,6 @@ async function generatePreview() {
         
     } catch (error) {
         console.error('❌ Error in generatePreview:', error);
-        // Use existing loadingOverlay variable
         if (loadingOverlay) {
             loadingOverlay.style.display = 'none';
         }
@@ -471,9 +469,6 @@ function drawSection3_WallOnly(ctx, wallOffsetX, wallOffsetY, scaledWallWidth, s
         
         // Calculate transformation
         const xTransform = wallOffsetX - section2WallOffsetX;
-        const yTransform = wallOffsetY - wallOffsetY; // This will be 0 for section 3
-        
-        const hasLimitation = calculations.exceedsLimit || calculations.exceedsAvailableLength;
         
         const repeatW = pattern.saleType === 'yard' ? pattern.repeatWidth * scale :
             (pattern.sequenceLength === 1 ? pattern.panelWidth * scale : pattern.repeatWidth * scale);
@@ -568,7 +563,75 @@ function drawPanelOutlines(ctx, offsetX, offsetY, scaledTotalWidth, scaledTotalH
             ctx.fillRect(x - textWidth/2 - 6, offsetY - 20, textWidth + 12, 16);
             
             ctx.fillStyle = '#333';
-            ctx.fillText(panelWidthDisplay, (panelStartX + panelEndX) / 2, labelY - 6);
+            ctx.fillText(label, x, offsetY - 8);
+        }
+    }
+    
+    if (showDimensions) {
+        drawPanelDimensions(ctx, offsetX, offsetY, scaledTotalWidth, scaledTotalHeight, scale);
+    }
+}
+
+function drawSection2Outlines(ctx, offsetX, offsetY, scaledTotalWidth, scaledTotalHeight, scaledWallWidth, scaledWallHeight, wallOffsetX, wallOffsetY, scale) {
+    const { pattern, calculations } = currentPreview;
+    
+    // Wall outline
+    ctx.strokeStyle = '#2c3e50';
+    ctx.lineWidth = 0.5;
+    ctx.strokeRect(wallOffsetX, wallOffsetY, scaledWallWidth, scaledWallHeight);
+    
+    // Panel outlines
+    ctx.strokeStyle = '#666666';
+    ctx.lineWidth = 0.5;
+    ctx.setLineDash([]);
+    
+    for (let i = 0; i < calculations.panelsNeeded; i++) {
+        const x = offsetX + (i * pattern.panelWidth * scale);
+        const width = pattern.panelWidth * scale;
+        ctx.strokeRect(x, offsetY, width, scaledTotalHeight);
+    }
+    
+    // Dashed lines between panels
+    ctx.setLineDash([8, 8]);
+    for (let i = 1; i < calculations.panelsNeeded; i++) {
+        const x = offsetX + (i * pattern.panelWidth * scale);
+        ctx.beginPath();
+        ctx.moveTo(x, offsetY);
+        ctx.lineTo(x, offsetY + scaledTotalHeight);
+        ctx.stroke();
+    }
+    ctx.setLineDash([]);
+}
+
+function drawPanelDimensions(ctx, offsetX, offsetY, scaledTotalWidth, scaledTotalHeight, scale) {
+    const { pattern, calculations } = currentPreview;
+    
+    ctx.fillStyle = '#333';
+    ctx.font = '12px sans-serif';
+    ctx.textAlign = 'center';
+    ctx.strokeStyle = '#333';
+    ctx.lineWidth = 0.5;
+    
+    // Individual panel width
+    const panelWidthFeet = Math.floor(pattern.panelWidth / 12);
+    const panelWidthInches = pattern.panelWidth % 12;
+    const panelWidthDisplay = panelWidthInches > 0 ? 
+        `${panelWidthFeet}'-${panelWidthInches}"` : `${panelWidthFeet}'-0"`;
+    
+    if (calculations.panelsNeeded > 0) {
+        const panelStartX = offsetX;
+        const panelEndX = offsetX + (pattern.panelWidth * scale);
+        const labelY = offsetY - 30;
+        
+        ctx.beginPath();
+        ctx.moveTo(panelStartX, labelY);
+        ctx.lineTo(panelEndX, labelY);
+        ctx.stroke();
+        
+        drawArrowHead(ctx, panelStartX, labelY, 'right');
+        drawArrowHead(ctx, panelEndX, labelY, 'left');
+        
+        ctx.fillText(panelWidthDisplay, (panelStartX + panelEndX) / 2, labelY - 6);
     }
     
     // Total width
@@ -830,72 +893,4 @@ function renderHighQualityPreview(ctx, canvasWidth, canvasHeight) {
 }
 
 // Make generatePreview globally accessible
-window.generatePreview = generatePreview;(label, x, offsetY - 8);
-        }
-    }
-    
-    if (showDimensions) {
-        drawPanelDimensions(ctx, offsetX, offsetY, scaledTotalWidth, scaledTotalHeight, scale);
-    }
-}
-
-function drawSection2Outlines(ctx, offsetX, offsetY, scaledTotalWidth, scaledTotalHeight, scaledWallWidth, scaledWallHeight, wallOffsetX, wallOffsetY, scale) {
-    const { pattern, calculations } = currentPreview;
-    
-    // Wall outline
-    ctx.strokeStyle = '#2c3e50';
-    ctx.lineWidth = 0.5;
-    ctx.strokeRect(wallOffsetX, wallOffsetY, scaledWallWidth, scaledWallHeight);
-    
-    // Panel outlines
-    ctx.strokeStyle = '#666666';
-    ctx.lineWidth = 0.5;
-    ctx.setLineDash([]);
-    
-    for (let i = 0; i < calculations.panelsNeeded; i++) {
-        const x = offsetX + (i * pattern.panelWidth * scale);
-        const width = pattern.panelWidth * scale;
-        ctx.strokeRect(x, offsetY, width, scaledTotalHeight);
-    }
-    
-    // Dashed lines between panels
-    ctx.setLineDash([8, 8]);
-    for (let i = 1; i < calculations.panelsNeeded; i++) {
-        const x = offsetX + (i * pattern.panelWidth * scale);
-        ctx.beginPath();
-        ctx.moveTo(x, offsetY);
-        ctx.lineTo(x, offsetY + scaledTotalHeight);
-        ctx.stroke();
-    }
-    ctx.setLineDash([]);
-}
-
-function drawPanelDimensions(ctx, offsetX, offsetY, scaledTotalWidth, scaledTotalHeight, scale) {
-    const { pattern, calculations } = currentPreview;
-    
-    ctx.fillStyle = '#333';
-    ctx.font = '12px sans-serif';
-    ctx.textAlign = 'center';
-    ctx.strokeStyle = '#333';
-    ctx.lineWidth = 0.5;
-    
-    // Individual panel width
-    const panelWidthFeet = Math.floor(pattern.panelWidth / 12);
-    const panelWidthInches = pattern.panelWidth % 12;
-    const panelWidthDisplay = panelWidthInches > 0 ? 
-        `${panelWidthFeet}'-${panelWidthInches}"` : `${panelWidthFeet}'-0"`;
-    
-    if (calculations.panelsNeeded > 0) {
-        const panelStartX = offsetX;
-        const panelEndX = offsetX + (pattern.panelWidth * scale);
-        const labelY = offsetY - 30;
-        
-        ctx.beginPath();
-        ctx.moveTo(panelStartX, labelY);
-        ctx.lineTo(panelEndX, labelY);
-        ctx.stroke();
-        
-        drawArrowHead(ctx, panelStartX, labelY, 'right');
-        drawArrowHead(ctx, panelEndX, labelY, 'left');
-        
-        ctx.fillText
+window.generatePreview = generatePreview;
