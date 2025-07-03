@@ -1,4 +1,4 @@
-// Canvas Preview Generation Module
+// Enhanced Canvas Preview Generation Module - 2-Section Layout
 
 // Generate preview function
 async function generatePreview() {
@@ -102,7 +102,7 @@ async function generatePreview() {
         await preloadPatternImage(pattern);
         
         updatePreviewInfo();
-        drawPreview();
+        drawEnhancedPreview();
         
         // Show warnings if needed
         const warningElement = document.getElementById('panelLimitWarning');
@@ -130,13 +130,13 @@ async function generatePreview() {
         
         if (!isMobile) {
             canvas.style.cursor = 'zoom-in';
-            canvas.onclick = openCanvasModal;
+            canvas.onclick = openEnhancedCanvasModal;
         } else {
             canvas.style.cursor = 'default';
             canvas.onclick = null;
         }
         
-        console.log('✅ Preview generation complete');
+        console.log('✅ Enhanced preview generation complete');
         
     } catch (error) {
         console.error('❌ Error in generatePreview:', error);
@@ -147,7 +147,7 @@ async function generatePreview() {
     }
 }
 
-// Update preview info display
+// Update preview info display (unchanged)
 function updatePreviewInfo() {
     const { calculations } = currentPreview;
     
@@ -227,30 +227,29 @@ function updatePreviewInfo() {
     }
 }
 
-// Draw preview on canvas
-function drawPreview() {
+// Enhanced 2-section preview drawing
+function drawEnhancedPreview() {
     const canvas = document.getElementById('previewCanvas');
     const ctx = canvas.getContext('2d');
     const { pattern, wallWidth, wallHeight, calculations } = currentPreview;
     
-    // Clear canvas
-    ctx.fillStyle = '#ffffff';
+    // Clear canvas with subtle gradient background
+    const gradient = ctx.createLinearGradient(0, 0, 0, canvas.height);
+    gradient.addColorStop(0, '#ffffff');
+    gradient.addColorStop(1, '#f8f9fa');
+    ctx.fillStyle = gradient;
     ctx.fillRect(0, 0, canvas.width, canvas.height);
     
-    // Calculate scale
-    const leftMargin = 60;
-    const rightMargin = 30;
-    const maxWidth = canvas.width - leftMargin - rightMargin;
-    const maxHeight = canvas.height - 80;
+    // Calculate enhanced layout
+    const margins = { left: 80, right: 40, top: 100, bottom: 80 };
+    const sectionGap = 60;
+    const maxWidth = canvas.width - margins.left - margins.right;
+    const maxHeight = canvas.height - margins.top - margins.bottom;
     
-    const sectionGap1 = 30;
-    const sectionGap2 = 25;
-    const dimensionSpace = 60;
-    
-    // Determine content dimensions
+    // Calculate dimensions for both sections
     const effectiveHeight = calculations.totalHeight;
     const section2VisualHeight = Math.max(calculations.totalHeight, wallHeight);
-    const totalContentHeight = (effectiveHeight + section2VisualHeight + wallHeight) + sectionGap1 + sectionGap2 + dimensionSpace;
+    const totalContentHeight = effectiveHeight + section2VisualHeight + sectionGap;
     const effectiveWidth = Math.max(calculations.totalWidth, wallWidth);
     
     const widthScale = maxWidth / effectiveWidth;
@@ -262,35 +261,42 @@ function drawPreview() {
     const scaledWallWidth = wallWidth * scale;
     const scaledWallHeight = wallHeight * scale;
     
-    const actualContentHeight = (effectiveHeight * scale) + (section2VisualHeight * scale) + (scaledWallHeight) + sectionGap1 + sectionGap2 + dimensionSpace;
-    let currentY = (canvas.height - actualContentHeight) / 2 + (dimensionSpace * 0.7);
+    const actualContentHeight = scaledTotalHeight + Math.max(scaledTotalHeight, scaledWallHeight) + sectionGap;
+    let currentY = margins.top + (maxHeight - actualContentHeight) / 2;
     
-    const offsetX = leftMargin + (maxWidth - scaledTotalWidth) / 2;
+    const offsetX = margins.left + (maxWidth - scaledTotalWidth) / 2;
     
-    // Section 1: Panel layout
-    drawSection1_PanelLayout(ctx, offsetX, currentY, scaledTotalWidth, scaledTotalHeight, scale);
-    drawArrowsBetweenSections(ctx, offsetX, currentY, scaledTotalWidth, scaledTotalHeight, scale, sectionGap1);
+    // Draw section labels
+    drawSectionLabel(ctx, offsetX, currentY - 30, scaledTotalWidth, 'PANEL LAYOUT & DIMENSIONS', '#2c3e50');
     
-    currentY += effectiveHeight * scale + sectionGap1;
+    // Section 1: Enhanced Panel Layout with dimensions and labels
+    drawEnhancedSection1(ctx, offsetX, currentY, scaledTotalWidth, scaledTotalHeight, scale);
     
-    // Section 2: Complete view with wall overlay
+    // Transition arrow
+    drawEnhancedTransitionArrow(ctx, offsetX, currentY + scaledTotalHeight, scaledTotalWidth, sectionGap);
+    
+    currentY += scaledTotalHeight + sectionGap;
+    
+    // Draw second section label
     const wallOffsetX = offsetX + (scaledTotalWidth - scaledWallWidth) / 2;
-    const wallOffsetY = currentY + ((section2VisualHeight * scale) - scaledWallHeight) / 2;
-    drawSection2_CompleteView(ctx, offsetX, currentY, scaledTotalWidth, scaledTotalHeight, scaledWallWidth, scaledWallHeight, wallOffsetX, wallOffsetY, scale);
+    const wallCenterX = wallOffsetX + scaledWallWidth / 2;
+    drawSectionLabel(ctx, wallCenterX - scaledWallWidth / 2, currentY - 30, scaledWallWidth, 'WALL COVERAGE VIEW', '#2c3e50');
     
-    currentY += section2VisualHeight * scale + sectionGap2;
-    
-    // Section 3: Wall only
-    const wallOnlyOffsetX = leftMargin + (maxWidth - scaledWallWidth) / 2;
-    drawSection3_WallOnly(ctx, wallOnlyOffsetX, currentY, scaledWallWidth, scaledWallHeight, scale);
+    // Section 2: Enhanced wall view
+    const wallOffsetY = currentY + (Math.max(scaledTotalHeight, scaledWallHeight) - scaledWallHeight) / 2;
+    drawEnhancedSection2(ctx, offsetX, currentY, scaledTotalWidth, scaledTotalHeight, 
+                        scaledWallWidth, scaledWallHeight, wallOffsetX, wallOffsetY, scale);
 }
 
-// Draw Section 1: Panel Layout
-function drawSection1_PanelLayout(ctx, offsetX, offsetY, scaledTotalWidth, scaledTotalHeight, scale) {
+// Enhanced Section 1: Panel Layout with integrated dimensions and labels
+function drawEnhancedSection1(ctx, offsetX, offsetY, scaledTotalWidth, scaledTotalHeight, scale) {
     const { pattern, calculations } = currentPreview;
     
-    // Draw pattern if image is loaded
+    // Draw pattern with enhanced quality
     if (imageLoaded && patternImage) {
+        ctx.imageSmoothingEnabled = true;
+        ctx.imageSmoothingQuality = 'high';
+        
         const repeatW = pattern.saleType === 'yard' ? pattern.repeatWidth * scale :
             (pattern.sequenceLength === 1 ? pattern.panelWidth * scale : pattern.repeatWidth * scale);
         const repeatH = pattern.repeatHeight * scale;
@@ -309,17 +315,15 @@ function drawSection1_PanelLayout(ctx, offsetX, offsetY, scaledTotalWidth, scale
             
             const panelBottomY = offsetY + scaledTotalHeight;
             
-            // Draw pattern tiles
+            // Draw pattern tiles with improved positioning
             for (let x = -repeatW; x < panelWidth + repeatW; x += repeatW) {
                 if (pattern.hasRepeatHeight) {
-                    // Normal repeating pattern
                     for (let y = -repeatH; y < scaledTotalHeight + repeatH; y += repeatH) {
                         const drawX = panelX + x - (sourceOffsetX * scale);
                         const drawY = offsetY + y;
                         ctx.drawImage(patternImage, drawX, drawY, repeatW, repeatH);
                     }
                 } else {
-                    // Non-repeating pattern - anchor to bottom
                     const drawX = panelX + x - (sourceOffsetX * scale);
                     const drawY = panelBottomY - repeatH;
                     ctx.drawImage(patternImage, drawX, drawY, repeatW, repeatH);
@@ -330,12 +334,19 @@ function drawSection1_PanelLayout(ctx, offsetX, offsetY, scaledTotalWidth, scale
         }
     }
     
-    // Draw panel outlines and labels
-    drawPanelOutlines(ctx, offsetX, offsetY, scaledTotalWidth, scaledTotalHeight, scale, true);
+    // Enhanced panel outlines with better styling
+    drawEnhancedPanelOutlines(ctx, offsetX, offsetY, scaledTotalWidth, scaledTotalHeight, scale);
+    
+    // Integrated dimension labels
+    drawIntegratedDimensions(ctx, offsetX, offsetY, scaledTotalWidth, scaledTotalHeight, scale);
+    
+    // Enhanced panel labels
+    drawEnhancedPanelLabels(ctx, offsetX, offsetY, scaledTotalWidth, scaledTotalHeight, scale);
 }
 
-// Draw Section 2: Complete View
-function drawSection2_CompleteView(ctx, offsetX, offsetY, scaledTotalWidth, scaledTotalHeight, scaledWallWidth, scaledWallHeight, wallOffsetX, wallOffsetY, scale) {
+// Enhanced Section 2: Wall coverage view
+function drawEnhancedSection2(ctx, offsetX, offsetY, scaledTotalWidth, scaledTotalHeight, 
+                             scaledWallWidth, scaledWallHeight, wallOffsetX, wallOffsetY, scale) {
     const { pattern, calculations } = currentPreview;
     
     // Calculate panel coverage
@@ -347,15 +358,18 @@ function drawSection2_CompleteView(ctx, offsetX, offsetY, scaledTotalWidth, scal
     
     const hasLimitation = calculations.exceedsLimit || calculations.exceedsAvailableLength;
     
-    // Draw pattern with opacity for overage areas
+    // Draw pattern with improved rendering
     if (imageLoaded && patternImage) {
+        ctx.imageSmoothingEnabled = true;
+        ctx.imageSmoothingQuality = 'high';
+        
         const repeatW = pattern.saleType === 'yard' ? pattern.repeatWidth * scale :
             (pattern.sequenceLength === 1 ? pattern.panelWidth * scale : pattern.repeatWidth * scale);
         const repeatH = pattern.repeatHeight * scale;
         const offsetPerPanel = pattern.sequenceLength === 1 ? 0 : pattern.repeatWidth / pattern.sequenceLength;
         
-        // First pass: Draw all panels at 50% opacity
-        ctx.globalAlpha = 0.5;
+        // Draw background pattern at reduced opacity
+        ctx.globalAlpha = 0.3;
         for (let panelIndex = 0; panelIndex < calculations.panelsNeeded; panelIndex++) {
             const panelX = offsetX + (panelIndex * pattern.panelWidth * scale);
             const panelWidth = pattern.panelWidth * scale;
@@ -393,7 +407,7 @@ function drawSection2_CompleteView(ctx, offsetX, offsetY, scaledTotalWidth, scal
             ctx.restore();
         }
         
-        // Second pass: Draw wall area at 100% opacity
+        // Draw wall area at full opacity with enhanced clipping
         ctx.globalAlpha = 1.0;
         ctx.save();
         ctx.beginPath();
@@ -434,110 +448,58 @@ function drawSection2_CompleteView(ctx, offsetX, offsetY, scaledTotalWidth, scal
         ctx.globalAlpha = 1.0;
     }
     
-    // Draw uncovered area if panels exceed any limit
+    // Draw uncovered area with enhanced styling
     if (hasLimitation) {
         const uncoveredAreaHeight = scaledWallHeight - actualPanelHeight;
         if (uncoveredAreaHeight > 0) {
-            ctx.fillStyle = 'rgba(255, 0, 0, 0.5)';
+            // Create pattern for uncovered area
+            const gradient = ctx.createLinearGradient(wallOffsetX, wallOffsetY, wallOffsetX, wallOffsetY + uncoveredAreaHeight);
+            gradient.addColorStop(0, 'rgba(255, 100, 100, 0.6)');
+            gradient.addColorStop(1, 'rgba(255, 50, 50, 0.4)');
+            ctx.fillStyle = gradient;
             ctx.fillRect(wallOffsetX, wallOffsetY, scaledWallWidth, uncoveredAreaHeight);
-        }
-    }
-    
-    // Draw outlines
-    drawSection2Outlines(ctx, offsetX, offsetY, scaledTotalWidth, scaledTotalHeight, scaledWallWidth, scaledWallHeight, wallOffsetX, wallOffsetY, scale);
-}
-
-// Draw Section 3: Wall Only
-function drawSection3_WallOnly(ctx, wallOffsetX, wallOffsetY, scaledWallWidth, scaledWallHeight, scale) {
-    const { pattern, wallWidth, wallHeight, calculations } = currentPreview;
-    
-    if (imageLoaded && patternImage) {
-        ctx.save();
-        ctx.imageSmoothingEnabled = false;
-        
-        // Clip to wall area
-        ctx.beginPath();
-        ctx.rect(Math.floor(wallOffsetX), Math.floor(wallOffsetY), Math.ceil(scaledWallWidth), Math.ceil(scaledWallHeight));
-        ctx.clip();
-        
-        // Use same coordinates as Section 2
-        const leftMargin = 60;
-        const maxWidth = 1400 - leftMargin - 30;
-        const scaledTotalWidth = calculations.totalWidth * scale;
-        const section2OffsetX = leftMargin + (maxWidth - scaledTotalWidth) / 2;
-        const section2WallOffsetX = section2OffsetX + (scaledTotalWidth - (wallWidth * scale)) / 2;
-        
-        // Calculate transformation
-        const xTransform = wallOffsetX - section2WallOffsetX;
-        
-        const repeatW = pattern.saleType === 'yard' ? pattern.repeatWidth * scale :
-            (pattern.sequenceLength === 1 ? pattern.panelWidth * scale : pattern.repeatWidth * scale);
-        const repeatH = pattern.repeatHeight * scale;
-        const offsetPerPanel = pattern.sequenceLength === 1 ? 0 : pattern.repeatWidth / pattern.sequenceLength;
-        
-        for (let panelIndex = 0; panelIndex < calculations.panelsNeeded; panelIndex++) {
-            const section2PanelX = section2OffsetX + (panelIndex * pattern.panelWidth * scale);
-            const panelX = section2PanelX + xTransform;
-            const sequencePosition = panelIndex % pattern.sequenceLength;
-            const sourceOffsetX = sequencePosition * offsetPerPanel;
             
-            for (let x = -repeatW; x < pattern.panelWidth * scale + repeatW; x += repeatW) {
-                if (pattern.hasRepeatHeight) {
-                    for (let y = -repeatH; y < scaledWallHeight + repeatH; y += repeatH) {
-                        const drawX = Math.floor(panelX + x - (sourceOffsetX * scale));
-                        const drawY = Math.floor(wallOffsetY + y);
-                        ctx.drawImage(patternImage, drawX, drawY, Math.ceil(repeatW), Math.ceil(repeatH));
-                    }
-                } else {
-                    const drawX = Math.floor(panelX + x - (sourceOffsetX * scale));
-                    const drawY = Math.floor(wallOffsetY + scaledWallHeight - repeatH);
-                    ctx.drawImage(patternImage, drawX, drawY, Math.ceil(repeatW), Math.ceil(repeatH));
-                }
+            // Add diagonal stripes to indicate uncovered area
+            ctx.strokeStyle = 'rgba(255, 255, 255, 0.3)';
+            ctx.lineWidth = 2;
+            for (let i = 0; i < scaledWallWidth + uncoveredAreaHeight; i += 15) {
+                ctx.beginPath();
+                ctx.moveTo(wallOffsetX + i, wallOffsetY);
+                ctx.lineTo(wallOffsetX + i - uncoveredAreaHeight, wallOffsetY + uncoveredAreaHeight);
+                ctx.stroke();
             }
         }
-        
-        ctx.restore();
-        ctx.imageSmoothingEnabled = true;
     }
     
-    // Draw uncovered area if needed
-    const hasLimitation = calculations.exceedsLimit || calculations.exceedsAvailableLength;
-    if (hasLimitation) {
-        const actualPanelLengthToUse = calculations.exceedsAvailableLength ? 
-            calculations.actualPanelLength : calculations.panelLength;
-        const coveredHeight = actualPanelLengthToUse * 12 * scale;
-        const uncoveredAreaHeight = scaledWallHeight - coveredHeight;
-        
-        if (uncoveredAreaHeight > 0) {
-            ctx.fillStyle = 'rgba(255, 0, 0, 0.5)';
-            ctx.fillRect(wallOffsetX, wallOffsetY, scaledWallWidth, uncoveredAreaHeight);
-        }
-    }
-    
-    // Draw wall outline and dimensions
-    ctx.strokeStyle = '#333';
-    ctx.lineWidth = 0.5;
-    ctx.strokeRect(wallOffsetX, wallOffsetY, scaledWallWidth, scaledWallHeight);
-    drawWallDimensions(ctx, wallOffsetX, wallOffsetY, scaledWallWidth, scaledWallHeight);
+    // Enhanced outlines and labels
+    drawEnhancedSection2Outlines(ctx, offsetX, offsetY, scaledTotalWidth, scaledTotalHeight, 
+                                scaledWallWidth, scaledWallHeight, wallOffsetX, wallOffsetY, scale);
 }
 
-// Helper functions for drawing outlines and dimensions
-function drawPanelOutlines(ctx, offsetX, offsetY, scaledTotalWidth, scaledTotalHeight, scale, showDimensions) {
+// Enhanced helper functions
+function drawSectionLabel(ctx, x, y, width, text, color = '#2c3e50') {
+    ctx.fillStyle = color;
+    ctx.font = 'bold 16px Arial, sans-serif';
+    ctx.textAlign = 'center';
+    ctx.fillText(text, x + width / 2, y);
+}
+
+function drawEnhancedPanelOutlines(ctx, offsetX, offsetY, scaledTotalWidth, scaledTotalHeight, scale) {
     const { pattern, calculations } = currentPreview;
     
-    // Panel outlines
-    ctx.strokeStyle = '#333';
-    ctx.lineWidth = 0.5;
+    // Main panel outlines with enhanced styling
+    ctx.strokeStyle = '#2c3e50';
+    ctx.lineWidth = 2;
     for (let i = 0; i < calculations.panelsNeeded; i++) {
         const x = offsetX + (i * pattern.panelWidth * scale);
         const width = pattern.panelWidth * scale;
         ctx.strokeRect(x, offsetY, width, scaledTotalHeight);
     }
     
-    // Dashed lines between panels
-    ctx.strokeStyle = '#666666';
-    ctx.lineWidth = 0.5;
-    ctx.setLineDash([8, 8]);
+    // Enhanced dashed lines between panels
+    ctx.strokeStyle = '#7f8c8d';
+    ctx.lineWidth = 1.5;
+    ctx.setLineDash([12, 6]);
     for (let i = 1; i < calculations.panelsNeeded; i++) {
         const x = offsetX + (i * pattern.panelWidth * scale);
         ctx.beginPath();
@@ -546,11 +508,13 @@ function drawPanelOutlines(ctx, offsetX, offsetY, scaledTotalWidth, scaledTotalH
         ctx.stroke();
     }
     ctx.setLineDash([]);
+}
+
+function drawEnhancedPanelLabels(ctx, offsetX, offsetY, scaledTotalWidth, scaledTotalHeight, scale) {
+    const { pattern, calculations } = currentPreview;
     
-    // Panel labels (A/B/C etc.)
     if (pattern.saleType === 'panel' && pattern.sequenceLength > 1) {
-        ctx.fillStyle = '#333';
-        ctx.font = '14px sans-serif';
+        ctx.font = 'bold 18px Arial, sans-serif';
         ctx.textAlign = 'center';
         
         for (let i = 0; i < calculations.panelsNeeded; i++) {
@@ -558,80 +522,40 @@ function drawPanelOutlines(ctx, offsetX, offsetY, scaledTotalWidth, scaledTotalH
             const sequencePosition = i % pattern.sequenceLength;
             const label = pattern.panelSequence[sequencePosition];
             
+            // Enhanced label background
             const textWidth = ctx.measureText(label).width;
-            ctx.fillStyle = 'rgba(255, 255, 255, 0.9)';
-            ctx.fillRect(x - textWidth/2 - 6, offsetY - 20, textWidth + 12, 16);
+            const padding = 8;
             
-            ctx.fillStyle = '#333';
-            ctx.fillText(label, x, offsetY - 8);
+            ctx.fillStyle = 'rgba(52, 152, 219, 0.9)';
+            ctx.fillRect(x - textWidth/2 - padding, offsetY + 15, textWidth + padding * 2, 28);
+            
+            ctx.fillStyle = '#ffffff';
+            ctx.fillText(label, x, offsetY + 35);
         }
     }
-    
-    if (showDimensions) {
-        drawPanelDimensions(ctx, offsetX, offsetY, scaledTotalWidth, scaledTotalHeight, scale);
-    }
 }
 
-function drawSection2Outlines(ctx, offsetX, offsetY, scaledTotalWidth, scaledTotalHeight, scaledWallWidth, scaledWallHeight, wallOffsetX, wallOffsetY, scale) {
+function drawIntegratedDimensions(ctx, offsetX, offsetY, scaledTotalWidth, scaledTotalHeight, scale) {
     const { pattern, calculations } = currentPreview;
     
-    // Wall outline
-    ctx.strokeStyle = '#2c3e50';
-    ctx.lineWidth = 0.5;
-    ctx.strokeRect(wallOffsetX, wallOffsetY, scaledWallWidth, scaledWallHeight);
-    
-    // Panel outlines
-    ctx.strokeStyle = '#666666';
-    ctx.lineWidth = 0.5;
-    ctx.setLineDash([]);
-    
-    for (let i = 0; i < calculations.panelsNeeded; i++) {
-        const x = offsetX + (i * pattern.panelWidth * scale);
-        const width = pattern.panelWidth * scale;
-        ctx.strokeRect(x, offsetY, width, scaledTotalHeight);
-    }
-    
-    // Dashed lines between panels
-    ctx.setLineDash([8, 8]);
-    for (let i = 1; i < calculations.panelsNeeded; i++) {
-        const x = offsetX + (i * pattern.panelWidth * scale);
-        ctx.beginPath();
-        ctx.moveTo(x, offsetY);
-        ctx.lineTo(x, offsetY + scaledTotalHeight);
-        ctx.stroke();
-    }
-    ctx.setLineDash([]);
-}
-
-function drawPanelDimensions(ctx, offsetX, offsetY, scaledTotalWidth, scaledTotalHeight, scale) {
-    const { pattern, calculations } = currentPreview;
-    
-    ctx.fillStyle = '#333';
-    ctx.font = '12px sans-serif';
+    ctx.fillStyle = '#2c3e50';
+    ctx.font = 'bold 14px Arial, sans-serif';
     ctx.textAlign = 'center';
-    ctx.strokeStyle = '#333';
-    ctx.lineWidth = 0.5;
+    ctx.strokeStyle = '#2c3e50';
+    ctx.lineWidth = 1.5;
     
-    // Individual panel width
-    const panelWidthFeet = Math.floor(pattern.panelWidth / 12);
-    const panelWidthInches = pattern.panelWidth % 12;
-    const panelWidthDisplay = panelWidthInches > 0 ? 
-        `${panelWidthFeet}'-${panelWidthInches}"` : `${panelWidthFeet}'-0"`;
-    
-    if (calculations.panelsNeeded > 0) {
+    // Individual panel width (if multiple panels)
+    if (calculations.panelsNeeded > 1) {
+        const panelWidthFeet = Math.floor(pattern.panelWidth / 12);
+        const panelWidthInches = pattern.panelWidth % 12;
+        const panelWidthDisplay = panelWidthInches > 0 ? 
+            `${panelWidthFeet}'-${panelWidthInches}"` : `${panelWidthFeet}'-0"`;
+        
         const panelStartX = offsetX;
         const panelEndX = offsetX + (pattern.panelWidth * scale);
-        const labelY = offsetY - 30;
+        const labelY = offsetY - 50;
         
-        ctx.beginPath();
-        ctx.moveTo(panelStartX, labelY);
-        ctx.lineTo(panelEndX, labelY);
-        ctx.stroke();
-        
-        drawArrowHead(ctx, panelStartX, labelY, 'right');
-        drawArrowHead(ctx, panelEndX, labelY, 'left');
-        
-        ctx.fillText(panelWidthDisplay, (panelStartX + panelEndX) / 2, labelY - 6);
+        drawEnhancedDimensionLine(ctx, panelStartX, labelY, panelEndX, labelY, panelWidthDisplay, '#3498db');
     }
     
     // Total width
@@ -640,34 +564,12 @@ function drawPanelDimensions(ctx, offsetX, offsetY, scaledTotalWidth, scaledTota
     const totalWidthDisplay = totalWidthInches > 0 ? 
         `${totalWidthFeet}'-${totalWidthInches}"` : `${totalWidthFeet}'-0"`;
     
-    const totalLabelY = offsetY - 50;
-    
-    ctx.beginPath();
-    ctx.moveTo(offsetX, totalLabelY);
-    ctx.lineTo(offsetX + scaledTotalWidth, totalLabelY);
-    ctx.stroke();
-    
-    drawArrowHead(ctx, offsetX, totalLabelY, 'right');
-    drawArrowHead(ctx, offsetX + scaledTotalWidth, totalLabelY, 'left');
-    
-    ctx.fillText(totalWidthDisplay, offsetX + scaledTotalWidth / 2, totalLabelY - 6);
+    const totalLabelY = offsetY - 25;
+    drawEnhancedDimensionLine(ctx, offsetX, totalLabelY, offsetX + scaledTotalWidth, totalLabelY, totalWidthDisplay, '#e74c3c');
     
     // Height
-    const heightLabelX = offsetX - 25;
+    const heightLabelX = offsetX - 50;
     
-    ctx.beginPath();
-    ctx.moveTo(heightLabelX, offsetY);
-    ctx.lineTo(heightLabelX, offsetY + scaledTotalHeight);
-    ctx.stroke();
-    
-    drawArrowHead(ctx, heightLabelX, offsetY, 'down');
-    drawArrowHead(ctx, heightLabelX, offsetY + scaledTotalHeight, 'up');
-    
-    ctx.save();
-    ctx.translate(heightLabelX - 10, offsetY + scaledTotalHeight / 2);
-    ctx.rotate(-Math.PI/2);
-    
-    // Display strip length properly for yard patterns
     let heightDisplay;
     if (pattern.saleType === 'yard' && calculations.panelLengthInches !== undefined) {
         const inches = calculations.panelLengthInches;
@@ -677,116 +579,188 @@ function drawPanelDimensions(ctx, offsetX, offsetY, scaledTotalWidth, scaledTota
         heightDisplay = `${calculations.panelLength}'-0"`;
     }
     
-    ctx.fillText(heightDisplay, 0, 0);
+    drawEnhancedVerticalDimension(ctx, heightLabelX, offsetY, heightLabelX, offsetY + scaledTotalHeight, heightDisplay, '#27ae60');
+}
+
+function drawEnhancedDimensionLine(ctx, x1, y, x2, y2, text, color = '#2c3e50') {
+    ctx.strokeStyle = color;
+    ctx.fillStyle = color;
+    
+    // Draw line
+    ctx.beginPath();
+    ctx.moveTo(x1, y);
+    ctx.lineTo(x2, y2);
+    ctx.stroke();
+    
+    // Draw arrows
+    drawEnhancedArrowHead(ctx, x1, y, 'right', color);
+    drawEnhancedArrowHead(ctx, x2, y2, 'left', color);
+    
+    // Draw text with background
+    const textWidth = ctx.measureText(text).width;
+    const centerX = (x1 + x2) / 2;
+    
+    ctx.fillStyle = 'rgba(255, 255, 255, 0.95)';
+    ctx.fillRect(centerX - textWidth/2 - 6, y - 20, textWidth + 12, 16);
+    
+    ctx.fillStyle = color;
+    ctx.fillText(text, centerX, y - 8);
+}
+
+function drawEnhancedVerticalDimension(ctx, x, y1, x2, y2, text, color = '#2c3e50') {
+    ctx.strokeStyle = color;
+    ctx.fillStyle = color;
+    
+    // Draw line
+    ctx.beginPath();
+    ctx.moveTo(x, y1);
+    ctx.lineTo(x2, y2);
+    ctx.stroke();
+    
+    // Draw arrows
+    drawEnhancedArrowHead(ctx, x, y1, 'down', color);
+    drawEnhancedArrowHead(ctx, x2, y2, 'up', color);
+    
+    // Draw rotated text with background
+    ctx.save();
+    ctx.translate(x - 25, (y1 + y2) / 2);
+    ctx.rotate(-Math.PI/2);
+    
+    const textWidth = ctx.measureText(text).width;
+    ctx.fillStyle = 'rgba(255, 255, 255, 0.95)';
+    ctx.fillRect(-textWidth/2 - 6, -8, textWidth + 12, 16);
+    
+    ctx.fillStyle = color;
+    ctx.fillText(text, 0, 0);
     ctx.restore();
 }
 
-function drawWallDimensions(ctx, wallOffsetX, wallOffsetY, scaledWallWidth, scaledWallHeight) {
-    const { wallWidthFeet, wallWidthInches, wallHeightFeet, wallHeightInches } = currentPreview;
+function drawEnhancedArrowHead(ctx, x, y, direction, color = '#2c3e50') {
+    ctx.strokeStyle = color;
+    ctx.fillStyle = color;
+    ctx.lineWidth = 2;
     
-    ctx.fillStyle = '#333';
-    ctx.font = '12px sans-serif';
+    const arrowSize = 8;
+    
+    ctx.beginPath();
+    switch(direction) {
+        case 'right':
+            ctx.moveTo(x, y);
+            ctx.lineTo(x + arrowSize, y - arrowSize/2);
+            ctx.lineTo(x + arrowSize, y + arrowSize/2);
+            ctx.closePath();
+            break;
+        case 'left':
+            ctx.moveTo(x, y);
+            ctx.lineTo(x - arrowSize, y - arrowSize/2);
+            ctx.lineTo(x - arrowSize, y + arrowSize/2);
+            ctx.closePath();
+            break;
+        case 'down':
+            ctx.moveTo(x, y);
+            ctx.lineTo(x - arrowSize/2, y + arrowSize);
+            ctx.lineTo(x + arrowSize/2, y + arrowSize);
+            ctx.closePath();
+            break;
+        case 'up':
+            ctx.moveTo(x, y);
+            ctx.lineTo(x - arrowSize/2, y - arrowSize);
+            ctx.lineTo(x + arrowSize/2, y - arrowSize);
+            ctx.closePath();
+            break;
+    }
+    ctx.fill();
+    ctx.stroke();
+}
+
+function drawEnhancedTransitionArrow(ctx, offsetX, startY, width, gap) {
+    const { calculations } = currentPreview;
+    
+    ctx.strokeStyle = '#7f8c8d';
+    ctx.fillStyle = '#7f8c8d';
+    ctx.lineWidth = 2;
+    
+    // Draw curved arrows pointing down from each panel to the wall view
+    for (let i = 0; i < calculations.panelsNeeded; i++) {
+        const panelCenterX = offsetX + (i * currentPreview.pattern.panelWidth + currentPreview.pattern.panelWidth / 2) * (width / currentPreview.calculations.totalWidth);
+        
+        const startArrowY = startY + 15;
+        const endArrowY = startY + gap - 15;
+        const midY = startY + gap / 2;
+        
+        // Draw curved line
+        ctx.beginPath();
+        ctx.moveTo(panelCenterX, startArrowY);
+        ctx.quadraticCurveTo(panelCenterX, midY, panelCenterX, endArrowY);
+        ctx.stroke();
+        
+        // Draw arrow head at bottom
+        drawEnhancedArrowHead(ctx, panelCenterX, endArrowY, 'down', '#7f8c8d');
+    }
+    
+    // Add text label in the middle
+    ctx.fillStyle = '#7f8c8d';
+    ctx.font = '14px Arial, sans-serif';
     ctx.textAlign = 'center';
-    ctx.strokeStyle = '#333';
-    ctx.lineWidth = 0.5;
+    ctx.fillText('Applied to wall', offsetX + width / 2, startY + gap / 2 + 5);
+}
+
+function drawEnhancedSection2Outlines(ctx, offsetX, offsetY, scaledTotalWidth, scaledTotalHeight, 
+                                     scaledWallWidth, scaledWallHeight, wallOffsetX, wallOffsetY, scale) {
+    const { pattern, calculations } = currentPreview;
+    
+    // Enhanced wall outline with shadow effect
+    ctx.save();
+    
+    // Draw shadow
+    ctx.shadowColor = 'rgba(0, 0, 0, 0.3)';
+    ctx.shadowBlur = 8;
+    ctx.shadowOffsetX = 4;
+    ctx.shadowOffsetY = 4;
+    
+    ctx.strokeStyle = '#2c3e50';
+    ctx.lineWidth = 3;
+    ctx.strokeRect(wallOffsetX, wallOffsetY, scaledWallWidth, scaledWallHeight);
+    
+    ctx.restore();
+    
+    // Panel coverage outlines (subtle)
+    ctx.strokeStyle = 'rgba(127, 140, 141, 0.4)';
+    ctx.lineWidth = 1;
+    ctx.setLineDash([8, 4]);
+    
+    for (let i = 0; i < calculations.panelsNeeded; i++) {
+        const x = offsetX + (i * pattern.panelWidth * scale);
+        const width = pattern.panelWidth * scale;
+        ctx.strokeRect(x, offsetY, width, scaledTotalHeight);
+    }
+    ctx.setLineDash([]);
+    
+    // Wall dimensions
+    drawWallDimensionsEnhanced(ctx, wallOffsetX, wallOffsetY, scaledWallWidth, scaledWallHeight);
+}
+
+function drawWallDimensionsEnhanced(ctx, wallOffsetX, wallOffsetY, scaledWallWidth, scaledWallHeight) {
+    const { wallWidthFeet, wallWidthInches, wallHeightFeet, wallHeightInches } = currentPreview;
     
     const widthDisplay = wallWidthInches > 0 ? 
         `${wallWidthFeet}'-${wallWidthInches}"` : `${wallWidthFeet}'-0"`;
     const heightDisplay = wallHeightInches > 0 ? 
         `${wallHeightFeet}'-${wallHeightInches}"` : `${wallHeightFeet}'-0"`;
     
-    // Width dimension
-    const widthLabelY = wallOffsetY + scaledWallHeight + 20;
+    // Width dimension (bottom)
+    const widthLabelY = wallOffsetY + scaledWallHeight + 35;
+    drawEnhancedDimensionLine(ctx, wallOffsetX, widthLabelY, wallOffsetX + scaledWallWidth, widthLabelY, 
+                             `WALL WIDTH: ${widthDisplay}`, '#e74c3c');
     
-    ctx.beginPath();
-    ctx.moveTo(wallOffsetX, widthLabelY);
-    ctx.lineTo(wallOffsetX + scaledWallWidth, widthLabelY);
-    ctx.stroke();
-    
-    drawArrowHead(ctx, wallOffsetX, widthLabelY, 'right');
-    drawArrowHead(ctx, wallOffsetX + scaledWallWidth, widthLabelY, 'left');
-    
-    ctx.fillText(widthDisplay, wallOffsetX + scaledWallWidth / 2, widthLabelY + 12);
-    
-    // Height dimension
-    const heightLabelX = wallOffsetX - 20;
-    
-    ctx.beginPath();
-    ctx.moveTo(heightLabelX, wallOffsetY);
-    ctx.lineTo(heightLabelX, wallOffsetY + scaledWallHeight);
-    ctx.stroke();
-    
-    drawArrowHead(ctx, heightLabelX, wallOffsetY, 'down');
-    drawArrowHead(ctx, heightLabelX, wallOffsetY + scaledWallHeight, 'up');
-    
-    ctx.save();
-    ctx.translate(heightLabelX - 10, wallOffsetY + scaledWallHeight / 2);
-    ctx.rotate(-Math.PI/2);
-    ctx.fillText(heightDisplay, 0, 0);
-    ctx.restore();
+    // Height dimension (right side)
+    const heightLabelX = wallOffsetX + scaledWallWidth + 35;
+    drawEnhancedVerticalDimension(ctx, heightLabelX, wallOffsetY, heightLabelX, wallOffsetY + scaledWallHeight, 
+                                 `WALL HEIGHT: ${heightDisplay}`, '#e74c3c');
 }
 
-function drawArrowHead(ctx, x, y, direction) {
-    ctx.beginPath();
-    switch(direction) {
-        case 'right':
-            ctx.moveTo(x, y);
-            ctx.lineTo(x + 6, y - 6);
-            ctx.moveTo(x, y);
-            ctx.lineTo(x + 6, y + 6);
-            break;
-        case 'left':
-            ctx.moveTo(x, y);
-            ctx.lineTo(x - 6, y - 6);
-            ctx.moveTo(x, y);
-            ctx.lineTo(x - 6, y + 6);
-            break;
-        case 'down':
-            ctx.moveTo(x, y);
-            ctx.lineTo(x - 6, y + 6);
-            ctx.moveTo(x, y);
-            ctx.lineTo(x + 6, y + 6);
-            break;
-        case 'up':
-            ctx.moveTo(x, y);
-            ctx.lineTo(x - 6, y - 6);
-            ctx.moveTo(x, y);
-            ctx.lineTo(x + 6, y - 6);
-            break;
-    }
-    ctx.stroke();
-}
-
-function drawArrowsBetweenSections(ctx, offsetX, offsetY, scaledTotalWidth, scaledTotalHeight, scale, gap = 25) {
-    const { pattern, calculations } = currentPreview;
-    
-    ctx.strokeStyle = '#333';
-    ctx.lineWidth = 0.5;
-    ctx.globalAlpha = 1.0;
-    
-    for (let i = 0; i < calculations.panelsNeeded; i++) {
-        const panelCenterX = offsetX + (i * pattern.panelWidth + pattern.panelWidth / 2) * scale;
-        
-        const middleY = offsetY + scaledTotalHeight + (gap / 2);
-        const startY = middleY - 6;
-        const endY = middleY + 6;
-        
-        ctx.beginPath();
-        ctx.moveTo(panelCenterX, startY);
-        ctx.lineTo(panelCenterX, endY);
-        ctx.stroke();
-        
-        ctx.beginPath();
-        ctx.moveTo(panelCenterX, endY);
-        ctx.lineTo(panelCenterX - 6, endY - 6);
-        ctx.moveTo(panelCenterX, endY);
-        ctx.lineTo(panelCenterX + 6, endY - 6);
-        ctx.stroke();
-    }
-}
-
-// Canvas modal functionality
-function openCanvasModal() {
+// Enhanced modal functionality
+function openEnhancedCanvasModal() {
     const canvas = document.getElementById('previewCanvas');
     
     if (!currentPreview) {
@@ -794,34 +768,34 @@ function openCanvasModal() {
         return;
     }
     
-    console.log('Creating high-res modal...');
+    console.log('Creating enhanced high-res modal...');
     
     const modal = document.createElement('div');
-    modal.className = 'canvas-modal';
+    modal.className = 'canvas-modal-enhanced';
+    
+    // Create close button
+    const closeButton = document.createElement('button');
+    closeButton.className = 'modal-close-btn';
+    closeButton.innerHTML = '×';
+    closeButton.onclick = () => document.body.removeChild(modal);
     
     const canvasContainer = document.createElement('div');
-    canvasContainer.style.width = '100%';
-    canvasContainer.style.maxWidth = '95vw';
-    canvasContainer.style.margin = '0 auto';
-    canvasContainer.style.overflowX = 'hidden';
-    canvasContainer.style.overflowY = 'visible';
+    canvasContainer.className = 'modal-canvas-container';
     
     const largeCanvas = document.createElement('canvas');
     
-    const hiResScale = 3;
-    const baseScale = 2;
+    const hiResScale = 2;
+    const baseScale = 3;
     largeCanvas.width = canvas.width * hiResScale * baseScale;
     largeCanvas.height = canvas.height * hiResScale * baseScale;
     
-    const displayWidth = window.innerWidth * 0.95;
+    const displayWidth = Math.min(window.innerWidth * 0.9, 1600);
     const canvasAspectRatio = canvas.width / canvas.height;
     const displayHeight = displayWidth / canvasAspectRatio;
     
     largeCanvas.style.width = displayWidth + 'px';
     largeCanvas.style.height = displayHeight + 'px';
-    largeCanvas.style.maxWidth = 'none';
-    largeCanvas.style.display = 'block';
-    largeCanvas.style.margin = '0 auto';
+    largeCanvas.className = 'modal-canvas';
     
     const largeCtx = largeCanvas.getContext('2d');
     
@@ -829,40 +803,75 @@ function openCanvasModal() {
     largeCtx.imageSmoothingQuality = 'high';
     largeCtx.scale(hiResScale * baseScale, hiResScale * baseScale);
     
-    largeCtx.fillStyle = '#ffffff';
-    largeCtx.fillRect(0, 0, canvas.width, canvas.height);
-    
-    renderHighQualityPreview(largeCtx, canvas.width, canvas.height);
+    // Draw enhanced high-res preview
+    renderEnhancedHighQualityPreview(largeCtx, canvas.width, canvas.height);
     
     canvasContainer.appendChild(largeCanvas);
+    modal.appendChild(closeButton);
     modal.appendChild(canvasContainer);
     
+    // Enhanced modal event handlers
     modal.onclick = (e) => {
         if (e.target === modal || e.target === canvasContainer) {
             document.body.removeChild(modal);
         }
     };
     
-    largeCanvas.onclick = () => {
-        document.body.removeChild(modal);
+    // Add keyboard support
+    const handleKeyPress = (e) => {
+        if (e.key === 'Escape') {
+            document.body.removeChild(modal);
+            document.removeEventListener('keydown', handleKeyPress);
+        }
     };
+    document.addEventListener('keydown', handleKeyPress);
     
     document.body.appendChild(modal);
+    
+    // Add entrance animation
+    modal.style.opacity = '0';
+    modal.style.transform = 'scale(0.9)';
+    setTimeout(() => {
+        modal.style.transition = 'opacity 0.3s ease, transform 0.3s ease';
+        modal.style.opacity = '1';
+        modal.style.transform = 'scale(1)';
+    }, 10);
 }
 
-function renderHighQualityPreview(ctx, canvasWidth, canvasHeight) {
+function renderEnhancedHighQualityPreview(ctx, canvasWidth, canvasHeight) {
+    // Use the same enhanced drawing logic but with higher quality settings
+    const originalCurrentPreview = currentPreview;
+    
+    // Temporarily scale up for high-res rendering
+    const tempCanvas = { width: canvasWidth, height: canvasHeight };
+    
+    // Clear with enhanced gradient
+    const gradient = ctx.createLinearGradient(0, 0, 0, canvasHeight);
+    gradient.addColorStop(0, '#ffffff');
+    gradient.addColorStop(1, '#f0f2f5');
+    ctx.fillStyle = gradient;
+    ctx.fillRect(0, 0, canvasWidth, canvasHeight);
+    
+    // Enhanced rendering settings
+    ctx.imageSmoothingEnabled = true;
+    ctx.imageSmoothingQuality = 'high';
+    ctx.textRenderingOptimization = 'optimizeQuality';
+    
+    // Call the same enhanced drawing function
     const { pattern, wallWidth, wallHeight, calculations } = currentPreview;
     
-    const maxWidth = canvasWidth - 120;
-    const totalAvailableHeight = canvasHeight - 200;
+    const margins = { left: 80, right: 40, top: 100, bottom: 80 };
+    const sectionGap = 60;
+    const maxWidth = canvasWidth - margins.left - margins.right;
+    const maxHeight = canvasHeight - margins.top - margins.bottom;
     
-    // Use the same spacing logic as the main preview
     const effectiveHeight = calculations.totalHeight;
     const section2VisualHeight = Math.max(calculations.totalHeight, wallHeight);
-    const totalContentHeight = effectiveHeight + section2VisualHeight + wallHeight + 90;
+    const totalContentHeight = effectiveHeight + section2VisualHeight + sectionGap;
+    const effectiveWidth = Math.max(calculations.totalWidth, wallWidth);
     
-    const widthScale = maxWidth / calculations.totalWidth;
-    const heightScale = totalAvailableHeight / totalContentHeight;
+    const widthScale = maxWidth / effectiveWidth;
+    const heightScale = maxHeight / totalContentHeight;
     const scale = Math.min(widthScale, heightScale);
     
     const scaledTotalWidth = calculations.totalWidth * scale;
@@ -870,27 +879,27 @@ function renderHighQualityPreview(ctx, canvasWidth, canvasHeight) {
     const scaledWallWidth = wallWidth * scale;
     const scaledWallHeight = wallHeight * scale;
     
-    const dimensionSpaceAbove = 100;
-    const dimensionSpaceBelow = 50;
-    const actualContentHeight = dimensionSpaceAbove + (effectiveHeight * scale) + (section2VisualHeight * scale) + (scaledWallHeight) + 90 + dimensionSpaceBelow;
-    let currentY = (canvasHeight - actualContentHeight) / 2 + dimensionSpaceAbove;
+    const actualContentHeight = scaledTotalHeight + Math.max(scaledTotalHeight, scaledWallHeight) + sectionGap;
+    let currentY = margins.top + (maxHeight - actualContentHeight) / 2;
     
-    const offsetX = (canvasWidth - scaledTotalWidth) / 2;
+    const offsetX = margins.left + (maxWidth - scaledTotalWidth) / 2;
     
-    drawSection1_PanelLayout(ctx, offsetX, currentY, scaledTotalWidth, scaledTotalHeight, scale);
-    drawArrowsBetweenSections(ctx, offsetX, currentY, scaledTotalWidth, scaledTotalHeight, scale);
+    // Draw with enhanced quality
+    drawSectionLabel(ctx, offsetX, currentY - 30, scaledTotalWidth, 'PANEL LAYOUT & DIMENSIONS', '#2c3e50');
+    drawEnhancedSection1(ctx, offsetX, currentY, scaledTotalWidth, scaledTotalHeight, scale);
+    drawEnhancedTransitionArrow(ctx, offsetX, currentY + scaledTotalHeight, scaledTotalWidth, sectionGap);
     
-    currentY += effectiveHeight * scale + 50;
+    currentY += scaledTotalHeight + sectionGap;
     
     const wallOffsetX = offsetX + (scaledTotalWidth - scaledWallWidth) / 2;
-    const wallOffsetY = currentY + ((section2VisualHeight * scale) - scaledWallHeight) / 2;
-    drawSection2_CompleteView(ctx, offsetX, currentY, scaledTotalWidth, scaledTotalHeight, scaledWallWidth, scaledWallHeight, wallOffsetX, wallOffsetY, scale);
+    const wallCenterX = wallOffsetX + scaledWallWidth / 2;
+    drawSectionLabel(ctx, wallCenterX - scaledWallWidth / 2, currentY - 30, scaledWallWidth, 'WALL COVERAGE VIEW', '#2c3e50');
     
-    currentY += section2VisualHeight * scale + 40;
-    
-    const wallOnlyOffsetX = (canvasWidth - scaledWallWidth) / 2;
-    drawSection3_WallOnly(ctx, wallOnlyOffsetX, currentY, scaledWallWidth, scaledWallHeight, scale);
+    const wallOffsetY = currentY + (Math.max(scaledTotalHeight, scaledWallHeight) - scaledWallHeight) / 2;
+    drawEnhancedSection2(ctx, offsetX, currentY, scaledTotalWidth, scaledTotalHeight, 
+                        scaledWallWidth, scaledWallHeight, wallOffsetX, wallOffsetY, scale);
 }
 
-// Make generatePreview globally accessible
+// Update the main function reference for backward compatibility
 window.generatePreview = generatePreview;
+window.drawPreview = drawEnhancedPreview;
