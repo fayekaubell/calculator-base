@@ -8,7 +8,14 @@ async function generatePreview() {
         patternImage = null;
         imageLoaded = false;
         
-        document.getElementById('previewSection').style.display = 'none';
+        // Get DOM elements once at the top
+        const previewSection = document.getElementById('previewSection');
+        const loadingOverlay = document.getElementById('loadingOverlay');
+        const previewTitle = document.getElementById('previewTitle');
+        
+        if (previewSection) {
+            previewSection.style.display = 'none';
+        }
         await new Promise(resolve => setTimeout(resolve, 100));
         
         const patternId = getSelectedPattern();
@@ -83,12 +90,10 @@ async function generatePreview() {
             previewTitle.textContent = `${pattern.name}: ${pattern.sku || 'N/A'}: ${formattedWidth}w x ${formattedHeight}h Wall`;
         }
         
-        const loadingOverlay = document.getElementById('loadingOverlay');
         if (loadingOverlay) {
             loadingOverlay.style.display = 'flex';
         }
         
-        const previewSection = document.getElementById('previewSection');
         if (previewSection) {
             previewSection.style.display = 'block';
             previewSection.scrollIntoView({ behavior: 'smooth' });
