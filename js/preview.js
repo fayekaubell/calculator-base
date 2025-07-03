@@ -85,7 +85,6 @@ async function generatePreview() {
             formattedHeight: formattedHeight
         };
         
-        const previewTitle = document.getElementById('previewTitle');
         if (previewTitle) {
             previewTitle.textContent = `${pattern.name}: ${pattern.sku || 'N/A'}: ${formattedWidth}w x ${formattedHeight}h Wall`;
         }
