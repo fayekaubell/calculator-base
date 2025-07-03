@@ -67,7 +67,7 @@
                     </div>
                 </div>
 
-                <button type="button" class="btn btn-primary" onclick="generatePreview()">Generate Preview</button>
+                <button type="button" class="btn btn-primary" id="generatePreviewBtn">Generate Preview</button>
             </div>
         </div>
 
@@ -132,6 +132,12 @@
         // Initialize calculator when page loads
         document.addEventListener('DOMContentLoaded', function() {
             initializeCalculator();
+            
+            // Add event listener for generate preview button
+            const generateBtn = document.getElementById('generatePreviewBtn');
+            if (generateBtn) {
+                generateBtn.addEventListener('click', generatePreview);
+            }
         });
     </script>
 </body>
