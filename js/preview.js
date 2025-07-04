@@ -639,7 +639,7 @@ function drawWallOnlyView(ctx, wallOffsetX, wallOffsetY, scaledWallWidth, scaled
     ctx.lineWidth = 2;
     ctx.strokeRect(wallOffsetX, wallOffsetY, scaledWallWidth, scaledWallHeight);
     
-    // WALL DIMENSIONS - COMPLETELY REWRITTEN
+    // WALL DIMENSIONS ONLY - NO LABELS
     ctx.fillStyle = '#333';
     ctx.font = '14px Arial, sans-serif';
     ctx.strokeStyle = '#333';
