@@ -1,4 +1,4 @@
-// Canvas Preview Generation Module - Fixed Pattern Alignment
+// Canvas Preview Generation Module - Fixed Two-Pass Opacity System
 
 // Generate preview function
 async function generatePreview() {
@@ -296,8 +296,8 @@ function calculateReferenceCoordinates() {
     };
 }
 
-// FIXED: Draw pattern with consistent coordinate system and proper draw modes
-function drawPatternInArea(ctx, areaX, areaY, areaWidth, areaHeight, referenceCoords, isSection2 = false, drawMode = 'normal') {
+// Draw pattern with consistent coordinate system across sections
+function drawPatternInArea(ctx, areaX, areaY, areaWidth, areaHeight, referenceCoords, isSection2 = false) {
     const { pattern, calculations } = currentPreview;
     
     if (!imageLoaded || !patternImage) {
@@ -316,7 +316,7 @@ function drawPatternInArea(ctx, areaX, areaY, areaWidth, areaHeight, referenceCo
     const offsetPerPanel = (pattern.sequenceLength === 0 || pattern.sequenceLength === 1) ? 0 : 
         pattern.repeatWidth / pattern.sequenceLength;
     
-    // Set clip area
+    // Set clip area to prevent drawing outside boundaries
     ctx.save();
     ctx.beginPath();
     ctx.rect(Math.floor(areaX), Math.floor(areaY), Math.ceil(areaWidth), Math.ceil(areaHeight));
@@ -335,7 +335,163 @@ function drawPatternInArea(ctx, areaX, areaY, areaWidth, areaHeight, referenceCo
         coordinateOffsetY = referenceCoords.section2.wallStartY - referenceCoords.section1.wallStartY;
     }
     
-    // Draw pattern for each panel/strip
+    // Draw wall outline
+    ctx.strokeStyle = '#2c3e50';
+    ctx.lineWidth = 2;
+    ctx.strokeRect(wallOffsetX, wallOffsetY, scaledWallWidth, scaledWallHeight);
+    
+    // Draw wall dimensions
+    ctx.fillStyle = '#333';
+    ctx.font = '14px Arial, sans-serif';
+    ctx.strokeStyle = '#333';
+    ctx.lineWidth = 1;
+    
+    // Format the dimension text
+    const wallWidthText = wallWidthInches > 0 ? 
+        `Wall Width: ${wallWidthFeet}'-${wallWidthInches}"` : `Wall Width: ${wallWidthFeet}'`;
+    const wallHeightText = wallHeightInches > 0 ? 
+        `Wall Height: ${wallHeightFeet}'-${wallHeightInches}"` : `Wall Height: ${wallHeightFeet}'`;
+    
+    // Wall width annotation (bottom of wall)
+    const widthLineY = wallOffsetY + scaledWallHeight + 30;
+    const widthTextY = widthLineY + 15;
+    
+    ctx.beginPath();
+    ctx.moveTo(wallOffsetX, widthLineY);
+    ctx.lineTo(wallOffsetX + scaledWallWidth, widthLineY);
+    ctx.stroke();
+    
+    ctx.beginPath();
+    ctx.moveTo(wallOffsetX, widthLineY - 5);
+    ctx.lineTo(wallOffsetX, widthLineY + 5);
+    ctx.moveTo(wallOffsetX + scaledWallWidth, widthLineY - 5);
+    ctx.lineTo(wallOffsetX + scaledWallWidth, widthLineY + 5);
+    ctx.stroke();
+    
+    ctx.textAlign = 'center';
+    ctx.fillText(wallWidthText, wallOffsetX + scaledWallWidth / 2, widthTextY);
+    
+    // Wall height annotation (left side of wall)
+    const wallHeightOffset = 30;
+    const heightLineX = wallOffsetX - wallHeightOffset;
+    const heightTextX = heightLineX - 15;
+    
+    ctx.beginPath();
+    ctx.moveTo(heightLineX, wallOffsetY);
+    ctx.lineTo(heightLineX, wallOffsetY + scaledWallHeight);
+    ctx.stroke();
+    
+    ctx.beginPath();
+    ctx.moveTo(heightLineX - 5, wallOffsetY);
+    ctx.lineTo(heightLineX + 5, wallOffsetY);
+    ctx.moveTo(heightLineX - 5, wallOffsetY + scaledWallHeight);
+    ctx.lineTo(heightLineX + 5, wallOffsetY + scaledWallHeight);
+    ctx.stroke();
+    
+    ctx.save();
+    ctx.translate(heightTextX, wallOffsetY + scaledWallHeight / 2);
+    ctx.rotate(-Math.PI/2);
+    ctx.textAlign = 'center';
+    ctx.fillText(wallHeightText, 0, 0);
+    ctx.restore();
+}
+
+// Canvas modal functionality
+function openCanvasModal() {
+    const canvas = document.getElementById('previewCanvas');
+    
+    if (!currentPreview) {
+        console.error('No current preview data available for high-res rendering');
+        return;
+    }
+    
+    console.log('Creating high-res modal...');
+    
+    const modal = document.createElement('div');
+    modal.className = 'canvas-modal';
+    
+    const canvasContainer = document.createElement('div');
+    canvasContainer.style.width = '100%';
+    canvasContainer.style.maxWidth = '95vw';
+    canvasContainer.style.margin = '0 auto';
+    canvasContainer.style.overflowX = 'hidden';
+    canvasContainer.style.overflowY = 'visible';
+    
+    const largeCanvas = document.createElement('canvas');
+    
+    const hiResScale = 3;
+    const baseScale = 2;
+    largeCanvas.width = canvas.width * hiResScale * baseScale;
+    largeCanvas.height = canvas.height * hiResScale * baseScale;
+    
+    const displayWidth = window.innerWidth * 0.95;
+    const canvasAspectRatio = canvas.width / canvas.height;
+    const displayHeight = displayWidth / canvasAspectRatio;
+    
+    largeCanvas.style.width = displayWidth + 'px';
+    largeCanvas.style.height = displayHeight + 'px';
+    largeCanvas.style.maxWidth = 'none';
+    largeCanvas.style.display = 'block';
+    largeCanvas.style.margin = '0 auto';
+    
+    const largeCtx = largeCanvas.getContext('2d');
+    
+    largeCtx.imageSmoothingEnabled = true;
+    largeCtx.imageSmoothingQuality = 'high';
+    largeCtx.scale(hiResScale * baseScale, hiResScale * baseScale);
+    
+    largeCtx.fillStyle = '#ffffff';
+    largeCtx.fillRect(0, 0, canvas.width, canvas.height);
+    
+    renderHighQualityPreview(largeCtx, canvas.width, canvas.height);
+    
+    canvasContainer.appendChild(largeCanvas);
+    modal.appendChild(canvasContainer);
+    
+    modal.onclick = (e) => {
+        if (e.target === modal || e.target === canvasContainer) {
+            document.body.removeChild(modal);
+        }
+    };
+    
+    largeCanvas.onclick = () => {
+        document.body.removeChild(modal);
+    };
+    
+    document.body.appendChild(modal);
+}
+
+function renderHighQualityPreview(ctx, canvasWidth, canvasHeight) {
+    // For high-quality rendering, we need to recalculate coordinates for the given canvas size
+    const originalCanvas = document.getElementById('previewCanvas');
+    const originalCurrentPreview = currentPreview;
+    
+    // Temporarily adjust the canvas reference for coordinate calculations
+    const tempCanvas = { width: canvasWidth, height: canvasHeight };
+    const originalGetElementById = document.getElementById;
+    document.getElementById = function(id) {
+        if (id === 'previewCanvas') return tempCanvas;
+        return originalGetElementById.call(document, id);
+    };
+    
+    try {
+        // Calculate reference coordinates for the high-res canvas
+        const referenceCoords = calculateReferenceCoordinates();
+        
+        // Draw Section 1: Complete view
+        drawCompleteViewWithAnnotations(ctx, referenceCoords);
+        
+        // Draw Section 2: Wall only view  
+        drawWallOnlyView(ctx, referenceCoords);
+        
+    } finally {
+        // Restore original getElementById function
+        document.getElementById = originalGetElementById;
+    }
+}
+
+// Make generatePreview globally accessible
+window.generatePreview = generatePreview; pattern for each panel/strip
     for (let panelIndex = 0; panelIndex < calculations.panelsNeeded; panelIndex++) {
         // Calculate panel position in the reference coordinate system
         const panelX = patternOriginX + (panelIndex * pattern.panelWidth * scale);
@@ -350,29 +506,7 @@ function drawPatternInArea(ctx, areaX, areaY, areaWidth, areaHeight, referenceCo
         
         // Draw pattern repeats for this panel
         const panelWidth = pattern.panelWidth * scale;
-        
-        // Determine the drawing height based on draw mode
-        let drawHeight, drawStartY;
-        
-        if (drawMode === 'wall_area') {
-            // Wall area only - calculate based on limitations
-            const hasLimitation = calculations.exceedsLimit || calculations.exceedsAvailableLength;
-            if (hasLimitation && !isSection2) {
-                const actualPanelLengthToUse = calculations.exceedsAvailableLength ? 
-                    calculations.actualPanelLength : calculations.panelLength;
-                const panelCoverageHeight = actualPanelLengthToUse * 12 * scale;
-                const wallHeight = referenceCoords.dimensions.scaledWallHeight;
-                drawStartY = drawPanelY + Math.max(0, wallHeight - panelCoverageHeight);
-                drawHeight = Math.min(panelCoverageHeight, wallHeight);
-            } else {
-                drawStartY = drawPanelY;
-                drawHeight = isSection2 ? areaHeight : referenceCoords.dimensions.scaledWallHeight;
-            }
-        } else {
-            // Normal drawing (Section 2 or overage areas)
-            drawStartY = drawPanelY;
-            drawHeight = isSection2 ? areaHeight : referenceCoords.dimensions.scaledTotalHeight;
-        }
+        const drawHeight = isSection2 ? areaHeight : referenceCoords.dimensions.scaledTotalHeight;
         
         // Draw horizontal repeats
         for (let x = -repeatW; x < panelWidth + repeatW; x += repeatW) {
@@ -381,12 +515,12 @@ function drawPatternInArea(ctx, areaX, areaY, areaWidth, areaHeight, referenceCo
             if (pattern.hasRepeatHeight) {
                 // Patterns with height repeats
                 for (let y = -repeatH; y < drawHeight + repeatH; y += repeatH) {
-                    const drawY = Math.floor(drawStartY + y);
+                    const drawY = Math.floor(drawPanelY + y);
                     ctx.drawImage(patternImage, drawX, drawY, Math.ceil(repeatW), Math.ceil(repeatH));
                 }
             } else {
                 // Patterns without height repeats (bottom-aligned)
-                const drawY = Math.floor(drawStartY + drawHeight - repeatH);
+                const drawY = Math.floor(drawPanelY + drawHeight - repeatH);
                 ctx.drawImage(patternImage, drawX, drawY, Math.ceil(repeatW), Math.ceil(repeatH));
             }
         }
@@ -395,7 +529,7 @@ function drawPatternInArea(ctx, areaX, areaY, areaWidth, areaHeight, referenceCo
     ctx.restore();
 }
 
-// Draw preview on canvas - RESTRUCTURED LAYOUT with fixed pattern alignment
+// Draw preview on canvas - Clean Two-Pass Opacity System
 function drawPreview() {
     const canvas = document.getElementById('previewCanvas');
     const ctx = canvas.getContext('2d');
@@ -415,7 +549,7 @@ function drawPreview() {
     drawWallOnlyView(ctx, referenceCoords);
 }
 
-// FIXED: Draw Complete View with proper opacity system (no overlap)
+// Draw Complete View with clean two-pass opacity system
 function drawCompleteViewWithAnnotations(ctx, referenceCoords) {
     const { pattern, calculations } = currentPreview;
     const { scale, section1, dimensions } = referenceCoords;
@@ -438,26 +572,19 @@ function drawCompleteViewWithAnnotations(ctx, referenceCoords) {
     
     const hasLimitation = calculations.exceedsLimit || calculations.exceedsAvailableLength;
     
-    // FIXED: Clean two-pass opacity system with no overlap
+    // FIXED: Clean two-pass opacity system
     if (imageLoaded && patternImage) {
-        
-        // PASS 1: Draw ALL panel coverage at 50% opacity
+        // Pass 1: Draw ALL panel coverage at 50% opacity
         ctx.globalAlpha = 0.5;
-        // Draw the full panel coverage area
-        drawPatternInArea(ctx, offsetX, offsetY, scaledTotalWidth, scaledTotalHeight, referenceCoords, false, 'normal');
+        drawPatternInArea(ctx, offsetX, offsetY, scaledTotalWidth, scaledTotalHeight, referenceCoords, false);
         
-        // PASS 2: Draw ONLY wall area at 100% opacity (overwrites the 50% underneath)
+        // Pass 2: Redraw ONLY the wall area at 100% opacity (overwrites the 50% area)
         ctx.globalAlpha = 1.0;
         if (hasLimitation) {
-            // With limitations, draw only the covered portion of the wall
-            drawPatternInArea(ctx, wallOffsetX, panelStartY, scaledWallWidth, actualPanelHeight, referenceCoords, false, 'wall_area');
+            drawPatternInArea(ctx, wallOffsetX, panelStartY, scaledWallWidth, actualPanelHeight, referenceCoords, false);
         } else {
-            // No limitations, draw the full wall area
-            drawPatternInArea(ctx, wallOffsetX, wallOffsetY, scaledWallWidth, scaledWallHeight, referenceCoords, false, 'wall_area');
+            drawPatternInArea(ctx, wallOffsetX, wallOffsetY, scaledWallWidth, scaledWallHeight, referenceCoords, false);
         }
-        
-        // Reset alpha for subsequent drawing
-        ctx.globalAlpha = 1.0;
     }
     
     // Draw uncovered area if panels exceed any limit
@@ -635,7 +762,7 @@ function drawPanelLabels(ctx, offsetX, offsetY, scaledTotalWidth, scaledTotalHei
     }
 }
 
-// FIXED: Draw Wall Only View with perfect pattern alignment
+// Draw Wall Only View with perfect pattern alignment
 function drawWallOnlyView(ctx, referenceCoords) {
     const { pattern, wallWidth, wallHeight, calculations, wallWidthFeet, wallWidthInches, wallHeightFeet, wallHeightInches } = currentPreview;
     const { section2, dimensions } = referenceCoords;
@@ -645,9 +772,9 @@ function drawWallOnlyView(ctx, referenceCoords) {
     const scaledWallWidth = dimensions.scaledWallWidth;
     const scaledWallHeight = dimensions.scaledWallHeight;
     
-    // CRITICAL FIX: Draw pattern using the same coordinate system as Section 1
+    // Draw pattern using the same coordinate system as Section 1
     if (imageLoaded && patternImage) {
-        drawPatternInArea(ctx, wallOffsetX, wallOffsetY, scaledWallWidth, scaledWallHeight, referenceCoords, true, 'normal');
+        drawPatternInArea(ctx, wallOffsetX, wallOffsetY, scaledWallWidth, scaledWallHeight, referenceCoords, true);
     }
     
     // Draw uncovered area if needed
@@ -664,160 +791,4 @@ function drawWallOnlyView(ctx, referenceCoords) {
         }
     }
     
-    // Draw wall outline
-    ctx.strokeStyle = '#2c3e50';
-    ctx.lineWidth = 2;
-    ctx.strokeRect(wallOffsetX, wallOffsetY, scaledWallWidth, scaledWallHeight);
-    
-    // Draw wall dimensions
-    ctx.fillStyle = '#333';
-    ctx.font = '14px Arial, sans-serif';
-    ctx.strokeStyle = '#333';
-    ctx.lineWidth = 1;
-    
-    // Format the dimension text
-    const wallWidthText = wallWidthInches > 0 ? 
-        `Wall Width: ${wallWidthFeet}'-${wallWidthInches}"` : `Wall Width: ${wallWidthFeet}'`;
-    const wallHeightText = wallHeightInches > 0 ? 
-        `Wall Height: ${wallHeightFeet}'-${wallHeightInches}"` : `Wall Height: ${wallHeightFeet}'`;
-    
-    // Wall width annotation (bottom of wall)
-    const widthLineY = wallOffsetY + scaledWallHeight + 30;
-    const widthTextY = widthLineY + 15;
-    
-    ctx.beginPath();
-    ctx.moveTo(wallOffsetX, widthLineY);
-    ctx.lineTo(wallOffsetX + scaledWallWidth, widthLineY);
-    ctx.stroke();
-    
-    ctx.beginPath();
-    ctx.moveTo(wallOffsetX, widthLineY - 5);
-    ctx.lineTo(wallOffsetX, widthLineY + 5);
-    ctx.moveTo(wallOffsetX + scaledWallWidth, widthLineY - 5);
-    ctx.lineTo(wallOffsetX + scaledWallWidth, widthLineY + 5);
-    ctx.stroke();
-    
-    ctx.textAlign = 'center';
-    ctx.fillText(wallWidthText, wallOffsetX + scaledWallWidth / 2, widthTextY);
-    
-    // Wall height annotation (left side of wall)
-    const wallHeightOffset = 30;
-    const heightLineX = wallOffsetX - wallHeightOffset;
-    const heightTextX = heightLineX - 15;
-    
-    ctx.beginPath();
-    ctx.moveTo(heightLineX, wallOffsetY);
-    ctx.lineTo(heightLineX, wallOffsetY + scaledWallHeight);
-    ctx.stroke();
-    
-    ctx.beginPath();
-    ctx.moveTo(heightLineX - 5, wallOffsetY);
-    ctx.lineTo(heightLineX + 5, wallOffsetY);
-    ctx.moveTo(heightLineX - 5, wallOffsetY + scaledWallHeight);
-    ctx.lineTo(heightLineX + 5, wallOffsetY + scaledWallHeight);
-    ctx.stroke();
-    
-    ctx.save();
-    ctx.translate(heightTextX, wallOffsetY + scaledWallHeight / 2);
-    ctx.rotate(-Math.PI/2);
-    ctx.textAlign = 'center';
-    ctx.fillText(wallHeightText, 0, 0);
-    ctx.restore();
-}
-
-// Canvas modal functionality
-function openCanvasModal() {
-    const canvas = document.getElementById('previewCanvas');
-    
-    if (!currentPreview) {
-        console.error('No current preview data available for high-res rendering');
-        return;
-    }
-    
-    console.log('Creating high-res modal...');
-    
-    const modal = document.createElement('div');
-    modal.className = 'canvas-modal';
-    
-    const canvasContainer = document.createElement('div');
-    canvasContainer.style.width = '100%';
-    canvasContainer.style.maxWidth = '95vw';
-    canvasContainer.style.margin = '0 auto';
-    canvasContainer.style.overflowX = 'hidden';
-    canvasContainer.style.overflowY = 'visible';
-    
-    const largeCanvas = document.createElement('canvas');
-    
-    const hiResScale = 3;
-    const baseScale = 2;
-    largeCanvas.width = canvas.width * hiResScale * baseScale;
-    largeCanvas.height = canvas.height * hiResScale * baseScale;
-    
-    const displayWidth = window.innerWidth * 0.95;
-    const canvasAspectRatio = canvas.width / canvas.height;
-    const displayHeight = displayWidth / canvasAspectRatio;
-    
-    largeCanvas.style.width = displayWidth + 'px';
-    largeCanvas.style.height = displayHeight + 'px';
-    largeCanvas.style.maxWidth = 'none';
-    largeCanvas.style.display = 'block';
-    largeCanvas.style.margin = '0 auto';
-    
-    const largeCtx = largeCanvas.getContext('2d');
-    
-    largeCtx.imageSmoothingEnabled = true;
-    largeCtx.imageSmoothingQuality = 'high';
-    largeCtx.scale(hiResScale * baseScale, hiResScale * baseScale);
-    
-    largeCtx.fillStyle = '#ffffff';
-    largeCtx.fillRect(0, 0, canvas.width, canvas.height);
-    
-    renderHighQualityPreview(largeCtx, canvas.width, canvas.height);
-    
-    canvasContainer.appendChild(largeCanvas);
-    modal.appendChild(canvasContainer);
-    
-    modal.onclick = (e) => {
-        if (e.target === modal || e.target === canvasContainer) {
-            document.body.removeChild(modal);
-        }
-    };
-    
-    largeCanvas.onclick = () => {
-        document.body.removeChild(modal);
-    };
-    
-    document.body.appendChild(modal);
-}
-
-function renderHighQualityPreview(ctx, canvasWidth, canvasHeight) {
-    // For high-quality rendering, we need to recalculate coordinates for the given canvas size
-    const originalCanvas = document.getElementById('previewCanvas');
-    const originalCurrentPreview = currentPreview;
-    
-    // Temporarily adjust the canvas reference for coordinate calculations
-    const tempCanvas = { width: canvasWidth, height: canvasHeight };
-    const originalGetElementById = document.getElementById;
-    document.getElementById = function(id) {
-        if (id === 'previewCanvas') return tempCanvas;
-        return originalGetElementById.call(document, id);
-    };
-    
-    try {
-        // Calculate reference coordinates for the high-res canvas
-        const referenceCoords = calculateReferenceCoordinates();
-        
-        // Draw Section 1: Complete view
-        drawCompleteViewWithAnnotations(ctx, referenceCoords);
-        
-        // Draw Section 2: Wall only view  
-        drawWallOnlyView(ctx, referenceCoords);
-        
-    } finally {
-        // Restore original getElementById function
-        document.getElementById = originalGetElementById;
-    }
-}
-
-// Make generatePreview globally accessible
-window.generatePreview = generatePreview;
+    // Draw
