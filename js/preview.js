@@ -594,19 +594,22 @@ function drawPanelLabels(ctx, offsetX, offsetY, scaledTotalWidth, scaledTotalHei
             const sequencePosition = i % pattern.sequenceLength;
             const label = pattern.panelSequence[sequencePosition];
             
+            // Position labels ABOVE the panels (before offsetY)
+            const labelY = offsetY - 15;
+            
             // Background for label
             const textWidth = ctx.measureText(label).width;
             ctx.fillStyle = 'rgba(255, 255, 255, 0.95)';
-            ctx.fillRect(x - textWidth/2 - 8, offsetY + 10, textWidth + 16, 20);
+            ctx.fillRect(x - textWidth/2 - 8, labelY - 12, textWidth + 16, 20);
             
             // Border for label
             ctx.strokeStyle = '#333';
             ctx.lineWidth = 1;
-            ctx.strokeRect(x - textWidth/2 - 8, offsetY + 10, textWidth + 16, 20);
+            ctx.strokeRect(x - textWidth/2 - 8, labelY - 12, textWidth + 16, 20);
             
             // Label text
             ctx.fillStyle = '#333';
-            ctx.fillText(label, x, offsetY + 25);
+            ctx.fillText(label, x, labelY + 2);
         }
     }
 }
