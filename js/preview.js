@@ -296,7 +296,7 @@ function calculateReferenceCoordinates() {
     };
 }
 
-// FIXED: Draw pattern with proper bottom-left corner alignment
+// SIMPLE: Draw pattern with consistent coordinate system
 function drawPatternInArea(ctx, areaX, areaY, areaWidth, areaHeight, referenceCoords, isSection2 = false) {
     const { pattern, calculations } = currentPreview;
     
@@ -348,47 +348,35 @@ function drawPatternInArea(ctx, areaX, areaY, areaWidth, areaHeight, referenceCo
         const sequencePosition = pattern.sequenceLength === 0 ? 0 : panelIndex % pattern.sequenceLength;
         const sourceOffsetX = sequencePosition * offsetPerPanel;
         
-        // FIXED: Calculate panel dimensions and bottom reference
+        // Draw pattern repeats for this panel
         const panelWidth = pattern.panelWidth * scale;
         const drawHeight = isSection2 ? areaHeight : referenceCoords.dimensions.scaledTotalHeight;
         
-        // FIXED: Calculate bottom-left corner of this panel as the reference point
+        // FIXED: Calculate the bottom-left corner of the panel as reference
         const panelBottomY = drawPanelY + drawHeight;
         const panelLeftX = drawPanelX - (sourceOffsetX * scale);
         
-        // FIXED: Calculate the grid starting position to ensure bottom-left alignment
-        let gridStartX, gridStartY;
+        // FIXED: Calculate grid-aligned starting positions
+        const gridStartX = Math.floor(panelLeftX / repeatW) * repeatW;
+        const gridStartY = pattern.hasRepeatHeight ? 
+            Math.floor(panelBottomY / repeatH) * repeatH - repeatH : 
+            panelBottomY - repeatH;
         
-        if (pattern.hasRepeatHeight) {
-            // For patterns with height repeats, align bottom-left corner to repeat grid
-            gridStartX = Math.floor(panelLeftX / repeatW) * repeatW;
-            gridStartY = Math.floor(panelBottomY / repeatH) * repeatH - repeatH;
-        } else {
-            // For patterns without height repeats, align horizontally but place at bottom
-            gridStartX = Math.floor(panelLeftX / repeatW) * repeatW;
-            gridStartY = panelBottomY - repeatH;
-        }
-        
-        // FIXED: Draw from grid-aligned positions to ensure proper alignment
-        if (pattern.hasRepeatHeight) {
-            // Draw repeating pattern in both directions
-            for (let x = gridStartX; x < drawPanelX + panelWidth + repeatW; x += repeatW) {
-                for (let y = gridStartY; y < drawPanelY + drawHeight + repeatH; y += repeatH) {
-                    // Only draw if the repeat intersects with the current panel area
-                    if (x + repeatW > drawPanelX && x < drawPanelX + panelWidth) {
+        // FIXED: Draw horizontal repeats with proper alignment
+        for (let x = gridStartX; x < drawPanelX + panelWidth + repeatW; x += repeatW) {
+            // Only draw if within panel bounds
+            if (x + repeatW > drawPanelX && x < drawPanelX + panelWidth) {
+                if (pattern.hasRepeatHeight) {
+                    // Patterns with height repeats
+                    for (let y = gridStartY; y < drawPanelY + drawHeight + repeatH; y += repeatH) {
                         ctx.drawImage(patternImage, 
                             Math.floor(x), 
                             Math.floor(y), 
                             Math.ceil(repeatW), 
                             Math.ceil(repeatH));
                     }
-                }
-            }
-        } else {
-            // Draw single row at bottom, aligned horizontally
-            for (let x = gridStartX; x < drawPanelX + panelWidth + repeatW; x += repeatW) {
-                // Only draw if the repeat intersects with the current panel area
-                if (x + repeatW > drawPanelX && x < drawPanelX + panelWidth) {
+                } else {
+                    // Patterns without height repeats (bottom-aligned)
                     ctx.drawImage(patternImage, 
                         Math.floor(x), 
                         Math.floor(gridStartY), 
