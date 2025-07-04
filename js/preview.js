@@ -503,15 +503,11 @@ function drawCompleteDimensionLabels(ctx, offsetX, offsetY, scaledTotalWidth, sc
     
     ctx.fillText(`Total Panels: ${totalWidthDisplay}`, offsetX + scaledTotalWidth / 2, totalLabelY - 8);
     
-    // Panel height annotation - EXACTLY MATCH WALL'S OFFSET DISTANCE
-    // Wall dimensions are at: wallOffsetX - 30
-    // Panel dimensions should be at: offsetX - 30 
-    // But we need to ensure the VISUAL distance is the same
-    
-    // Calculate the exact same relative offset as the wall uses
-    const wallHeightOffset = 30;  // This is the distance wall height uses from wall edge
-    const panelHeightLineX = offsetX - wallHeightOffset;  // Use EXACT same offset value
-    const panelHeightTextX = panelHeightLineX - 15;  // Use EXACT same text spacing
+    // Panel height annotation - SAME DISTANCE FROM PANELS AS WALL IS FROM WALL
+    // Wall height is 30px from wall edge: wallOffsetX - 30
+    // Panel height should be 30px from panel edge: offsetX - 30
+    const panelHeightLineX = offsetX - 30;  // 30px from PANEL edge
+    const panelHeightTextX = panelHeightLineX - 15;  // Text spacing
     
     ctx.beginPath();
     ctx.moveTo(panelHeightLineX, offsetY);
