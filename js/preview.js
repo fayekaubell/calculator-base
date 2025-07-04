@@ -1,4 +1,4 @@
-// Canvas Preview Generation Module - Enhanced Version
+// Canvas Preview Generation Module - Fixed Pattern Alignment
 
 // Generate preview function
 async function generatePreview() {
@@ -227,22 +227,17 @@ function updatePreviewInfo() {
     }
 }
 
-// Draw preview on canvas - COMPLETELY RESTRUCTURED LAYOUT
-function drawPreview() {
+// Calculate the reference coordinate system for consistent pattern positioning
+function calculateReferenceCoordinates() {
     const canvas = document.getElementById('previewCanvas');
-    const ctx = canvas.getContext('2d');
-    const { pattern, wallWidth, wallHeight, calculations } = currentPreview;
+    const { wallWidth, wallHeight, calculations } = currentPreview;
     
-    // Clear canvas
-    ctx.fillStyle = '#ffffff';
-    ctx.fillRect(0, 0, canvas.width, canvas.height);
-    
-    // MASSIVELY INCREASED MARGINS FOR PROPER SPACING
-    const leftMargin = 120;    // INCREASED from 80
-    const rightMargin = 120;   // INCREASED from 80
-    const topMargin = 140;     // INCREASED from 100
-    const bottomMargin = 120;  // INCREASED from 100
-    const sectionGap = 60;     // INCREASED from 40
+    // Use the same layout constants as the main drawing function
+    const leftMargin = 120;
+    const rightMargin = 120;
+    const topMargin = 140;
+    const bottomMargin = 120;
+    const sectionGap = 60;
     
     const maxWidth = canvas.width - leftMargin - rightMargin;
     const maxHeight = canvas.height - topMargin - bottomMargin;
@@ -259,37 +254,178 @@ function drawPreview() {
     const heightScale = maxHeight / totalContentHeight;
     const scale = Math.min(widthScale, heightScale);
     
-    // Scaled dimensions
+    // Calculate vertical positioning
+    const actualContentHeight = (completeViewHeight * scale) + (wallOnlyHeight * scale) + sectionGap;
+    const section1StartY = topMargin + (maxHeight - actualContentHeight) / 2;
+    
+    // Pattern coverage area in Section 1
     const scaledTotalWidth = calculations.totalWidth * scale;
     const scaledTotalHeight = calculations.totalHeight * scale;
     const scaledWallWidth = wallWidth * scale;
     const scaledWallHeight = wallHeight * scale;
     
-    // Calculate vertical positioning
-    const actualContentHeight = (completeViewHeight * scale) + (wallOnlyHeight * scale) + sectionGap;
-    let currentY = topMargin + (maxHeight - actualContentHeight) / 2;
+    // Section 1 coordinates
+    const section1OffsetX = leftMargin + (maxWidth - scaledTotalWidth) / 2;
+    const section1OffsetY = section1StartY;
+    const section1WallOffsetX = section1OffsetX + (scaledTotalWidth - scaledWallWidth) / 2;
+    const section1WallOffsetY = section1OffsetY + ((completeViewHeight * scale) - scaledWallHeight) / 2;
     
-    // Center horizontally
-    const offsetX = leftMargin + (maxWidth - scaledTotalWidth) / 2;
+    // Section 2 coordinates
+    const section2StartY = section1StartY + completeViewHeight * scale + sectionGap;
+    const section2WallOffsetX = leftMargin + (maxWidth - scaledWallWidth) / 2;
+    const section2WallOffsetY = section2StartY;
     
-    // Section 1: Complete view with wall overlay
-    const wallOffsetX = offsetX + (scaledTotalWidth - scaledWallWidth) / 2;
-    const wallOffsetY = currentY + ((completeViewHeight * scale) - scaledWallHeight) / 2;
-    
-    drawCompleteViewWithAnnotations(ctx, offsetX, currentY, scaledTotalWidth, scaledTotalHeight, 
-                                   scaledWallWidth, scaledWallHeight, wallOffsetX, wallOffsetY, scale);
-    
-    currentY += completeViewHeight * scale + sectionGap;
-    
-    // Section 2: Wall only view (WITH WALL DIMENSIONS)
-    const wallOnlyOffsetX = leftMargin + (maxWidth - scaledWallWidth) / 2;
-    drawWallOnlyView(ctx, wallOnlyOffsetX, currentY, scaledWallWidth, scaledWallHeight, scale);
+    return {
+        scale,
+        section1: {
+            patternStartX: section1OffsetX,
+            patternStartY: section1OffsetY,
+            wallStartX: section1WallOffsetX,
+            wallStartY: section1WallOffsetY
+        },
+        section2: {
+            wallStartX: section2WallOffsetX,
+            wallStartY: section2WallOffsetY
+        },
+        dimensions: {
+            scaledTotalWidth,
+            scaledTotalHeight,
+            scaledWallWidth,
+            scaledWallHeight
+        }
+    };
 }
 
-// Draw Complete View with all annotations and labels - NO WALL DIMENSIONS
-function drawCompleteViewWithAnnotations(ctx, offsetX, offsetY, scaledTotalWidth, scaledTotalHeight, 
-                                       scaledWallWidth, scaledWallHeight, wallOffsetX, wallOffsetY, scale) {
+// FIXED: Draw pattern with consistent coordinate system across sections
+function drawPatternInArea(ctx, areaX, areaY, areaWidth, areaHeight, referenceCoords, isSection2 = false) {
     const { pattern, calculations } = currentPreview;
+    
+    if (!imageLoaded || !patternImage) {
+        console.warn('Pattern image not loaded, skipping pattern drawing');
+        return;
+    }
+    
+    const { scale } = referenceCoords;
+    
+    // Calculate pattern dimensions
+    const repeatW = pattern.saleType === 'yard' ? pattern.repeatWidth * scale :
+        (pattern.sequenceLength === 1 ? pattern.panelWidth * scale : pattern.repeatWidth * scale);
+    const repeatH = pattern.repeatHeight * scale;
+    
+    // Handle yard patterns (sequenceLength = 0) correctly
+    const offsetPerPanel = (pattern.sequenceLength === 0 || pattern.sequenceLength === 1) ? 0 : 
+        pattern.repeatWidth / pattern.sequenceLength;
+    
+    // Set clip area
+    ctx.save();
+    ctx.beginPath();
+    ctx.rect(Math.floor(areaX), Math.floor(areaY), Math.ceil(areaWidth), Math.ceil(areaHeight));
+    ctx.clip();
+    
+    // CRITICAL FIX: Use consistent pattern origin for both sections
+    // Pattern origin is always relative to Section 1's pattern start position
+    const patternOriginX = referenceCoords.section1.patternStartX;
+    const patternOriginY = referenceCoords.section1.patternStartY;
+    
+    // For Section 2, calculate the coordinate offset but maintain the same pattern grid
+    let coordinateOffsetX = 0;
+    let coordinateOffsetY = 0;
+    
+    if (isSection2) {
+        // Calculate how much to shift coordinates to align Section 2's wall area
+        // with Section 1's wall area in the pattern grid
+        coordinateOffsetX = referenceCoords.section2.wallStartX - referenceCoords.section1.wallStartX;
+        coordinateOffsetY = referenceCoords.section2.wallStartY - referenceCoords.section1.wallStartY;
+    }
+    
+    // Draw pattern for each panel/strip
+    for (let panelIndex = 0; panelIndex < calculations.panelsNeeded; panelIndex++) {
+        // Calculate panel position in the reference coordinate system
+        const panelX = patternOriginX + (panelIndex * pattern.panelWidth * scale);
+        
+        // Apply coordinate offset for Section 2
+        const drawPanelX = panelX + coordinateOffsetX;
+        const drawPanelY = patternOriginY + coordinateOffsetY;
+        
+        // Calculate sequence offset for panel patterns
+        const sequencePosition = pattern.sequenceLength === 0 ? 0 : panelIndex % pattern.sequenceLength;
+        const sourceOffsetX = sequencePosition * offsetPerPanel;
+        
+        // Draw pattern repeats for this panel
+        const panelWidth = pattern.panelWidth * scale;
+        
+        // Determine the drawing height based on limitations
+        const hasLimitation = calculations.exceedsLimit || calculations.exceedsAvailableLength;
+        let drawHeight, drawStartY;
+        
+        if (hasLimitation && !isSection2) {
+            // Section 1 with limitations - calculate covered area
+            const actualPanelLengthToUse = calculations.exceedsAvailableLength ? 
+                calculations.actualPanelLength : calculations.panelLength;
+            const panelCoverageHeight = actualPanelLengthToUse * 12 * scale;
+            const wallHeight = referenceCoords.dimensions.scaledWallHeight;
+            drawStartY = drawPanelY + Math.max(0, wallHeight - panelCoverageHeight);
+            drawHeight = Math.min(panelCoverageHeight, wallHeight);
+        } else {
+            // Normal drawing or Section 2
+            drawStartY = drawPanelY;
+            drawHeight = isSection2 ? areaHeight : referenceCoords.dimensions.scaledTotalHeight;
+        }
+        
+        // Draw horizontal repeats
+        for (let x = -repeatW; x < panelWidth + repeatW; x += repeatW) {
+            const drawX = Math.floor(drawPanelX + x - (sourceOffsetX * scale));
+            
+            if (pattern.hasRepeatHeight) {
+                // Patterns with height repeats
+                for (let y = -repeatH; y < drawHeight + repeatH; y += repeatH) {
+                    const drawY = Math.floor(drawStartY + y);
+                    ctx.drawImage(patternImage, drawX, drawY, Math.ceil(repeatW), Math.ceil(repeatH));
+                }
+            } else {
+                // Patterns without height repeats (bottom-aligned)
+                const drawY = Math.floor(drawStartY + drawHeight - repeatH);
+                ctx.drawImage(patternImage, drawX, drawY, Math.ceil(repeatW), Math.ceil(repeatH));
+            }
+        }
+    }
+    
+    ctx.restore();
+}
+
+// Draw preview on canvas - RESTRUCTURED LAYOUT with fixed pattern alignment
+function drawPreview() {
+    const canvas = document.getElementById('previewCanvas');
+    const ctx = canvas.getContext('2d');
+    const { pattern, wallWidth, wallHeight, calculations } = currentPreview;
+    
+    // Clear canvas
+    ctx.fillStyle = '#ffffff';
+    ctx.fillRect(0, 0, canvas.width, canvas.height);
+    
+    // Calculate reference coordinates for consistent pattern positioning
+    const referenceCoords = calculateReferenceCoordinates();
+    
+    // Section 1: Complete view with wall overlay
+    drawCompleteViewWithAnnotations(ctx, referenceCoords);
+    
+    // Section 2: Wall only view
+    drawWallOnlyView(ctx, referenceCoords);
+}
+
+// Draw Complete View with all annotations and labels
+function drawCompleteViewWithAnnotations(ctx, referenceCoords) {
+    const { pattern, calculations } = currentPreview;
+    const { scale, section1, dimensions } = referenceCoords;
+    
+    const offsetX = section1.patternStartX;
+    const offsetY = section1.patternStartY;
+    const scaledTotalWidth = dimensions.scaledTotalWidth;
+    const scaledTotalHeight = dimensions.scaledTotalHeight;
+    const scaledWallWidth = dimensions.scaledWallWidth;
+    const scaledWallHeight = dimensions.scaledWallHeight;
+    const wallOffsetX = section1.wallStartX;
+    const wallOffsetY = section1.wallStartY;
     
     // Calculate panel coverage for limitations
     const actualPanelLengthToUse = calculations.exceedsAvailableLength ? 
@@ -302,95 +438,18 @@ function drawCompleteViewWithAnnotations(ctx, offsetX, offsetY, scaledTotalWidth
     
     // Draw pattern with opacity for overage areas
     if (imageLoaded && patternImage) {
-        const repeatW = pattern.saleType === 'yard' ? pattern.repeatWidth * scale :
-            (pattern.sequenceLength === 1 ? pattern.panelWidth * scale : pattern.repeatWidth * scale);
-        const repeatH = pattern.repeatHeight * scale;
-        
-        // FIXED: Handle yard patterns (sequenceLength = 0) correctly
-        const offsetPerPanel = (pattern.sequenceLength === 0 || pattern.sequenceLength === 1) ? 0 : 
-            pattern.repeatWidth / pattern.sequenceLength;
-        
         // First pass: Draw all panels at 50% opacity
         ctx.globalAlpha = 0.5;
-        for (let panelIndex = 0; panelIndex < calculations.panelsNeeded; panelIndex++) {
-            const panelX = offsetX + (panelIndex * pattern.panelWidth * scale);
-            const panelWidth = pattern.panelWidth * scale;
-            
-            // FIXED: Handle sequenceLength = 0 for yard patterns
-            const sequencePosition = pattern.sequenceLength === 0 ? 0 : panelIndex % pattern.sequenceLength;
-            const sourceOffsetX = sequencePosition * offsetPerPanel;
-            
-            ctx.save();
-            ctx.beginPath();
-            
-            if (hasLimitation) {
-                ctx.rect(panelX, panelStartY, panelWidth, actualPanelHeight);
-            } else {
-                ctx.rect(panelX, offsetY, panelWidth, scaledTotalHeight);
-            }
-            ctx.clip();
-            
-            const drawStartY = hasLimitation ? panelStartY : offsetY;
-            const drawHeight = hasLimitation ? actualPanelHeight : scaledTotalHeight;
-            const panelBottomY = drawStartY + drawHeight;
-            
-            for (let x = -repeatW; x < panelWidth + repeatW; x += repeatW) {
-                if (pattern.hasRepeatHeight) {
-                    for (let y = -repeatH; y < drawHeight + repeatH; y += repeatH) {
-                        const drawX = panelX + x - (sourceOffsetX * scale);
-                        const drawY = drawStartY + y;
-                        ctx.drawImage(patternImage, drawX, drawY, repeatW, repeatH);
-                    }
-                } else {
-                    const drawX = panelX + x - (sourceOffsetX * scale);
-                    const drawY = panelBottomY - repeatH;
-                    ctx.drawImage(patternImage, drawX, drawY, repeatW, repeatH);
-                }
-            }
-            
-            ctx.restore();
-        }
+        drawPatternInArea(ctx, offsetX, offsetY, scaledTotalWidth, scaledTotalHeight, referenceCoords, false);
         
         // Second pass: Draw wall area at 100% opacity
         ctx.globalAlpha = 1.0;
-        ctx.save();
-        ctx.beginPath();
-        
         if (hasLimitation) {
-            ctx.rect(wallOffsetX, panelStartY, scaledWallWidth, actualPanelHeight);
+            drawPatternInArea(ctx, wallOffsetX, panelStartY, scaledWallWidth, actualPanelHeight, referenceCoords, false);
         } else {
-            ctx.rect(wallOffsetX, wallOffsetY, scaledWallWidth, scaledWallHeight);
-        }
-        ctx.clip();
-        
-        for (let panelIndex = 0; panelIndex < calculations.panelsNeeded; panelIndex++) {
-            const panelX = offsetX + (panelIndex * pattern.panelWidth * scale);
-            const panelWidth = pattern.panelWidth * scale;
-            
-            // FIXED: Handle sequenceLength = 0 for yard patterns
-            const sequencePosition = pattern.sequenceLength === 0 ? 0 : panelIndex % pattern.sequenceLength;
-            const sourceOffsetX = sequencePosition * offsetPerPanel;
-            
-            const drawStartY = hasLimitation ? panelStartY : offsetY;
-            const drawHeight = hasLimitation ? actualPanelHeight : scaledTotalHeight;
-            const panelBottomY = drawStartY + drawHeight;
-            
-            for (let x = -repeatW; x < panelWidth + repeatW; x += repeatW) {
-                if (pattern.hasRepeatHeight) {
-                    for (let y = -repeatH; y < drawHeight + repeatH; y += repeatH) {
-                        const drawX = panelX + x - (sourceOffsetX * scale);
-                        const drawY = drawStartY + y;
-                        ctx.drawImage(patternImage, drawX, drawY, repeatW, repeatH);
-                    }
-                } else {
-                    const drawX = panelX + x - (sourceOffsetX * scale);
-                    const drawY = panelBottomY - repeatH;
-                    ctx.drawImage(patternImage, drawX, drawY, repeatW, repeatH);
-                }
-            }
+            drawPatternInArea(ctx, wallOffsetX, wallOffsetY, scaledWallWidth, scaledWallHeight, referenceCoords, false);
         }
         
-        ctx.restore();
         ctx.globalAlpha = 1.0;
     }
     
@@ -407,11 +466,11 @@ function drawCompleteViewWithAnnotations(ctx, offsetX, offsetY, scaledTotalWidth
     drawCompleteViewOutlines(ctx, offsetX, offsetY, scaledTotalWidth, scaledTotalHeight, 
                            scaledWallWidth, scaledWallHeight, wallOffsetX, wallOffsetY, scale);
     
-    // Draw ONLY panel dimension labels - NO WALL DIMENSIONS
+    // Draw dimension labels
     drawCompleteDimensionLabels(ctx, offsetX, offsetY, scaledTotalWidth, scaledTotalHeight, 
                               scaledWallWidth, scaledWallHeight, wallOffsetX, wallOffsetY, scale);
     
-    // Draw panel labels WITHOUT BOXES - call our clean function
+    // Draw panel labels
     drawPanelLabels(ctx, offsetX, offsetY, scaledTotalWidth, scaledTotalHeight, scale);
 }
 
@@ -450,7 +509,7 @@ function drawCompleteViewOutlines(ctx, offsetX, offsetY, scaledTotalWidth, scale
     ctx.setLineDash([]);
 }
 
-// Draw all dimension labels for complete view - PANEL DIMENSIONS ONLY
+// Draw all dimension labels for complete view
 function drawCompleteDimensionLabels(ctx, offsetX, offsetY, scaledTotalWidth, scaledTotalHeight, 
                                    scaledWallWidth, scaledWallHeight, wallOffsetX, wallOffsetY, scale) {
     const { pattern, calculations } = currentPreview;
@@ -461,17 +520,17 @@ function drawCompleteDimensionLabels(ctx, offsetX, offsetY, scaledTotalWidth, sc
     ctx.strokeStyle = '#333';
     ctx.lineWidth = 1;
     
-    // ONLY PANEL DIMENSIONS - CLEAN UP FORMATTING
+    // Panel dimensions formatting
     const panelWidthFeet = Math.floor(pattern.panelWidth / 12);
     const panelWidthInches = Math.round(pattern.panelWidth % 12);
     const panelWidthDisplay = panelWidthInches > 0 ? 
         `${panelWidthFeet}'-${panelWidthInches}"` : `${panelWidthFeet}'`;
     
-    // Individual panel width annotation (higher up)
+    // Individual panel width annotation
     if (calculations.panelsNeeded > 0) {
         const panelStartX = offsetX;
         const panelEndX = offsetX + (pattern.panelWidth * scale);
-        const labelY = offsetY - 50;  // MOVED HIGHER
+        const labelY = offsetY - 50;
         
         ctx.beginPath();
         ctx.moveTo(panelStartX, labelY);
@@ -485,20 +544,19 @@ function drawCompleteDimensionLabels(ctx, offsetX, offsetY, scaledTotalWidth, sc
         ctx.lineTo(panelEndX, labelY + 5);
         ctx.stroke();
         
-        // Use different labels for yard vs panel patterns
         const labelText = pattern.saleType === 'yard' ? 
             `Strip Width: ${panelWidthDisplay}` : 
             `Panel Width: ${panelWidthDisplay}`;
         ctx.fillText(labelText, (panelStartX + panelEndX) / 2, labelY - 8);
     }
     
-    // Total panels width annotation (even higher)
+    // Total panels width annotation
     const totalWidthFeet = Math.floor(calculations.totalWidth / 12);
     const totalWidthInches = Math.round(calculations.totalWidth % 12);
     const totalWidthDisplay = totalWidthInches > 0 ? 
         `${totalWidthFeet}'-${totalWidthInches}"` : `${totalWidthFeet}'`;
     
-    const totalLabelY = offsetY - 80;  // MOVED EVEN HIGHER
+    const totalLabelY = offsetY - 80;
     
     ctx.beginPath();
     ctx.moveTo(offsetX, totalLabelY);
@@ -512,15 +570,14 @@ function drawCompleteDimensionLabels(ctx, offsetX, offsetY, scaledTotalWidth, sc
     ctx.lineTo(offsetX + scaledTotalWidth, totalLabelY + 5);
     ctx.stroke();
     
-    // Use different labels for yard vs panel patterns
     const totalLabelText = pattern.saleType === 'yard' ? 
         `All Strips: ${totalWidthDisplay}` : 
         `All Panels: ${totalWidthDisplay}`;
     ctx.fillText(totalLabelText, offsetX + scaledTotalWidth / 2, totalLabelY - 8);
     
-    // Panel height annotation - SAME DISTANCE FROM PANELS AS WALL IS FROM WALL
-    const panelHeightLineX = offsetX - 30;  // 30px from PANEL edge
-    const panelHeightTextX = panelHeightLineX - 15;  // Text spacing
+    // Panel height annotation
+    const panelHeightLineX = offsetX - 30;
+    const panelHeightTextX = panelHeightLineX - 15;
     
     ctx.beginPath();
     ctx.moveTo(panelHeightLineX, offsetY);
@@ -549,124 +606,41 @@ function drawCompleteDimensionLabels(ctx, offsetX, offsetY, scaledTotalWidth, sc
     
     ctx.fillText(heightDisplay, 0, 0);
     ctx.restore();
-    
-    // ABSOLUTELY NO WALL DIMENSIONS HERE - THEY'RE MOVED TO SECTION 2 ONLY
 }
 
-// Draw panel labels (A/B/C sequence) - ABSOLUTELY NO BOXES OR BORDERS
+// Draw panel labels (A/B/C sequence)
 function drawPanelLabels(ctx, offsetX, offsetY, scaledTotalWidth, scaledTotalHeight, scale) {
     const { pattern, calculations } = currentPreview;
     
-    // ONLY draw labels if we have a panel sequence AND it's not a yard pattern
     if (pattern.saleType === 'panel' && pattern.sequenceLength > 1) {
-        // Set font and style
         ctx.fillStyle = '#333';
         ctx.font = '14px Arial, sans-serif';
         ctx.textAlign = 'center';
         
-        // Draw each label as PLAIN TEXT ONLY
         for (let i = 0; i < calculations.panelsNeeded; i++) {
             const centerX = offsetX + (i * pattern.panelWidth + pattern.panelWidth / 2) * scale;
             const sequencePosition = i % pattern.sequenceLength;
             const labelText = pattern.panelSequence[sequencePosition];
-            
-            // Position above panels with clear spacing
             const textY = offsetY - 25;
             
-            // ONLY draw text - NO fillRect, NO strokeRect, NO background, NO border
             ctx.fillText(labelText, centerX, textY);
         }
     }
 }
 
-// Draw Wall Only View - FIXED to preserve exact pattern alignment from Section 1
-function drawWallOnlyView(ctx, wallOffsetX, wallOffsetY, scaledWallWidth, scaledWallHeight, scale) {
+// FIXED: Draw Wall Only View with perfect pattern alignment
+function drawWallOnlyView(ctx, referenceCoords) {
     const { pattern, wallWidth, wallHeight, calculations, wallWidthFeet, wallWidthInches, wallHeightFeet, wallHeightInches } = currentPreview;
+    const { section2, dimensions } = referenceCoords;
     
-    // Draw the pattern first
+    const wallOffsetX = section2.wallStartX;
+    const wallOffsetY = section2.wallStartY;
+    const scaledWallWidth = dimensions.scaledWallWidth;
+    const scaledWallHeight = dimensions.scaledWallHeight;
+    
+    // CRITICAL FIX: Draw pattern using the same coordinate system as Section 1
     if (imageLoaded && patternImage) {
-        ctx.save();
-        ctx.imageSmoothingEnabled = false;
-        
-        // Clip to wall area ONLY
-        ctx.beginPath();
-        ctx.rect(Math.floor(wallOffsetX), Math.floor(wallOffsetY), Math.ceil(scaledWallWidth), Math.ceil(scaledWallHeight));
-        ctx.clip();
-        
-        // CRITICAL FIX: Use the EXACT SAME coordinate system as Section 1
-        // Calculate the Section 1 coordinates - BOTH X AND Y
-        const leftMargin = 120;
-        const rightMargin = 120;
-        const topMargin = 140;
-        const bottomMargin = 120;
-        const sectionGap = 60;
-        
-        const maxWidth = 1400 - leftMargin - rightMargin;
-        const maxHeight = 1200 - topMargin - bottomMargin;
-        
-        // Recreate Section 1's layout calculations
-        const wallOnlyHeight = wallHeight;
-        const completeViewHeight = Math.max(calculations.totalHeight, wallHeight);
-        const totalContentHeight = completeViewHeight + wallOnlyHeight + sectionGap;
-        const effectiveWidth = Math.max(calculations.totalWidth, wallWidth);
-        
-        const actualContentHeight = (completeViewHeight * scale) + (wallOnlyHeight * scale) + sectionGap;
-        const section1CurrentY = topMargin + (maxHeight - actualContentHeight) / 2;
-        
-        const scaledTotalWidth = calculations.totalWidth * scale;
-        const scaledTotalHeight = calculations.totalHeight * scale;
-        const scaledWallWidth = wallWidth * scale;
-        const scaledWallHeight = wallHeight * scale;
-        
-        // Section 1's pattern start position
-        const section1OffsetX = leftMargin + (maxWidth - scaledTotalWidth) / 2;
-        const section1OffsetY = section1CurrentY;
-        
-        // Section 1's wall position within the coverage
-        const section1WallOffsetX = section1OffsetX + (scaledTotalWidth - scaledWallWidth) / 2;
-        const section1WallOffsetY = section1OffsetY + ((completeViewHeight * scale) - scaledWallHeight) / 2;
-        
-        // Use the same pattern drawing logic as Section 1, but with Section 1 coordinates
-        const repeatW = pattern.saleType === 'yard' ? pattern.repeatWidth * scale :
-            (pattern.sequenceLength === 1 ? pattern.panelWidth * scale : pattern.repeatWidth * scale);
-        const repeatH = pattern.repeatHeight * scale;
-        
-        // FIXED: Handle yard patterns (sequenceLength = 0) correctly
-        const offsetPerPanel = (pattern.sequenceLength === 0 || pattern.sequenceLength === 1) ? 0 : 
-            pattern.repeatWidth / pattern.sequenceLength;
-        
-        // Draw pattern using Section 1's coordinate system
-        for (let panelIndex = 0; panelIndex < calculations.panelsNeeded; panelIndex++) {
-            // Use Section 1's panel positioning
-            const section1PanelX = section1OffsetX + (panelIndex * pattern.panelWidth * scale);
-            
-            // FIXED: Handle sequenceLength = 0 for yard patterns
-            const sequencePosition = pattern.sequenceLength === 0 ? 0 : panelIndex % pattern.sequenceLength;
-            const sourceOffsetX = sequencePosition * offsetPerPanel;
-            
-            // Calculate where this panel's pattern should appear in Section 2's coordinate space
-            // Key insight: Only shift X coordinates, Y coordinates should match Section 1's wall overlay pass exactly
-            const xCoordinateShift = wallOffsetX - section1WallOffsetX;
-            const panelX = section1PanelX + xCoordinateShift;
-            
-            for (let x = -repeatW; x < pattern.panelWidth * scale + repeatW; x += repeatW) {
-                if (pattern.hasRepeatHeight) {
-                    // Use EXACT same Y logic as Section 1's wall overlay pass
-                    for (let y = -repeatH; y < scaledWallHeight + repeatH; y += repeatH) {
-                        const drawX = Math.floor(panelX + x - (sourceOffsetX * scale));
-                        const drawY = Math.floor(wallOffsetY + y);  // SAME as Section 1 wall overlay
-                        ctx.drawImage(patternImage, drawX, drawY, Math.ceil(repeatW), Math.ceil(repeatH));
-                    }
-                } else {
-                    const drawX = Math.floor(panelX + x - (sourceOffsetX * scale));
-                    const drawY = Math.floor(wallOffsetY + scaledWallHeight - repeatH);  // SAME as Section 1 wall overlay
-                    ctx.drawImage(patternImage, drawX, drawY, Math.ceil(repeatW), Math.ceil(repeatH));
-                }
-            }
-        }
-        
-        ctx.restore();
-        ctx.imageSmoothingEnabled = true;
+        drawPatternInArea(ctx, wallOffsetX, wallOffsetY, scaledWallWidth, scaledWallHeight, referenceCoords, true);
     }
     
     // Draw uncovered area if needed
@@ -674,7 +648,7 @@ function drawWallOnlyView(ctx, wallOffsetX, wallOffsetY, scaledWallWidth, scaled
     if (hasLimitation) {
         const actualPanelLengthToUse = calculations.exceedsAvailableLength ? 
             calculations.actualPanelLength : calculations.panelLength;
-        const coveredHeight = actualPanelLengthToUse * 12 * scale;
+        const coveredHeight = actualPanelLengthToUse * 12 * referenceCoords.scale;
         const uncoveredAreaHeight = scaledWallHeight - coveredHeight;
         
         if (uncoveredAreaHeight > 0) {
@@ -688,29 +662,27 @@ function drawWallOnlyView(ctx, wallOffsetX, wallOffsetY, scaledWallWidth, scaled
     ctx.lineWidth = 2;
     ctx.strokeRect(wallOffsetX, wallOffsetY, scaledWallWidth, scaledWallHeight);
     
-    // WALL DIMENSIONS ONLY - NO LABELS
+    // Draw wall dimensions
     ctx.fillStyle = '#333';
     ctx.font = '14px Arial, sans-serif';
     ctx.strokeStyle = '#333';
     ctx.lineWidth = 1;
     
-    // Format the dimension text - DESCRIPTIVE LABELS
+    // Format the dimension text
     const wallWidthText = wallWidthInches > 0 ? 
         `Wall Width: ${wallWidthFeet}'-${wallWidthInches}"` : `Wall Width: ${wallWidthFeet}'`;
     const wallHeightText = wallHeightInches > 0 ? 
         `Wall Height: ${wallHeightFeet}'-${wallHeightInches}"` : `Wall Height: ${wallHeightFeet}'`;
     
-    // 1. WALL WIDTH (bottom of wall)
+    // Wall width annotation (bottom of wall)
     const widthLineY = wallOffsetY + scaledWallHeight + 30;
     const widthTextY = widthLineY + 15;
     
-    // Draw width dimension line
     ctx.beginPath();
     ctx.moveTo(wallOffsetX, widthLineY);
     ctx.lineTo(wallOffsetX + scaledWallWidth, widthLineY);
     ctx.stroke();
     
-    // Draw width end marks
     ctx.beginPath();
     ctx.moveTo(wallOffsetX, widthLineY - 5);
     ctx.lineTo(wallOffsetX, widthLineY + 5);
@@ -718,22 +690,19 @@ function drawWallOnlyView(ctx, wallOffsetX, wallOffsetY, scaledWallWidth, scaled
     ctx.lineTo(wallOffsetX + scaledWallWidth, widthLineY + 5);
     ctx.stroke();
     
-    // Draw width text
     ctx.textAlign = 'center';
     ctx.fillText(wallWidthText, wallOffsetX + scaledWallWidth / 2, widthTextY);
     
-    // 2. WALL HEIGHT (LEFT SIDE OF WALL) - USE SAME OFFSET AS PANELS
-    const wallHeightOffset = 30;  // SAME VALUE AS PANELS USE
-    const heightLineX = wallOffsetX - wallHeightOffset;  // Use consistent offset
-    const heightTextX = heightLineX - 15;   // Use consistent text spacing
+    // Wall height annotation (left side of wall)
+    const wallHeightOffset = 30;
+    const heightLineX = wallOffsetX - wallHeightOffset;
+    const heightTextX = heightLineX - 15;
     
-    // Draw height dimension line
     ctx.beginPath();
     ctx.moveTo(heightLineX, wallOffsetY);
     ctx.lineTo(heightLineX, wallOffsetY + scaledWallHeight);
     ctx.stroke();
     
-    // Draw height end marks
     ctx.beginPath();
     ctx.moveTo(heightLineX - 5, wallOffsetY);
     ctx.lineTo(heightLineX + 5, wallOffsetY);
@@ -741,7 +710,6 @@ function drawWallOnlyView(ctx, wallOffsetX, wallOffsetY, scaledWallWidth, scaled
     ctx.lineTo(heightLineX + 5, wallOffsetY + scaledWallHeight);
     ctx.stroke();
     
-    // Draw height text (rotated)
     ctx.save();
     ctx.translate(heightTextX, wallOffsetY + scaledWallHeight / 2);
     ctx.rotate(-Math.PI/2);
@@ -816,50 +784,32 @@ function openCanvasModal() {
 }
 
 function renderHighQualityPreview(ctx, canvasWidth, canvasHeight) {
-    const { pattern, wallWidth, wallHeight, calculations } = currentPreview;
+    // For high-quality rendering, we need to recalculate coordinates for the given canvas size
+    const originalCanvas = document.getElementById('previewCanvas');
+    const originalCurrentPreview = currentPreview;
     
-    // Use the same layout logic as the main preview
-    const leftMargin = 80;
-    const rightMargin = 80;
-    const topMargin = 100;
-    const bottomMargin = 100;
-    const sectionGap = 40;
+    // Temporarily adjust the canvas reference for coordinate calculations
+    const tempCanvas = { width: canvasWidth, height: canvasHeight };
+    const originalGetElementById = document.getElementById;
+    document.getElementById = function(id) {
+        if (id === 'previewCanvas') return tempCanvas;
+        return originalGetElementById.call(document, id);
+    };
     
-    const maxWidth = canvasWidth - leftMargin - rightMargin;
-    const maxHeight = canvasHeight - topMargin - bottomMargin;
-    
-    const wallOnlyHeight = wallHeight;
-    const completeViewHeight = Math.max(calculations.totalHeight, wallHeight);
-    const totalContentHeight = completeViewHeight + wallOnlyHeight + sectionGap;
-    
-    const effectiveWidth = Math.max(calculations.totalWidth, wallWidth);
-    
-    const widthScale = maxWidth / effectiveWidth;
-    const heightScale = maxHeight / totalContentHeight;
-    const scale = Math.min(widthScale, heightScale);
-    
-    const scaledTotalWidth = calculations.totalWidth * scale;
-    const scaledTotalHeight = calculations.totalHeight * scale;
-    const scaledWallWidth = wallWidth * scale;
-    const scaledWallHeight = wallHeight * scale;
-    
-    const actualContentHeight = (completeViewHeight * scale) + (wallOnlyHeight * scale) + sectionGap;
-    let currentY = topMargin + (maxHeight - actualContentHeight) / 2;
-    
-    const offsetX = leftMargin + (maxWidth - scaledTotalWidth) / 2;
-    
-    // Section 1: Complete view
-    const wallOffsetX = offsetX + (scaledTotalWidth - scaledWallWidth) / 2;
-    const wallOffsetY = currentY + ((completeViewHeight * scale) - scaledWallHeight) / 2;
-    
-    drawCompleteViewWithAnnotations(ctx, offsetX, currentY, scaledTotalWidth, scaledTotalHeight, 
-                                   scaledWallWidth, scaledWallHeight, wallOffsetX, wallOffsetY, scale);
-    
-    currentY += completeViewHeight * scale + sectionGap;
-    
-    // Section 2: Wall only
-    const wallOnlyOffsetX = leftMargin + (maxWidth - scaledWallWidth) / 2;
-    drawWallOnlyView(ctx, wallOnlyOffsetX, currentY, scaledWallWidth, scaledWallHeight, scale);
+    try {
+        // Calculate reference coordinates for the high-res canvas
+        const referenceCoords = calculateReferenceCoordinates();
+        
+        // Draw Section 1: Complete view
+        drawCompleteViewWithAnnotations(ctx, referenceCoords);
+        
+        // Draw Section 2: Wall only view  
+        drawWallOnlyView(ctx, referenceCoords);
+        
+    } finally {
+        // Restore original getElementById function
+        document.getElementById = originalGetElementById;
+    }
 }
 
 // Make generatePreview globally accessible
