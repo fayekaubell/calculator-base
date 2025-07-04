@@ -594,8 +594,10 @@ function drawPanelLabels(ctx, offsetX, offsetY, scaledTotalWidth, scaledTotalHei
             const sequencePosition = i % pattern.sequenceLength;
             const label = pattern.panelSequence[sequencePosition];
             
-            // Position labels ABOVE the panels (before offsetY)
-            const labelY = offsetY - 15;
+            // Position labels between dimension annotations and panels
+            // Dimensions are at offsetY - 70 and offsetY - 40
+            // So place labels at offsetY - 20 (between dimensions and panels)
+            const labelY = offsetY - 20;
             
             // Background for label
             const textWidth = ctx.measureText(label).width;
