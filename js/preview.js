@@ -305,14 +305,19 @@ function drawCompleteViewWithAnnotations(ctx, offsetX, offsetY, scaledTotalWidth
         const repeatW = pattern.saleType === 'yard' ? pattern.repeatWidth * scale :
             (pattern.sequenceLength === 1 ? pattern.panelWidth * scale : pattern.repeatWidth * scale);
         const repeatH = pattern.repeatHeight * scale;
-        const offsetPerPanel = pattern.sequenceLength === 1 ? 0 : pattern.repeatWidth / pattern.sequenceLength;
+        
+        // FIXED: Handle yard patterns (sequenceLength = 0) correctly
+        const offsetPerPanel = (pattern.sequenceLength === 0 || pattern.sequenceLength === 1) ? 0 : 
+            pattern.repeatWidth / pattern.sequenceLength;
         
         // First pass: Draw all panels at 50% opacity
         ctx.globalAlpha = 0.5;
         for (let panelIndex = 0; panelIndex < calculations.panelsNeeded; panelIndex++) {
             const panelX = offsetX + (panelIndex * pattern.panelWidth * scale);
             const panelWidth = pattern.panelWidth * scale;
-            const sequencePosition = panelIndex % pattern.sequenceLength;
+            
+            // FIXED: Handle sequenceLength = 0 for yard patterns
+            const sequencePosition = pattern.sequenceLength === 0 ? 0 : panelIndex % pattern.sequenceLength;
             const sourceOffsetX = sequencePosition * offsetPerPanel;
             
             ctx.save();
@@ -361,7 +366,9 @@ function drawCompleteViewWithAnnotations(ctx, offsetX, offsetY, scaledTotalWidth
         for (let panelIndex = 0; panelIndex < calculations.panelsNeeded; panelIndex++) {
             const panelX = offsetX + (panelIndex * pattern.panelWidth * scale);
             const panelWidth = pattern.panelWidth * scale;
-            const sequencePosition = panelIndex % pattern.sequenceLength;
+            
+            // FIXED: Handle sequenceLength = 0 for yard patterns
+            const sequencePosition = pattern.sequenceLength === 0 ? 0 : panelIndex % pattern.sequenceLength;
             const sourceOffsetX = sequencePosition * offsetPerPanel;
             
             const drawStartY = hasLimitation ? panelStartY : offsetY;
@@ -478,7 +485,11 @@ function drawCompleteDimensionLabels(ctx, offsetX, offsetY, scaledTotalWidth, sc
         ctx.lineTo(panelEndX, labelY + 5);
         ctx.stroke();
         
-        ctx.fillText(`Panel Width: ${panelWidthDisplay}`, (panelStartX + panelEndX) / 2, labelY - 8);
+        // Use different labels for yard vs panel patterns
+        const labelText = pattern.saleType === 'yard' ? 
+            `Strip Width: ${panelWidthDisplay}` : 
+            `Panel Width: ${panelWidthDisplay}`;
+        ctx.fillText(labelText, (panelStartX + panelEndX) / 2, labelY - 8);
     }
     
     // Total panels width annotation (even higher)
@@ -501,7 +512,11 @@ function drawCompleteDimensionLabels(ctx, offsetX, offsetY, scaledTotalWidth, sc
     ctx.lineTo(offsetX + scaledTotalWidth, totalLabelY + 5);
     ctx.stroke();
     
-    ctx.fillText(`All Panels: ${totalWidthDisplay}`, offsetX + scaledTotalWidth / 2, totalLabelY - 8);
+    // Use different labels for yard vs panel patterns
+    const totalLabelText = pattern.saleType === 'yard' ? 
+        `All Strips: ${totalWidthDisplay}` : 
+        `All Panels: ${totalWidthDisplay}`;
+    ctx.fillText(totalLabelText, offsetX + scaledTotalWidth / 2, totalLabelY - 8);
     
     // Panel height annotation - SAME DISTANCE FROM PANELS AS WALL IS FROM WALL
     const panelHeightLineX = offsetX - 30;  // 30px from PANEL edge
@@ -525,7 +540,9 @@ function drawCompleteDimensionLabels(ctx, offsetX, offsetY, scaledTotalWidth, sc
     
     let heightDisplay;
     if (pattern.saleType === 'yard' && calculations.panelLengthInches !== undefined && calculations.panelLengthInches > 0) {
-        heightDisplay = `Panel Height: ${calculations.panelLength}'-${calculations.panelLengthInches}"`;
+        heightDisplay = `Strip Height: ${calculations.panelLength}'-${calculations.panelLengthInches}"`;
+    } else if (pattern.saleType === 'yard') {
+        heightDisplay = `Strip Height: ${calculations.panelLength}'`;
     } else {
         heightDisplay = `Panel Height: ${calculations.panelLength}'`;
     }
@@ -540,7 +557,7 @@ function drawCompleteDimensionLabels(ctx, offsetX, offsetY, scaledTotalWidth, sc
 function drawPanelLabels(ctx, offsetX, offsetY, scaledTotalWidth, scaledTotalHeight, scale) {
     const { pattern, calculations } = currentPreview;
     
-    // ONLY draw labels if we have a panel sequence
+    // ONLY draw labels if we have a panel sequence AND it's not a yard pattern
     if (pattern.saleType === 'panel' && pattern.sequenceLength > 1) {
         // Set font and style
         ctx.fillStyle = '#333';
@@ -589,12 +606,17 @@ function drawWallOnlyView(ctx, wallOffsetX, wallOffsetY, scaledWallWidth, scaled
         const repeatW = pattern.saleType === 'yard' ? pattern.repeatWidth * scale :
             (pattern.sequenceLength === 1 ? pattern.panelWidth * scale : pattern.repeatWidth * scale);
         const repeatH = pattern.repeatHeight * scale;
-        const offsetPerPanel = pattern.sequenceLength === 1 ? 0 : pattern.repeatWidth / pattern.sequenceLength;
+        
+        // FIXED: Handle yard patterns (sequenceLength = 0) correctly
+        const offsetPerPanel = (pattern.sequenceLength === 0 || pattern.sequenceLength === 1) ? 0 : 
+            pattern.repeatWidth / pattern.sequenceLength;
         
         for (let panelIndex = 0; panelIndex < calculations.panelsNeeded; panelIndex++) {
             const completeViewPanelX = completeViewOffsetX + (panelIndex * pattern.panelWidth * scale);
             const panelX = completeViewPanelX + xTransform;
-            const sequencePosition = panelIndex % pattern.sequenceLength;
+            
+            // FIXED: Handle sequenceLength = 0 for yard patterns
+            const sequencePosition = pattern.sequenceLength === 0 ? 0 : panelIndex % pattern.sequenceLength;
             const sourceOffsetX = sequencePosition * offsetPerPanel;
             
             for (let x = -repeatW; x < pattern.panelWidth * scale + repeatW; x += repeatW) {
