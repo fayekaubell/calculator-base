@@ -1,4 +1,4 @@
-// Canvas Preview Generation Module - Fixed Pattern Alignment
+// Canvas Preview Generation Module - Fixed Pattern Alignment & Opacity System
 
 // Generate preview function
 async function generatePreview() {
@@ -296,7 +296,7 @@ function calculateReferenceCoordinates() {
     };
 }
 
-// FIXED: Draw pattern with consistent coordinate system across sections
+// FIXED: Draw pattern with consistent coordinate system and proper draw modes
 function drawPatternInArea(ctx, areaX, areaY, areaWidth, areaHeight, referenceCoords, isSection2 = false, drawMode = 'normal') {
     const { pattern, calculations } = currentPreview;
     
@@ -322,8 +322,7 @@ function drawPatternInArea(ctx, areaX, areaY, areaWidth, areaHeight, referenceCo
     ctx.rect(Math.floor(areaX), Math.floor(areaY), Math.ceil(areaWidth), Math.ceil(areaHeight));
     ctx.clip();
     
-    // CRITICAL FIX: Use consistent pattern origin for both sections
-    // Pattern origin is always relative to Section 1's pattern start position
+    // Use consistent pattern origin for both sections
     const patternOriginX = referenceCoords.section1.patternStartX;
     const patternOriginY = referenceCoords.section1.patternStartY;
     
@@ -332,8 +331,6 @@ function drawPatternInArea(ctx, areaX, areaY, areaWidth, areaHeight, referenceCo
     let coordinateOffsetY = 0;
     
     if (isSection2) {
-        // Calculate how much to shift coordinates to align Section 2's wall area
-        // with Section 1's wall area in the pattern grid
         coordinateOffsetX = referenceCoords.section2.wallStartX - referenceCoords.section1.wallStartX;
         coordinateOffsetY = referenceCoords.section2.wallStartY - referenceCoords.section1.wallStartY;
     }
@@ -354,24 +351,29 @@ function drawPatternInArea(ctx, areaX, areaY, areaWidth, areaHeight, referenceCo
         // Draw pattern repeats for this panel
         const panelWidth = pattern.panelWidth * scale;
         
-        // Determine the drawing height based on limitations and draw mode
-        const hasLimitation = calculations.exceedsLimit || calculations.exceedsAvailableLength;
+        // Determine the drawing height based on draw mode
         let drawHeight, drawStartY;
         
-        if (drawMode === 'overage') {
-            // Overage areas - draw full panel height for the given area
+        if (drawMode === 'full_coverage') {
+            // Full panel coverage - draw the entire panel height
             drawStartY = drawPanelY;
             drawHeight = referenceCoords.dimensions.scaledTotalHeight;
-        } else if (hasLimitation && !isSection2 && drawMode === 'wall_area') {
-            // Section 1 wall area pass - draw only the covered area
-            const actualPanelLengthToUse = calculations.exceedsAvailableLength ? 
-                calculations.actualPanelLength : calculations.panelLength;
-            const panelCoverageHeight = actualPanelLengthToUse * 12 * scale;
-            const wallHeight = referenceCoords.dimensions.scaledWallHeight;
-            drawStartY = drawPanelY + Math.max(0, wallHeight - panelCoverageHeight);
-            drawHeight = Math.min(panelCoverageHeight, wallHeight);
+        } else if (drawMode === 'wall_area') {
+            // Wall area only - calculate based on limitations
+            const hasLimitation = calculations.exceedsLimit || calculations.exceedsAvailableLength;
+            if (hasLimitation && !isSection2) {
+                const actualPanelLengthToUse = calculations.exceedsAvailableLength ? 
+                    calculations.actualPanelLength : calculations.panelLength;
+                const panelCoverageHeight = actualPanelLengthToUse * 12 * scale;
+                const wallHeight = referenceCoords.dimensions.scaledWallHeight;
+                drawStartY = drawPanelY + Math.max(0, wallHeight - panelCoverageHeight);
+                drawHeight = Math.min(panelCoverageHeight, wallHeight);
+            } else {
+                drawStartY = drawPanelY;
+                drawHeight = isSection2 ? areaHeight : referenceCoords.dimensions.scaledWallHeight;
+            }
         } else {
-            // Normal drawing or Section 2
+            // Normal drawing (Section 2 or other cases)
             drawStartY = drawPanelY;
             drawHeight = isSection2 ? areaHeight : referenceCoords.dimensions.scaledTotalHeight;
         }
@@ -397,110 +399,6 @@ function drawPatternInArea(ctx, areaX, areaY, areaWidth, areaHeight, referenceCo
     ctx.restore();
 }
 
-// Draw overage areas (panel coverage outside the wall area) at reduced opacity
-function drawOverageAreas(ctx, panelStartX, panelStartY, panelTotalWidth, panelTotalHeight,
-                         wallStartX, wallStartY, wallWidth, wallHeight,
-                         referenceCoords, hasLimitation, limitedPanelStartY, limitedPanelHeight) {
-    
-    // Calculate areas that are panel coverage but NOT wall area
-    const areas = [];
-    
-    if (hasLimitation) {
-        // With limitations, we need to consider the actual panel coverage area
-        const panelEndY = limitedPanelStartY + limitedPanelHeight;
-        
-        // Left overage (if any)
-        if (wallStartX > panelStartX) {
-            areas.push({
-                x: panelStartX,
-                y: limitedPanelStartY,
-                width: wallStartX - panelStartX,
-                height: limitedPanelHeight
-            });
-        }
-        
-        // Right overage (if any)
-        if (wallStartX + wallWidth < panelStartX + panelTotalWidth) {
-            areas.push({
-                x: wallStartX + wallWidth,
-                y: limitedPanelStartY,
-                width: (panelStartX + panelTotalWidth) - (wallStartX + wallWidth),
-                height: limitedPanelHeight
-            });
-        }
-        
-        // Top overage (above limited panel coverage)
-        if (limitedPanelStartY > panelStartY) {
-            areas.push({
-                x: panelStartX,
-                y: panelStartY,
-                width: panelTotalWidth,
-                height: limitedPanelStartY - panelStartY
-            });
-        }
-        
-        // Bottom overage (below limited panel coverage) 
-        if (panelEndY < panelStartY + panelTotalHeight) {
-            areas.push({
-                x: panelStartX,
-                y: panelEndY,
-                width: panelTotalWidth,
-                height: (panelStartY + panelTotalHeight) - panelEndY
-            });
-        }
-        
-    } else {
-        // No limitations - simpler calculation
-        
-        // Left overage
-        if (wallStartX > panelStartX) {
-            areas.push({
-                x: panelStartX,
-                y: panelStartY,
-                width: wallStartX - panelStartX,
-                height: panelTotalHeight
-            });
-        }
-        
-        // Right overage
-        if (wallStartX + wallWidth < panelStartX + panelTotalWidth) {
-            areas.push({
-                x: wallStartX + wallWidth,
-                y: panelStartY,
-                width: (panelStartX + panelTotalWidth) - (wallStartX + wallWidth),
-                height: panelTotalHeight
-            });
-        }
-        
-        // Top overage
-        if (wallStartY > panelStartY) {
-            areas.push({
-                x: wallStartX,
-                y: panelStartY,
-                width: wallWidth,
-                height: wallStartY - panelStartY
-            });
-        }
-        
-        // Bottom overage
-        if (wallStartY + wallHeight < panelStartY + panelTotalHeight) {
-            areas.push({
-                x: wallStartX,
-                y: wallStartY + wallHeight,
-                width: wallWidth,
-                height: (panelStartY + panelTotalHeight) - (wallStartY + wallHeight)
-            });
-        }
-    }
-    
-    // Draw each overage area
-    for (const area of areas) {
-        if (area.width > 0 && area.height > 0) {
-            drawPatternInArea(ctx, area.x, area.y, area.width, area.height, referenceCoords, false, 'overage');
-        }
-    }
-}
-
 // Draw preview on canvas - RESTRUCTURED LAYOUT with fixed pattern alignment
 function drawPreview() {
     const canvas = document.getElementById('previewCanvas');
@@ -521,7 +419,7 @@ function drawPreview() {
     drawWallOnlyView(ctx, referenceCoords);
 }
 
-// Draw Complete View with all annotations and labels
+// FIXED: Draw Complete View with proper two-pass opacity system (no overlap)
 function drawCompleteViewWithAnnotations(ctx, referenceCoords) {
     const { pattern, calculations } = currentPreview;
     const { scale, section1, dimensions } = referenceCoords;
@@ -544,24 +442,24 @@ function drawCompleteViewWithAnnotations(ctx, referenceCoords) {
     
     const hasLimitation = calculations.exceedsLimit || calculations.exceedsAvailableLength;
     
-    // FIXED: Draw pattern areas without overlap to prevent opacity stacking
+    // FIXED: Clean two-pass opacity system with no overlap
     if (imageLoaded && patternImage) {
-        // Strategy: Draw wall area first at 100%, then draw overage areas at 50%
         
-        // First: Draw wall area at 100% opacity
+        // PASS 1: Draw ALL panel coverage at 50% opacity
+        ctx.globalAlpha = 0.5;
+        drawPatternInArea(ctx, offsetX, offsetY, scaledTotalWidth, scaledTotalHeight, referenceCoords, false, 'full_coverage');
+        
+        // PASS 2: Draw ONLY wall area at 100% opacity (overwrites the 50% underneath)
         ctx.globalAlpha = 1.0;
         if (hasLimitation) {
+            // With limitations, draw only the covered portion of the wall
             drawPatternInArea(ctx, wallOffsetX, panelStartY, scaledWallWidth, actualPanelHeight, referenceCoords, false, 'wall_area');
         } else {
+            // No limitations, draw the full wall area
             drawPatternInArea(ctx, wallOffsetX, wallOffsetY, scaledWallWidth, scaledWallHeight, referenceCoords, false, 'wall_area');
         }
         
-        // Second: Draw overage areas at 50% opacity (areas outside the wall)
-        ctx.globalAlpha = 0.5;
-        drawOverageAreas(ctx, offsetX, offsetY, scaledTotalWidth, scaledTotalHeight, 
-                        wallOffsetX, wallOffsetY, scaledWallWidth, scaledWallHeight, 
-                        referenceCoords, hasLimitation, panelStartY, actualPanelHeight);
-        
+        // Reset alpha for subsequent drawing
         ctx.globalAlpha = 1.0;
     }
     
@@ -738,191 +636,3 @@ function drawPanelLabels(ctx, offsetX, offsetY, scaledTotalWidth, scaledTotalHei
             ctx.fillText(labelText, centerX, textY);
         }
     }
-}
-
-// FIXED: Draw Wall Only View with perfect pattern alignment
-function drawWallOnlyView(ctx, referenceCoords) {
-    const { pattern, wallWidth, wallHeight, calculations, wallWidthFeet, wallWidthInches, wallHeightFeet, wallHeightInches } = currentPreview;
-    const { section2, dimensions } = referenceCoords;
-    
-    const wallOffsetX = section2.wallStartX;
-    const wallOffsetY = section2.wallStartY;
-    const scaledWallWidth = dimensions.scaledWallWidth;
-    const scaledWallHeight = dimensions.scaledWallHeight;
-    
-    // CRITICAL FIX: Draw pattern using the same coordinate system as Section 1
-    if (imageLoaded && patternImage) {
-        drawPatternInArea(ctx, wallOffsetX, wallOffsetY, scaledWallWidth, scaledWallHeight, referenceCoords, true, 'normal');
-    }
-    
-    // Draw uncovered area if needed
-    const hasLimitation = calculations.exceedsLimit || calculations.exceedsAvailableLength;
-    if (hasLimitation) {
-        const actualPanelLengthToUse = calculations.exceedsAvailableLength ? 
-            calculations.actualPanelLength : calculations.panelLength;
-        const coveredHeight = actualPanelLengthToUse * 12 * referenceCoords.scale;
-        const uncoveredAreaHeight = scaledWallHeight - coveredHeight;
-        
-        if (uncoveredAreaHeight > 0) {
-            ctx.fillStyle = 'rgba(255, 0, 0, 0.5)';
-            ctx.fillRect(wallOffsetX, wallOffsetY, scaledWallWidth, uncoveredAreaHeight);
-        }
-    }
-    
-    // Draw wall outline
-    ctx.strokeStyle = '#2c3e50';
-    ctx.lineWidth = 2;
-    ctx.strokeRect(wallOffsetX, wallOffsetY, scaledWallWidth, scaledWallHeight);
-    
-    // Draw wall dimensions
-    ctx.fillStyle = '#333';
-    ctx.font = '14px Arial, sans-serif';
-    ctx.strokeStyle = '#333';
-    ctx.lineWidth = 1;
-    
-    // Format the dimension text
-    const wallWidthText = wallWidthInches > 0 ? 
-        `Wall Width: ${wallWidthFeet}'-${wallWidthInches}"` : `Wall Width: ${wallWidthFeet}'`;
-    const wallHeightText = wallHeightInches > 0 ? 
-        `Wall Height: ${wallHeightFeet}'-${wallHeightInches}"` : `Wall Height: ${wallHeightFeet}'`;
-    
-    // Wall width annotation (bottom of wall)
-    const widthLineY = wallOffsetY + scaledWallHeight + 30;
-    const widthTextY = widthLineY + 15;
-    
-    ctx.beginPath();
-    ctx.moveTo(wallOffsetX, widthLineY);
-    ctx.lineTo(wallOffsetX + scaledWallWidth, widthLineY);
-    ctx.stroke();
-    
-    ctx.beginPath();
-    ctx.moveTo(wallOffsetX, widthLineY - 5);
-    ctx.lineTo(wallOffsetX, widthLineY + 5);
-    ctx.moveTo(wallOffsetX + scaledWallWidth, widthLineY - 5);
-    ctx.lineTo(wallOffsetX + scaledWallWidth, widthLineY + 5);
-    ctx.stroke();
-    
-    ctx.textAlign = 'center';
-    ctx.fillText(wallWidthText, wallOffsetX + scaledWallWidth / 2, widthTextY);
-    
-    // Wall height annotation (left side of wall)
-    const wallHeightOffset = 30;
-    const heightLineX = wallOffsetX - wallHeightOffset;
-    const heightTextX = heightLineX - 15;
-    
-    ctx.beginPath();
-    ctx.moveTo(heightLineX, wallOffsetY);
-    ctx.lineTo(heightLineX, wallOffsetY + scaledWallHeight);
-    ctx.stroke();
-    
-    ctx.beginPath();
-    ctx.moveTo(heightLineX - 5, wallOffsetY);
-    ctx.lineTo(heightLineX + 5, wallOffsetY);
-    ctx.moveTo(heightLineX - 5, wallOffsetY + scaledWallHeight);
-    ctx.lineTo(heightLineX + 5, wallOffsetY + scaledWallHeight);
-    ctx.stroke();
-    
-    ctx.save();
-    ctx.translate(heightTextX, wallOffsetY + scaledWallHeight / 2);
-    ctx.rotate(-Math.PI/2);
-    ctx.textAlign = 'center';
-    ctx.fillText(wallHeightText, 0, 0);
-    ctx.restore();
-}
-
-// Canvas modal functionality
-function openCanvasModal() {
-    const canvas = document.getElementById('previewCanvas');
-    
-    if (!currentPreview) {
-        console.error('No current preview data available for high-res rendering');
-        return;
-    }
-    
-    console.log('Creating high-res modal...');
-    
-    const modal = document.createElement('div');
-    modal.className = 'canvas-modal';
-    
-    const canvasContainer = document.createElement('div');
-    canvasContainer.style.width = '100%';
-    canvasContainer.style.maxWidth = '95vw';
-    canvasContainer.style.margin = '0 auto';
-    canvasContainer.style.overflowX = 'hidden';
-    canvasContainer.style.overflowY = 'visible';
-    
-    const largeCanvas = document.createElement('canvas');
-    
-    const hiResScale = 3;
-    const baseScale = 2;
-    largeCanvas.width = canvas.width * hiResScale * baseScale;
-    largeCanvas.height = canvas.height * hiResScale * baseScale;
-    
-    const displayWidth = window.innerWidth * 0.95;
-    const canvasAspectRatio = canvas.width / canvas.height;
-    const displayHeight = displayWidth / canvasAspectRatio;
-    
-    largeCanvas.style.width = displayWidth + 'px';
-    largeCanvas.style.height = displayHeight + 'px';
-    largeCanvas.style.maxWidth = 'none';
-    largeCanvas.style.display = 'block';
-    largeCanvas.style.margin = '0 auto';
-    
-    const largeCtx = largeCanvas.getContext('2d');
-    
-    largeCtx.imageSmoothingEnabled = true;
-    largeCtx.imageSmoothingQuality = 'high';
-    largeCtx.scale(hiResScale * baseScale, hiResScale * baseScale);
-    
-    largeCtx.fillStyle = '#ffffff';
-    largeCtx.fillRect(0, 0, canvas.width, canvas.height);
-    
-    renderHighQualityPreview(largeCtx, canvas.width, canvas.height);
-    
-    canvasContainer.appendChild(largeCanvas);
-    modal.appendChild(canvasContainer);
-    
-    modal.onclick = (e) => {
-        if (e.target === modal || e.target === canvasContainer) {
-            document.body.removeChild(modal);
-        }
-    };
-    
-    largeCanvas.onclick = () => {
-        document.body.removeChild(modal);
-    };
-    
-    document.body.appendChild(modal);
-}
-
-function renderHighQualityPreview(ctx, canvasWidth, canvasHeight) {
-    // For high-quality rendering, we need to recalculate coordinates for the given canvas size
-    const originalCanvas = document.getElementById('previewCanvas');
-    const originalCurrentPreview = currentPreview;
-    
-    // Temporarily adjust the canvas reference for coordinate calculations
-    const tempCanvas = { width: canvasWidth, height: canvasHeight };
-    const originalGetElementById = document.getElementById;
-    document.getElementById = function(id) {
-        if (id === 'previewCanvas') return tempCanvas;
-        return originalGetElementById.call(document, id);
-    };
-    
-    try {
-        // Calculate reference coordinates for the high-res canvas
-        const referenceCoords = calculateReferenceCoordinates();
-        
-        // Draw Section 1: Complete view
-        drawCompleteViewWithAnnotations(ctx, referenceCoords);
-        
-        // Draw Section 2: Wall only view  
-        drawWallOnlyView(ctx, referenceCoords);
-        
-    } finally {
-        // Restore original getElementById function
-        document.getElementById = originalGetElementById;
-    }
-}
-
-// Make generatePreview globally accessible
-window.generatePreview = generatePreview;
