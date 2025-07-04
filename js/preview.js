@@ -639,11 +639,7 @@ function drawWallOnlyView(ctx, wallOffsetX, wallOffsetY, scaledWallWidth, scaled
     ctx.lineWidth = 2;
     ctx.strokeRect(wallOffsetX, wallOffsetY, scaledWallWidth, scaledWallHeight);
     
-    // Add section label
-    ctx.fillStyle = '#333';
-    ctx.font = '16px Arial, sans-serif';
-    ctx.textAlign = 'center';
-    ctx.fillText('Final Result', wallOffsetX + scaledWallWidth / 2, wallOffsetY - 15);
+    // REMOVED: "Final Result" label
     
     // WALL DIMENSIONS - COMPLETELY REWRITTEN
     ctx.fillStyle = '#333';
