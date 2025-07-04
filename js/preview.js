@@ -503,10 +503,14 @@ function drawCompleteDimensionLabels(ctx, offsetX, offsetY, scaledTotalWidth, sc
     
     ctx.fillText(`Total Panels: ${totalWidthDisplay}`, offsetX + scaledTotalWidth / 2, totalLabelY - 8);
     
-    // Panel height annotation - EXACTLY MATCH WALL SPACING AND POSITIONING
-    // Wall uses: wallOffsetX - 30 for line, wallOffsetX - 30 - 15 for text
-    const panelHeightLineX = offsetX - 30;  // EXACT SAME AS WALL: -30
-    const panelHeightTextX = panelHeightLineX - 15;  // EXACT SAME AS WALL: -15 more
+    // Panel height annotation - USE WALL'S EXACT RELATIVE POSITIONING
+    // Wall uses: wallOffsetX - 30, where wallOffsetX = offsetX + (scaledTotalWidth - scaledWallWidth) / 2
+    // So wall's actual distance from left edge is: offsetX + (scaledTotalWidth - scaledWallWidth) / 2 - 30
+    // For panels, we want the same relative distance from the panel edge (offsetX)
+    // Wall distance from its left edge = 30px
+    // So panel distance from its left edge should also be 30px
+    const panelHeightLineX = wallOffsetX - 30;  // USE THE EXACT SAME CALCULATION AS WALL
+    const panelHeightTextX = panelHeightLineX - 15;  // EXACT SAME AS WALL
     
     ctx.beginPath();
     ctx.moveTo(panelHeightLineX, offsetY);
@@ -521,7 +525,7 @@ function drawCompleteDimensionLabels(ctx, offsetX, offsetY, scaledTotalWidth, sc
     ctx.stroke();
     
     ctx.save();
-    ctx.translate(panelHeightTextX, offsetY + scaledTotalHeight / 2);  // EXACT SAME POSITIONING
+    ctx.translate(panelHeightTextX, offsetY + scaledTotalHeight / 2);
     ctx.rotate(-Math.PI/2);
     
     let heightDisplay;
