@@ -358,8 +358,8 @@ function drawPatternInArea(ctx, areaX, areaY, areaWidth, areaHeight, referenceCo
         const hasLimitation = calculations.exceedsLimit || calculations.exceedsAvailableLength;
         let drawHeight, drawStartY;
         
-        if (hasLimitation && !isSection2 && drawMode === 'full_coverage') {
-            // Section 1 full coverage pass - draw the full panel height
+        if (drawMode === 'overage') {
+            // Overage areas - draw full panel height for the given area
             drawStartY = drawPanelY;
             drawHeight = referenceCoords.dimensions.scaledTotalHeight;
         } else if (hasLimitation && !isSection2 && drawMode === 'wall_area') {
@@ -395,6 +395,110 @@ function drawPatternInArea(ctx, areaX, areaY, areaWidth, areaHeight, referenceCo
     }
     
     ctx.restore();
+}
+
+// Draw overage areas (panel coverage outside the wall area) at reduced opacity
+function drawOverageAreas(ctx, panelStartX, panelStartY, panelTotalWidth, panelTotalHeight,
+                         wallStartX, wallStartY, wallWidth, wallHeight,
+                         referenceCoords, hasLimitation, limitedPanelStartY, limitedPanelHeight) {
+    
+    // Calculate areas that are panel coverage but NOT wall area
+    const areas = [];
+    
+    if (hasLimitation) {
+        // With limitations, we need to consider the actual panel coverage area
+        const panelEndY = limitedPanelStartY + limitedPanelHeight;
+        
+        // Left overage (if any)
+        if (wallStartX > panelStartX) {
+            areas.push({
+                x: panelStartX,
+                y: limitedPanelStartY,
+                width: wallStartX - panelStartX,
+                height: limitedPanelHeight
+            });
+        }
+        
+        // Right overage (if any)
+        if (wallStartX + wallWidth < panelStartX + panelTotalWidth) {
+            areas.push({
+                x: wallStartX + wallWidth,
+                y: limitedPanelStartY,
+                width: (panelStartX + panelTotalWidth) - (wallStartX + wallWidth),
+                height: limitedPanelHeight
+            });
+        }
+        
+        // Top overage (above limited panel coverage)
+        if (limitedPanelStartY > panelStartY) {
+            areas.push({
+                x: panelStartX,
+                y: panelStartY,
+                width: panelTotalWidth,
+                height: limitedPanelStartY - panelStartY
+            });
+        }
+        
+        // Bottom overage (below limited panel coverage) 
+        if (panelEndY < panelStartY + panelTotalHeight) {
+            areas.push({
+                x: panelStartX,
+                y: panelEndY,
+                width: panelTotalWidth,
+                height: (panelStartY + panelTotalHeight) - panelEndY
+            });
+        }
+        
+    } else {
+        // No limitations - simpler calculation
+        
+        // Left overage
+        if (wallStartX > panelStartX) {
+            areas.push({
+                x: panelStartX,
+                y: panelStartY,
+                width: wallStartX - panelStartX,
+                height: panelTotalHeight
+            });
+        }
+        
+        // Right overage
+        if (wallStartX + wallWidth < panelStartX + panelTotalWidth) {
+            areas.push({
+                x: wallStartX + wallWidth,
+                y: panelStartY,
+                width: (panelStartX + panelTotalWidth) - (wallStartX + wallWidth),
+                height: panelTotalHeight
+            });
+        }
+        
+        // Top overage
+        if (wallStartY > panelStartY) {
+            areas.push({
+                x: wallStartX,
+                y: panelStartY,
+                width: wallWidth,
+                height: wallStartY - panelStartY
+            });
+        }
+        
+        // Bottom overage
+        if (wallStartY + wallHeight < panelStartY + panelTotalHeight) {
+            areas.push({
+                x: wallStartX,
+                y: wallStartY + wallHeight,
+                width: wallWidth,
+                height: (panelStartY + panelTotalHeight) - (wallStartY + wallHeight)
+            });
+        }
+    }
+    
+    // Draw each overage area
+    for (const area of areas) {
+        if (area.width > 0 && area.height > 0) {
+            drawPatternInArea(ctx, area.x, area.y, area.width, area.height, referenceCoords, false, 'overage');
+        }
+    }
 }
 
 // Draw preview on canvas - RESTRUCTURED LAYOUT with fixed pattern alignment
@@ -440,19 +544,23 @@ function drawCompleteViewWithAnnotations(ctx, referenceCoords) {
     
     const hasLimitation = calculations.exceedsLimit || calculations.exceedsAvailableLength;
     
-    // Draw pattern with opacity for overage areas - FIXED TWO-PASS SYSTEM
+    // FIXED: Draw pattern areas without overlap to prevent opacity stacking
     if (imageLoaded && patternImage) {
-        // First pass: Draw all panels at 50% opacity
-        ctx.globalAlpha = 0.5;
-        drawPatternInArea(ctx, offsetX, offsetY, scaledTotalWidth, scaledTotalHeight, referenceCoords, false, 'full_coverage');
+        // Strategy: Draw wall area first at 100%, then draw overage areas at 50%
         
-        // Second pass: Draw wall area at 100% opacity
+        // First: Draw wall area at 100% opacity
         ctx.globalAlpha = 1.0;
         if (hasLimitation) {
             drawPatternInArea(ctx, wallOffsetX, panelStartY, scaledWallWidth, actualPanelHeight, referenceCoords, false, 'wall_area');
         } else {
             drawPatternInArea(ctx, wallOffsetX, wallOffsetY, scaledWallWidth, scaledWallHeight, referenceCoords, false, 'wall_area');
         }
+        
+        // Second: Draw overage areas at 50% opacity (areas outside the wall)
+        ctx.globalAlpha = 0.5;
+        drawOverageAreas(ctx, offsetX, offsetY, scaledTotalWidth, scaledTotalHeight, 
+                        wallOffsetX, wallOffsetY, scaledWallWidth, scaledWallHeight, 
+                        referenceCoords, hasLimitation, panelStartY, actualPanelHeight);
         
         ctx.globalAlpha = 1.0;
     }
