@@ -501,7 +501,7 @@ function drawCompleteDimensionLabels(ctx, offsetX, offsetY, scaledTotalWidth, sc
     ctx.lineTo(offsetX + scaledTotalWidth, totalLabelY + 5);
     ctx.stroke();
     
-    ctx.fillText(`Total Panels: ${totalWidthDisplay}`, offsetX + scaledTotalWidth / 2, totalLabelY - 8);
+    ctx.fillText(`All Panels: ${totalWidthDisplay}`, offsetX + scaledTotalWidth / 2, totalLabelY - 8);
     
     // Panel height annotation - SAME DISTANCE FROM PANELS AS WALL IS FROM WALL
     // Wall height is 30px from wall edge: wallOffsetX - 30
@@ -638,8 +638,6 @@ function drawWallOnlyView(ctx, wallOffsetX, wallOffsetY, scaledWallWidth, scaled
     ctx.strokeStyle = '#2c3e50';
     ctx.lineWidth = 2;
     ctx.strokeRect(wallOffsetX, wallOffsetY, scaledWallWidth, scaledWallHeight);
-    
-    // REMOVED: "Final Result" label
     
     // WALL DIMENSIONS - COMPLETELY REWRITTEN
     ctx.fillStyle = '#333';
