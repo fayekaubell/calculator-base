@@ -236,39 +236,38 @@ function getSelectedPattern() {
     return select ? select.value : '';
 }
 
-// Preload pattern images with CORS handling
+// FIXED: Preload pattern images without CORS issues
 function preloadPatternImage(pattern) {
     return new Promise((resolve, reject) => {
         if (!pattern.imageUrl) {
+            console.warn('No image URL provided for pattern:', pattern.name);
             resolve(null);
             return;
         }
         
-        const img = new Image();
-        img.crossOrigin = 'anonymous';
+        console.log('🖼️ Loading pattern image:', pattern.imageUrl);
         
+        const img = new Image();
+        
+        // Remove CORS header - try loading without it first
         img.onload = function() {
+            console.log('✅ Pattern image loaded successfully');
             patternImage = img;
             imageLoaded = true;
             resolve(img);
         };
         
         img.onerror = function() {
-            console.error('Failed to load pattern image with CORS');
-            // Try without CORS
-            const fallbackImg = new Image();
-            fallbackImg.onload = function() {
-                patternImage = fallbackImg;
-                imageLoaded = true;
-                resolve(fallbackImg);
-            };
-            fallbackImg.onerror = function() {
-                console.error('Failed to load pattern image completely');
-                resolve(null);
-            };
-            fallbackImg.src = pattern.imageUrl;
+            console.warn('⚠️ Failed to load pattern image:', pattern.imageUrl);
+            console.warn('This may be due to CORS restrictions or missing image file');
+            
+            // For development/testing, continue without image
+            patternImage = null;
+            imageLoaded = false;
+            resolve(null);
         };
         
+        // Start loading the image
         img.src = pattern.imageUrl;
     });
 }
