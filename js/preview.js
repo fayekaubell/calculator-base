@@ -645,23 +645,21 @@ function drawWallOnlyView(ctx, wallOffsetX, wallOffsetY, scaledWallWidth, scaled
             const sourceOffsetX = sequencePosition * offsetPerPanel;
             
             // Calculate where this panel's pattern should appear in Section 2's coordinate space
-            // Apply BOTH X and Y coordinate shifts to maintain exact pattern positioning
+            // Key insight: Only shift X coordinates, Y coordinates should match Section 1's wall overlay pass exactly
             const xCoordinateShift = wallOffsetX - section1WallOffsetX;
-            const yCoordinateShift = wallOffsetY - section1WallOffsetY;
             const panelX = section1PanelX + xCoordinateShift;
-            const patternStartY = section1OffsetY + yCoordinateShift;
             
             for (let x = -repeatW; x < pattern.panelWidth * scale + repeatW; x += repeatW) {
                 if (pattern.hasRepeatHeight) {
+                    // Use EXACT same Y logic as Section 1's wall overlay pass
                     for (let y = -repeatH; y < scaledWallHeight + repeatH; y += repeatH) {
                         const drawX = Math.floor(panelX + x - (sourceOffsetX * scale));
-                        const drawY = Math.floor(patternStartY + y);
+                        const drawY = Math.floor(wallOffsetY + y);  // SAME as Section 1 wall overlay
                         ctx.drawImage(patternImage, drawX, drawY, Math.ceil(repeatW), Math.ceil(repeatH));
                     }
                 } else {
                     const drawX = Math.floor(panelX + x - (sourceOffsetX * scale));
-                    // For patterns without repeat height, align to bottom of coverage area
-                    const drawY = Math.floor(patternStartY + (completeViewHeight * scale) - repeatH);
+                    const drawY = Math.floor(wallOffsetY + scaledWallHeight - repeatH);  // SAME as Section 1 wall overlay
                     ctx.drawImage(patternImage, drawX, drawY, Math.ceil(repeatW), Math.ceil(repeatH));
                 }
             }
