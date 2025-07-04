@@ -118,7 +118,7 @@ async function loadPatternsFromCSV() {
     }
 }
 
-// Create pattern object from CSV row
+// Create pattern object from CSV row - FIXED FOR YARD PATTERNS
 function createPatternFromCSV(row) {
     if (!row.pattern_name || !row.sku) {
         console.warn('⚠️ Skipping row with missing required fields:', row);
@@ -136,8 +136,8 @@ function createPatternFromCSV(row) {
         availableLengthsStr.split(',').map(l => parseInt(l.trim())).filter(l => !isNaN(l)) :
         defaults.availableLengths;
     
-    // Parse panel sequence
-    const panelSequence = row.panel_sequence || 'AB';
+    // FIXED: Parse panel sequence with proper yard pattern handling
+    const panelSequence = row.panel_sequence || (row.sale_type === 'yard' ? '' : 'AB');
     const sequenceLength = panelSequence.length;
     
     // Handle repeat height - check for "none" values
