@@ -503,8 +503,8 @@ function drawCompleteDimensionLabels(ctx, offsetX, offsetY, scaledTotalWidth, sc
     
     ctx.fillText(`Total Panels: ${totalWidthDisplay}`, offsetX + scaledTotalWidth / 2, totalLabelY - 8);
     
-    // Panel height annotation (left side, further left)
-    const heightLabelX = offsetX - 60;  // MOVED FURTHER LEFT
+    // Panel height annotation - MATCH WALL SPACING (30px from panels)
+    const heightLabelX = offsetX - 30;  // CHANGED FROM -60 TO -30 (same as wall)
     
     ctx.beginPath();
     ctx.moveTo(heightLabelX, offsetY);
@@ -519,7 +519,7 @@ function drawCompleteDimensionLabels(ctx, offsetX, offsetY, scaledTotalWidth, sc
     ctx.stroke();
     
     ctx.save();
-    ctx.translate(heightLabelX - 20, offsetY + scaledTotalHeight / 2);
+    ctx.translate(heightLabelX - 15, offsetY + scaledTotalHeight / 2);  // ADJUSTED TEXT POSITION
     ctx.rotate(-Math.PI/2);
     
     let heightDisplay;
