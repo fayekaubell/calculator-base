@@ -297,7 +297,7 @@ function calculateReferenceCoordinates() {
 }
 
 // FIXED: Draw pattern with consistent coordinate system across sections
-function drawPatternInArea(ctx, areaX, areaY, areaWidth, areaHeight, referenceCoords, isSection2 = false) {
+function drawPatternInArea(ctx, areaX, areaY, areaWidth, areaHeight, referenceCoords, isSection2 = false, drawMode = 'normal') {
     const { pattern, calculations } = currentPreview;
     
     if (!imageLoaded || !patternImage) {
@@ -354,12 +354,16 @@ function drawPatternInArea(ctx, areaX, areaY, areaWidth, areaHeight, referenceCo
         // Draw pattern repeats for this panel
         const panelWidth = pattern.panelWidth * scale;
         
-        // Determine the drawing height based on limitations
+        // Determine the drawing height based on limitations and draw mode
         const hasLimitation = calculations.exceedsLimit || calculations.exceedsAvailableLength;
         let drawHeight, drawStartY;
         
-        if (hasLimitation && !isSection2) {
-            // Section 1 with limitations - calculate covered area
+        if (hasLimitation && !isSection2 && drawMode === 'full_coverage') {
+            // Section 1 full coverage pass - draw the full panel height
+            drawStartY = drawPanelY;
+            drawHeight = referenceCoords.dimensions.scaledTotalHeight;
+        } else if (hasLimitation && !isSection2 && drawMode === 'wall_area') {
+            // Section 1 wall area pass - draw only the covered area
             const actualPanelLengthToUse = calculations.exceedsAvailableLength ? 
                 calculations.actualPanelLength : calculations.panelLength;
             const panelCoverageHeight = actualPanelLengthToUse * 12 * scale;
@@ -436,18 +440,18 @@ function drawCompleteViewWithAnnotations(ctx, referenceCoords) {
     
     const hasLimitation = calculations.exceedsLimit || calculations.exceedsAvailableLength;
     
-    // Draw pattern with opacity for overage areas
+    // Draw pattern with opacity for overage areas - FIXED TWO-PASS SYSTEM
     if (imageLoaded && patternImage) {
         // First pass: Draw all panels at 50% opacity
         ctx.globalAlpha = 0.5;
-        drawPatternInArea(ctx, offsetX, offsetY, scaledTotalWidth, scaledTotalHeight, referenceCoords, false);
+        drawPatternInArea(ctx, offsetX, offsetY, scaledTotalWidth, scaledTotalHeight, referenceCoords, false, 'full_coverage');
         
         // Second pass: Draw wall area at 100% opacity
         ctx.globalAlpha = 1.0;
         if (hasLimitation) {
-            drawPatternInArea(ctx, wallOffsetX, panelStartY, scaledWallWidth, actualPanelHeight, referenceCoords, false);
+            drawPatternInArea(ctx, wallOffsetX, panelStartY, scaledWallWidth, actualPanelHeight, referenceCoords, false, 'wall_area');
         } else {
-            drawPatternInArea(ctx, wallOffsetX, wallOffsetY, scaledWallWidth, scaledWallHeight, referenceCoords, false);
+            drawPatternInArea(ctx, wallOffsetX, wallOffsetY, scaledWallWidth, scaledWallHeight, referenceCoords, false, 'wall_area');
         }
         
         ctx.globalAlpha = 1.0;
@@ -640,7 +644,7 @@ function drawWallOnlyView(ctx, referenceCoords) {
     
     // CRITICAL FIX: Draw pattern using the same coordinate system as Section 1
     if (imageLoaded && patternImage) {
-        drawPatternInArea(ctx, wallOffsetX, wallOffsetY, scaledWallWidth, scaledWallHeight, referenceCoords, true);
+        drawPatternInArea(ctx, wallOffsetX, wallOffsetY, scaledWallWidth, scaledWallHeight, referenceCoords, true, 'normal');
     }
     
     // Draw uncovered area if needed
