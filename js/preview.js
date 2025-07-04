@@ -537,13 +537,14 @@ function drawCompleteDimensionLabels(ctx, offsetX, offsetY, scaledTotalWidth, sc
     // ABSOLUTELY NO WALL DIMENSIONS HERE - THEY'RE MOVED TO SECTION 2 ONLY
 }
 
-// Draw panel labels (A/B/C sequence) - COMPLETELY REPOSITIONED
+// Draw panel labels (A/B/C sequence) - NO BOXES, MATCH DIMENSION FONT
 function drawPanelLabels(ctx, offsetX, offsetY, scaledTotalWidth, scaledTotalHeight, scale) {
     const { pattern, calculations } = currentPreview;
     
     if (pattern.saleType === 'panel' && pattern.sequenceLength > 1) {
+        // Match dimension font exactly
         ctx.fillStyle = '#333';
-        ctx.font = '18px Arial, sans-serif';
+        ctx.font = '14px Arial, sans-serif';
         ctx.textAlign = 'center';
         
         for (let i = 0; i < calculations.panelsNeeded; i++) {
@@ -551,23 +552,11 @@ function drawPanelLabels(ctx, offsetX, offsetY, scaledTotalWidth, scaledTotalHei
             const sequencePosition = i % pattern.sequenceLength;
             const label = pattern.panelSequence[sequencePosition];
             
-            // Position labels WAY ABOVE the panels - clear space between dimensions and panels
-            // Dimensions end at offsetY - 40, so place labels at offsetY - 25 with clear gap
+            // Position labels with clear gap from panels
             const labelY = offsetY - 25;
             
-            // Larger, more prominent background
-            const textWidth = ctx.measureText(label).width;
-            ctx.fillStyle = 'rgba(255, 255, 255, 0.98)';
-            ctx.fillRect(x - textWidth/2 - 10, labelY - 15, textWidth + 20, 24);
-            
-            // Thicker border for visibility
-            ctx.strokeStyle = '#000';
-            ctx.lineWidth = 2;
-            ctx.strokeRect(x - textWidth/2 - 10, labelY - 15, textWidth + 20, 24);
-            
-            // Bold label text
-            ctx.fillStyle = '#000';
-            ctx.font = 'bold 18px Arial, sans-serif';
+            // NO BACKGROUND, NO BORDER - just plain text
+            ctx.fillStyle = '#333';
             ctx.fillText(label, x, labelY);
         }
     }
@@ -587,8 +576,8 @@ function drawWallOnlyView(ctx, wallOffsetX, wallOffsetY, scaledWallWidth, scaled
         ctx.clip();
         
         // Use same coordinates as complete view for consistency
-        const leftMargin = 80;
-        const maxWidth = 1400 - leftMargin - 80;
+        const leftMargin = 120;
+        const maxWidth = 1400 - leftMargin - 120;
         const scaledTotalWidth = calculations.totalWidth * scale;
         const completeViewOffsetX = leftMargin + (maxWidth - scaledTotalWidth) / 2;
         const completeViewWallOffsetX = completeViewOffsetX + (scaledTotalWidth - (wallWidth * scale)) / 2;
@@ -651,7 +640,7 @@ function drawWallOnlyView(ctx, wallOffsetX, wallOffsetY, scaledWallWidth, scaled
     ctx.textAlign = 'center';
     ctx.fillText('Final Result', wallOffsetX + scaledWallWidth / 2, wallOffsetY - 15);
     
-    // Add WALL DIMENSIONS here (moved from complete view)
+    // Add WALL DIMENSIONS here - HEIGHT ON LEFT SIDE
     ctx.fillStyle = '#333';
     ctx.font = '14px Arial, sans-serif';
     ctx.textAlign = 'center';
@@ -680,8 +669,8 @@ function drawWallOnlyView(ctx, wallOffsetX, wallOffsetY, scaledWallWidth, scaled
     
     ctx.fillText(`Wall: ${wallWidthDisplay}`, wallOffsetX + scaledWallWidth / 2, wallWidthLabelY + 15);
     
-    // Wall height annotation (right side)
-    const wallHeightLabelX = wallOffsetX + scaledWallWidth + 30;
+    // Wall height annotation (LEFT SIDE - MOVED FROM RIGHT)
+    const wallHeightLabelX = wallOffsetX - 30;  // LEFT SIDE instead of right
     
     ctx.beginPath();
     ctx.moveTo(wallHeightLabelX, wallOffsetY);
@@ -696,7 +685,7 @@ function drawWallOnlyView(ctx, wallOffsetX, wallOffsetY, scaledWallWidth, scaled
     ctx.stroke();
     
     ctx.save();
-    ctx.translate(wallHeightLabelX + 15, wallOffsetY + scaledWallHeight / 2);
+    ctx.translate(wallHeightLabelX - 15, wallOffsetY + scaledWallHeight / 2);  // LEFT SIDE
     ctx.rotate(-Math.PI/2);
     ctx.fillText(`Wall: ${wallHeightDisplay}`, 0, 0);
     ctx.restore();
