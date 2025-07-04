@@ -503,14 +503,15 @@ function drawCompleteDimensionLabels(ctx, offsetX, offsetY, scaledTotalWidth, sc
     
     ctx.fillText(`Total Panels: ${totalWidthDisplay}`, offsetX + scaledTotalWidth / 2, totalLabelY - 8);
     
-    // Panel height annotation - USE WALL'S EXACT RELATIVE POSITIONING
-    // Wall uses: wallOffsetX - 30, where wallOffsetX = offsetX + (scaledTotalWidth - scaledWallWidth) / 2
-    // So wall's actual distance from left edge is: offsetX + (scaledTotalWidth - scaledWallWidth) / 2 - 30
-    // For panels, we want the same relative distance from the panel edge (offsetX)
-    // Wall distance from its left edge = 30px
-    // So panel distance from its left edge should also be 30px
-    const panelHeightLineX = wallOffsetX - 30;  // USE THE EXACT SAME CALCULATION AS WALL
-    const panelHeightTextX = panelHeightLineX - 15;  // EXACT SAME AS WALL
+    // Panel height annotation - EXACTLY MATCH WALL'S OFFSET DISTANCE
+    // Wall dimensions are at: wallOffsetX - 30
+    // Panel dimensions should be at: offsetX - 30 
+    // But we need to ensure the VISUAL distance is the same
+    
+    // Calculate the exact same relative offset as the wall uses
+    const wallHeightOffset = 30;  // This is the distance wall height uses from wall edge
+    const panelHeightLineX = offsetX - wallHeightOffset;  // Use EXACT same offset value
+    const panelHeightTextX = panelHeightLineX - 15;  // Use EXACT same text spacing
     
     ctx.beginPath();
     ctx.moveTo(panelHeightLineX, offsetY);
@@ -682,9 +683,10 @@ function drawWallOnlyView(ctx, wallOffsetX, wallOffsetY, scaledWallWidth, scaled
     ctx.textAlign = 'center';
     ctx.fillText(wallWidthText, wallOffsetX + scaledWallWidth / 2, widthTextY);
     
-    // 2. WALL HEIGHT (LEFT SIDE OF WALL) - MOVED FROM RIGHT
-    const heightLineX = wallOffsetX - 30;  // LEFT SIDE - 30px to the left of wall
-    const heightTextX = heightLineX - 15;   // Text even further left
+    // 2. WALL HEIGHT (LEFT SIDE OF WALL) - USE SAME OFFSET AS PANELS
+    const wallHeightOffset = 30;  // SAME VALUE AS PANELS USE
+    const heightLineX = wallOffsetX - wallHeightOffset;  // Use consistent offset
+    const heightTextX = heightLineX - 15;   // Use consistent text spacing
     
     // Draw height dimension line
     ctx.beginPath();
