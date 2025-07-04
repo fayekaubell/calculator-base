@@ -446,7 +446,7 @@ function drawCompleteViewOutlines(ctx, offsetX, offsetY, scaledTotalWidth, scale
 // Draw all dimension labels for complete view
 function drawCompleteDimensionLabels(ctx, offsetX, offsetY, scaledTotalWidth, scaledTotalHeight, 
                                    scaledWallWidth, scaledWallHeight, wallOffsetX, wallOffsetY, scale) {
-    const { pattern, calculations, wallWidthFeet, wallWidthInches, wallHeightFeet, wallHeightInches } = currentPreview;
+    const { pattern, calculations } = currentPreview;
     
     ctx.fillStyle = '#333';
     ctx.font = '14px Arial, sans-serif';
@@ -454,7 +454,7 @@ function drawCompleteDimensionLabels(ctx, offsetX, offsetY, scaledTotalWidth, sc
     ctx.strokeStyle = '#333';
     ctx.lineWidth = 1;
     
-    // Panel dimensions
+    // Panel dimensions ONLY - NO WALL DIMENSIONS
     const panelWidthFeet = Math.floor(pattern.panelWidth / 12);
     const panelWidthInches = pattern.panelWidth % 12;
     const panelWidthDisplay = panelWidthInches > 0 ? 
@@ -534,50 +534,6 @@ function drawCompleteDimensionLabels(ctx, offsetX, offsetY, scaledTotalWidth, sc
     
     ctx.fillText(heightDisplay, 0, 0);
     ctx.restore();
-    
-    // Wall dimensions
-    const wallWidthDisplay = wallWidthInches > 0 ? 
-        `${wallWidthFeet}'-${wallWidthInches}"` : `${wallWidthFeet}'-0"`;
-    const wallHeightDisplay = wallHeightInches > 0 ? 
-        `${wallHeightFeet}'-${wallHeightInches}"` : `${wallHeightFeet}'-0"`;
-    
-    // Wall width annotation (bottom)
-    const wallWidthLabelY = wallOffsetY + scaledWallHeight + 30;
-    
-    ctx.beginPath();
-    ctx.moveTo(wallOffsetX, wallWidthLabelY);
-    ctx.lineTo(wallOffsetX + scaledWallWidth, wallWidthLabelY);
-    ctx.stroke();
-    
-    ctx.beginPath();
-    ctx.moveTo(wallOffsetX, wallWidthLabelY - 5);
-    ctx.lineTo(wallOffsetX, wallWidthLabelY + 5);
-    ctx.moveTo(wallOffsetX + scaledWallWidth, wallWidthLabelY - 5);
-    ctx.lineTo(wallOffsetX + scaledWallWidth, wallWidthLabelY + 5);
-    ctx.stroke();
-    
-    ctx.fillText(`Wall: ${wallWidthDisplay}`, wallOffsetX + scaledWallWidth / 2, wallWidthLabelY + 15);
-    
-    // Wall height annotation (right side)
-    const wallHeightLabelX = wallOffsetX + scaledWallWidth + 30;
-    
-    ctx.beginPath();
-    ctx.moveTo(wallHeightLabelX, wallOffsetY);
-    ctx.lineTo(wallHeightLabelX, wallOffsetY + scaledWallHeight);
-    ctx.stroke();
-    
-    ctx.beginPath();
-    ctx.moveTo(wallHeightLabelX - 5, wallOffsetY);
-    ctx.lineTo(wallHeightLabelX + 5, wallOffsetY);
-    ctx.moveTo(wallHeightLabelX - 5, wallOffsetY + scaledWallHeight);
-    ctx.lineTo(wallHeightLabelX + 5, wallOffsetY + scaledWallHeight);
-    ctx.stroke();
-    
-    ctx.save();
-    ctx.translate(wallHeightLabelX + 15, wallOffsetY + scaledWallHeight / 2);
-    ctx.rotate(-Math.PI/2);
-    ctx.fillText(`Wall: ${wallHeightDisplay}`, 0, 0);
-    ctx.restore();
 }
 
 // Draw panel labels (A/B/C sequence)
@@ -594,31 +550,29 @@ function drawPanelLabels(ctx, offsetX, offsetY, scaledTotalWidth, scaledTotalHei
             const sequencePosition = i % pattern.sequenceLength;
             const label = pattern.panelSequence[sequencePosition];
             
-            // Position labels well above the panels, between dimension lines
-            // Total dimension is at offsetY - 70, individual panel at offsetY - 40
-            // Place labels at offsetY - 55 (between the two dimension lines)
-            const labelY = offsetY - 55;
+            // Position labels RIGHT above the panel bounds, with some spacing
+            const labelY = offsetY - 8;
             
             // Background for label
             const textWidth = ctx.measureText(label).width;
             ctx.fillStyle = 'rgba(255, 255, 255, 0.95)';
-            ctx.fillRect(x - textWidth/2 - 8, labelY - 12, textWidth + 16, 20);
+            ctx.fillRect(x - textWidth/2 - 6, labelY - 12, textWidth + 12, 18);
             
             // Border for label
             ctx.strokeStyle = '#333';
             ctx.lineWidth = 1;
-            ctx.strokeRect(x - textWidth/2 - 8, labelY - 12, textWidth + 16, 20);
+            ctx.strokeRect(x - textWidth/2 - 6, labelY - 12, textWidth + 12, 18);
             
             // Label text
             ctx.fillStyle = '#333';
-            ctx.fillText(label, x, labelY + 2);
+            ctx.fillText(label, x, labelY - 2);
         }
     }
 }
 
 // Draw Wall Only View (simplified)
 function drawWallOnlyView(ctx, wallOffsetX, wallOffsetY, scaledWallWidth, scaledWallHeight, scale) {
-    const { pattern, wallWidth, wallHeight, calculations } = currentPreview;
+    const { pattern, wallWidth, wallHeight, calculations, wallWidthFeet, wallWidthInches, wallHeightFeet, wallHeightInches } = currentPreview;
     
     if (imageLoaded && patternImage) {
         ctx.save();
@@ -693,6 +647,56 @@ function drawWallOnlyView(ctx, wallOffsetX, wallOffsetY, scaledWallWidth, scaled
     ctx.font = '16px Arial, sans-serif';
     ctx.textAlign = 'center';
     ctx.fillText('Final Result', wallOffsetX + scaledWallWidth / 2, wallOffsetY - 15);
+    
+    // Add WALL DIMENSIONS here (moved from complete view)
+    ctx.fillStyle = '#333';
+    ctx.font = '14px Arial, sans-serif';
+    ctx.textAlign = 'center';
+    ctx.strokeStyle = '#333';
+    ctx.lineWidth = 1;
+    
+    const wallWidthDisplay = wallWidthInches > 0 ? 
+        `${wallWidthFeet}'-${wallWidthInches}"` : `${wallWidthFeet}'-0"`;
+    const wallHeightDisplay = wallHeightInches > 0 ? 
+        `${wallHeightFeet}'-${wallHeightInches}"` : `${wallHeightFeet}'-0"`;
+    
+    // Wall width annotation (bottom)
+    const wallWidthLabelY = wallOffsetY + scaledWallHeight + 30;
+    
+    ctx.beginPath();
+    ctx.moveTo(wallOffsetX, wallWidthLabelY);
+    ctx.lineTo(wallOffsetX + scaledWallWidth, wallWidthLabelY);
+    ctx.stroke();
+    
+    ctx.beginPath();
+    ctx.moveTo(wallOffsetX, wallWidthLabelY - 5);
+    ctx.lineTo(wallOffsetX, wallWidthLabelY + 5);
+    ctx.moveTo(wallOffsetX + scaledWallWidth, wallWidthLabelY - 5);
+    ctx.lineTo(wallOffsetX + scaledWallWidth, wallWidthLabelY + 5);
+    ctx.stroke();
+    
+    ctx.fillText(`Wall: ${wallWidthDisplay}`, wallOffsetX + scaledWallWidth / 2, wallWidthLabelY + 15);
+    
+    // Wall height annotation (right side)
+    const wallHeightLabelX = wallOffsetX + scaledWallWidth + 30;
+    
+    ctx.beginPath();
+    ctx.moveTo(wallHeightLabelX, wallOffsetY);
+    ctx.lineTo(wallHeightLabelX, wallOffsetY + scaledWallHeight);
+    ctx.stroke();
+    
+    ctx.beginPath();
+    ctx.moveTo(wallHeightLabelX - 5, wallOffsetY);
+    ctx.lineTo(wallHeightLabelX + 5, wallOffsetY);
+    ctx.moveTo(wallHeightLabelX - 5, wallOffsetY + scaledWallHeight);
+    ctx.lineTo(wallHeightLabelX + 5, wallOffsetY + scaledWallHeight);
+    ctx.stroke();
+    
+    ctx.save();
+    ctx.translate(wallHeightLabelX + 15, wallOffsetY + scaledWallHeight / 2);
+    ctx.rotate(-Math.PI/2);
+    ctx.fillText(`Wall: ${wallHeightDisplay}`, 0, 0);
+    ctx.restore();
 }
 
 // Canvas modal functionality
