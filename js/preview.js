@@ -227,7 +227,7 @@ function updatePreviewInfo() {
     }
 }
 
-// Draw preview on canvas - NEW CONSOLIDATED LAYOUT
+// Draw preview on canvas - COMPLETELY RESTRUCTURED LAYOUT
 function drawPreview() {
     const canvas = document.getElementById('previewCanvas');
     const ctx = canvas.getContext('2d');
@@ -237,12 +237,12 @@ function drawPreview() {
     ctx.fillStyle = '#ffffff';
     ctx.fillRect(0, 0, canvas.width, canvas.height);
     
-    // Calculate layout parameters
-    const leftMargin = 80;
-    const rightMargin = 80;
-    const topMargin = 100;
-    const bottomMargin = 100;
-    const sectionGap = 40;
+    // MASSIVELY INCREASED MARGINS FOR PROPER SPACING
+    const leftMargin = 120;    // INCREASED from 80
+    const rightMargin = 120;   // INCREASED from 80
+    const topMargin = 140;     // INCREASED from 100
+    const bottomMargin = 120;  // INCREASED from 100
+    const sectionGap = 60;     // INCREASED from 40
     
     const maxWidth = canvas.width - leftMargin - rightMargin;
     const maxHeight = canvas.height - topMargin - bottomMargin;
@@ -272,7 +272,7 @@ function drawPreview() {
     // Center horizontally
     const offsetX = leftMargin + (maxWidth - scaledTotalWidth) / 2;
     
-    // Section 1: Complete view with wall overlay (formerly Section 2)
+    // Section 1: Complete view with wall overlay
     const wallOffsetX = offsetX + (scaledTotalWidth - scaledWallWidth) / 2;
     const wallOffsetY = currentY + ((completeViewHeight * scale) - scaledWallHeight) / 2;
     
@@ -281,7 +281,7 @@ function drawPreview() {
     
     currentY += completeViewHeight * scale + sectionGap;
     
-    // Section 2: Wall only view (formerly Section 3)
+    // Section 2: Wall only view (WITH WALL DIMENSIONS)
     const wallOnlyOffsetX = leftMargin + (maxWidth - scaledWallWidth) / 2;
     drawWallOnlyView(ctx, wallOnlyOffsetX, currentY, scaledWallWidth, scaledWallHeight, scale);
 }
@@ -443,7 +443,7 @@ function drawCompleteViewOutlines(ctx, offsetX, offsetY, scaledTotalWidth, scale
     ctx.setLineDash([]);
 }
 
-// Draw all dimension labels for complete view
+// Draw all dimension labels for complete view - PANEL DIMENSIONS ONLY
 function drawCompleteDimensionLabels(ctx, offsetX, offsetY, scaledTotalWidth, scaledTotalHeight, 
                                    scaledWallWidth, scaledWallHeight, wallOffsetX, wallOffsetY, scale) {
     const { pattern, calculations } = currentPreview;
@@ -454,24 +454,23 @@ function drawCompleteDimensionLabels(ctx, offsetX, offsetY, scaledTotalWidth, sc
     ctx.strokeStyle = '#333';
     ctx.lineWidth = 1;
     
-    // Panel dimensions ONLY - NO WALL DIMENSIONS
+    // ONLY PANEL DIMENSIONS - ABSOLUTELY NO WALL DIMENSIONS HERE
     const panelWidthFeet = Math.floor(pattern.panelWidth / 12);
     const panelWidthInches = pattern.panelWidth % 12;
     const panelWidthDisplay = panelWidthInches > 0 ? 
         `${panelWidthFeet}'-${panelWidthInches}"` : `${panelWidthFeet}'-0"`;
     
-    // Individual panel width annotation (top)
+    // Individual panel width annotation (higher up)
     if (calculations.panelsNeeded > 0) {
         const panelStartX = offsetX;
         const panelEndX = offsetX + (pattern.panelWidth * scale);
-        const labelY = offsetY - 40;
+        const labelY = offsetY - 50;  // MOVED HIGHER
         
         ctx.beginPath();
         ctx.moveTo(panelStartX, labelY);
         ctx.lineTo(panelEndX, labelY);
         ctx.stroke();
         
-        // Simple line ends instead of arrows
         ctx.beginPath();
         ctx.moveTo(panelStartX, labelY - 5);
         ctx.lineTo(panelStartX, labelY + 5);
@@ -482,13 +481,13 @@ function drawCompleteDimensionLabels(ctx, offsetX, offsetY, scaledTotalWidth, sc
         ctx.fillText(`Panel: ${panelWidthDisplay}`, (panelStartX + panelEndX) / 2, labelY - 8);
     }
     
-    // Total panels width annotation (above individual panel)
+    // Total panels width annotation (even higher)
     const totalWidthFeet = Math.floor(calculations.totalWidth / 12);
     const totalWidthInches = calculations.totalWidth % 12;
     const totalWidthDisplay = totalWidthInches > 0 ? 
         `${totalWidthFeet}'-${totalWidthInches}"` : `${totalWidthFeet}'-0"`;
     
-    const totalLabelY = offsetY - 70;
+    const totalLabelY = offsetY - 80;  // MOVED EVEN HIGHER
     
     ctx.beginPath();
     ctx.moveTo(offsetX, totalLabelY);
@@ -504,8 +503,8 @@ function drawCompleteDimensionLabels(ctx, offsetX, offsetY, scaledTotalWidth, sc
     
     ctx.fillText(`Total Panels: ${totalWidthDisplay}`, offsetX + scaledTotalWidth / 2, totalLabelY - 8);
     
-    // Panel height annotation (left side)
-    const heightLabelX = offsetX - 40;
+    // Panel height annotation (left side, further left)
+    const heightLabelX = offsetX - 60;  // MOVED FURTHER LEFT
     
     ctx.beginPath();
     ctx.moveTo(heightLabelX, offsetY);
@@ -520,7 +519,7 @@ function drawCompleteDimensionLabels(ctx, offsetX, offsetY, scaledTotalWidth, sc
     ctx.stroke();
     
     ctx.save();
-    ctx.translate(heightLabelX - 15, offsetY + scaledTotalHeight / 2);
+    ctx.translate(heightLabelX - 20, offsetY + scaledTotalHeight / 2);
     ctx.rotate(-Math.PI/2);
     
     let heightDisplay;
@@ -534,15 +533,17 @@ function drawCompleteDimensionLabels(ctx, offsetX, offsetY, scaledTotalWidth, sc
     
     ctx.fillText(heightDisplay, 0, 0);
     ctx.restore();
+    
+    // ABSOLUTELY NO WALL DIMENSIONS HERE - THEY'RE MOVED TO SECTION 2 ONLY
 }
 
-// Draw panel labels (A/B/C sequence)
+// Draw panel labels (A/B/C sequence) - COMPLETELY REPOSITIONED
 function drawPanelLabels(ctx, offsetX, offsetY, scaledTotalWidth, scaledTotalHeight, scale) {
     const { pattern, calculations } = currentPreview;
     
     if (pattern.saleType === 'panel' && pattern.sequenceLength > 1) {
         ctx.fillStyle = '#333';
-        ctx.font = '16px Arial, sans-serif';
+        ctx.font = '18px Arial, sans-serif';
         ctx.textAlign = 'center';
         
         for (let i = 0; i < calculations.panelsNeeded; i++) {
@@ -550,22 +551,24 @@ function drawPanelLabels(ctx, offsetX, offsetY, scaledTotalWidth, scaledTotalHei
             const sequencePosition = i % pattern.sequenceLength;
             const label = pattern.panelSequence[sequencePosition];
             
-            // Position labels RIGHT above the panel bounds, with some spacing
-            const labelY = offsetY - 8;
+            // Position labels WAY ABOVE the panels - clear space between dimensions and panels
+            // Dimensions end at offsetY - 40, so place labels at offsetY - 25 with clear gap
+            const labelY = offsetY - 25;
             
-            // Background for label
+            // Larger, more prominent background
             const textWidth = ctx.measureText(label).width;
-            ctx.fillStyle = 'rgba(255, 255, 255, 0.95)';
-            ctx.fillRect(x - textWidth/2 - 6, labelY - 12, textWidth + 12, 18);
+            ctx.fillStyle = 'rgba(255, 255, 255, 0.98)';
+            ctx.fillRect(x - textWidth/2 - 10, labelY - 15, textWidth + 20, 24);
             
-            // Border for label
-            ctx.strokeStyle = '#333';
-            ctx.lineWidth = 1;
-            ctx.strokeRect(x - textWidth/2 - 6, labelY - 12, textWidth + 12, 18);
+            // Thicker border for visibility
+            ctx.strokeStyle = '#000';
+            ctx.lineWidth = 2;
+            ctx.strokeRect(x - textWidth/2 - 10, labelY - 15, textWidth + 20, 24);
             
-            // Label text
-            ctx.fillStyle = '#333';
-            ctx.fillText(label, x, labelY - 2);
+            // Bold label text
+            ctx.fillStyle = '#000';
+            ctx.font = 'bold 18px Arial, sans-serif';
+            ctx.fillText(label, x, labelY);
         }
     }
 }
