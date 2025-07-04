@@ -579,7 +579,7 @@ function drawPanelLabels(ctx, offsetX, offsetY, scaledTotalWidth, scaledTotalHei
     }
 }
 
-// Draw Wall Only View - COMPLETELY REWRITTEN WITH LEFT SIDE HEIGHT
+// Draw Wall Only View - FIXED to preserve exact pattern alignment from Section 1
 function drawWallOnlyView(ctx, wallOffsetX, wallOffsetY, scaledWallWidth, scaledWallHeight, scale) {
     const { pattern, wallWidth, wallHeight, calculations, wallWidthFeet, wallWidthInches, wallHeightFeet, wallHeightInches } = currentPreview;
     
@@ -588,21 +588,22 @@ function drawWallOnlyView(ctx, wallOffsetX, wallOffsetY, scaledWallWidth, scaled
         ctx.save();
         ctx.imageSmoothingEnabled = false;
         
-        // Clip to wall area
+        // Clip to wall area ONLY
         ctx.beginPath();
         ctx.rect(Math.floor(wallOffsetX), Math.floor(wallOffsetY), Math.ceil(scaledWallWidth), Math.ceil(scaledWallHeight));
         ctx.clip();
         
-        // Use same coordinates as complete view for consistency
+        // CRITICAL FIX: Use the EXACT SAME coordinate system as Section 1
+        // Calculate the Section 1 coordinates
         const leftMargin = 120;
         const maxWidth = 1400 - leftMargin - 120;
         const scaledTotalWidth = calculations.totalWidth * scale;
-        const completeViewOffsetX = leftMargin + (maxWidth - scaledTotalWidth) / 2;
-        const completeViewWallOffsetX = completeViewOffsetX + (scaledTotalWidth - (wallWidth * scale)) / 2;
+        const section1OffsetX = leftMargin + (maxWidth - scaledTotalWidth) / 2;
         
-        // Calculate transformation
-        const xTransform = wallOffsetX - completeViewWallOffsetX;
+        // Calculate Section 1's wall position within the strip coverage
+        const section1WallOffsetX = section1OffsetX + (scaledTotalWidth - (wallWidth * scale)) / 2;
         
+        // Use the same pattern drawing logic as Section 1, but with Section 1 coordinates
         const repeatW = pattern.saleType === 'yard' ? pattern.repeatWidth * scale :
             (pattern.sequenceLength === 1 ? pattern.panelWidth * scale : pattern.repeatWidth * scale);
         const repeatH = pattern.repeatHeight * scale;
@@ -611,13 +612,19 @@ function drawWallOnlyView(ctx, wallOffsetX, wallOffsetY, scaledWallWidth, scaled
         const offsetPerPanel = (pattern.sequenceLength === 0 || pattern.sequenceLength === 1) ? 0 : 
             pattern.repeatWidth / pattern.sequenceLength;
         
+        // Draw pattern using Section 1's coordinate system
         for (let panelIndex = 0; panelIndex < calculations.panelsNeeded; panelIndex++) {
-            const completeViewPanelX = completeViewOffsetX + (panelIndex * pattern.panelWidth * scale);
-            const panelX = completeViewPanelX + xTransform;
+            // Use Section 1's panel positioning
+            const section1PanelX = section1OffsetX + (panelIndex * pattern.panelWidth * scale);
             
             // FIXED: Handle sequenceLength = 0 for yard patterns
             const sequencePosition = pattern.sequenceLength === 0 ? 0 : panelIndex % pattern.sequenceLength;
             const sourceOffsetX = sequencePosition * offsetPerPanel;
+            
+            // Calculate where this panel's pattern should appear in Section 2's coordinate space
+            // The key insight: maintain the same pattern positioning, just draw it at different canvas coordinates
+            const coordinateShift = wallOffsetX - section1WallOffsetX;
+            const panelX = section1PanelX + coordinateShift;
             
             for (let x = -repeatW; x < pattern.panelWidth * scale + repeatW; x += repeatW) {
                 if (pattern.hasRepeatHeight) {
