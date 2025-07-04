@@ -478,7 +478,7 @@ function drawCompleteDimensionLabels(ctx, offsetX, offsetY, scaledTotalWidth, sc
         ctx.lineTo(panelEndX, labelY + 5);
         ctx.stroke();
         
-        ctx.fillText(`Panel: ${panelWidthDisplay}`, (panelStartX + panelEndX) / 2, labelY - 8);
+        ctx.fillText(`Panel Width: ${panelWidthDisplay}`, (panelStartX + panelEndX) / 2, labelY - 8);
     }
     
     // Total panels width annotation (even higher)
@@ -525,9 +525,9 @@ function drawCompleteDimensionLabels(ctx, offsetX, offsetY, scaledTotalWidth, sc
     
     let heightDisplay;
     if (pattern.saleType === 'yard' && calculations.panelLengthInches !== undefined && calculations.panelLengthInches > 0) {
-        heightDisplay = `Panel: ${calculations.panelLength}'-${calculations.panelLengthInches}"`;
+        heightDisplay = `Panel Height: ${calculations.panelLength}'-${calculations.panelLengthInches}"`;
     } else {
-        heightDisplay = `Panel: ${calculations.panelLength}'`;
+        heightDisplay = `Panel Height: ${calculations.panelLength}'`;
     }
     
     ctx.fillText(heightDisplay, 0, 0);
@@ -641,11 +641,11 @@ function drawWallOnlyView(ctx, wallOffsetX, wallOffsetY, scaledWallWidth, scaled
     ctx.strokeStyle = '#333';
     ctx.lineWidth = 1;
     
-    // Format the dimension text - CLEAN UP 0 INCHES
+    // Format the dimension text - DESCRIPTIVE LABELS
     const wallWidthText = wallWidthInches > 0 ? 
-        `Wall: ${wallWidthFeet}'-${wallWidthInches}"` : `Wall: ${wallWidthFeet}'`;
+        `Wall Width: ${wallWidthFeet}'-${wallWidthInches}"` : `Wall Width: ${wallWidthFeet}'`;
     const wallHeightText = wallHeightInches > 0 ? 
-        `Wall: ${wallHeightFeet}'-${wallHeightInches}"` : `Wall: ${wallHeightFeet}'`;
+        `Wall Height: ${wallHeightFeet}'-${wallHeightInches}"` : `Wall Height: ${wallHeightFeet}'`;
     
     // 1. WALL WIDTH (bottom of wall)
     const widthLineY = wallOffsetY + scaledWallHeight + 30;
