@@ -458,7 +458,7 @@ function drawCompleteDimensionLabels(ctx, offsetX, offsetY, scaledTotalWidth, sc
     const panelWidthFeet = Math.floor(pattern.panelWidth / 12);
     const panelWidthInches = pattern.panelWidth % 12;
     const panelWidthDisplay = panelWidthInches > 0 ? 
-        `${panelWidthFeet}'-${panelWidthInches}"` : `${panelWidthFeet}'-0"`;
+        `${panelWidthFeet}'-${panelWidthInches}"` : `${panelWidthFeet}'`;
     
     // Individual panel width annotation (higher up)
     if (calculations.panelsNeeded > 0) {
@@ -485,7 +485,7 @@ function drawCompleteDimensionLabels(ctx, offsetX, offsetY, scaledTotalWidth, sc
     const totalWidthFeet = Math.floor(calculations.totalWidth / 12);
     const totalWidthInches = calculations.totalWidth % 12;
     const totalWidthDisplay = totalWidthInches > 0 ? 
-        `${totalWidthFeet}'-${totalWidthInches}"` : `${totalWidthFeet}'-0"`;
+        `${totalWidthFeet}'-${totalWidthInches}"` : `${totalWidthFeet}'`;
     
     const totalLabelY = offsetY - 80;  // MOVED EVEN HIGHER
     
@@ -529,9 +529,9 @@ function drawCompleteDimensionLabels(ctx, offsetX, offsetY, scaledTotalWidth, sc
     if (pattern.saleType === 'yard' && calculations.panelLengthInches !== undefined) {
         const inches = calculations.panelLengthInches;
         heightDisplay = inches > 0 ? 
-            `Panel: ${calculations.panelLength}'-${inches}"` : `Panel: ${calculations.panelLength}'-0"`;
+            `Panel: ${calculations.panelLength}'-${inches}"` : `Panel: ${calculations.panelLength}'`;
     } else {
-        heightDisplay = `Panel: ${calculations.panelLength}'-0"`;
+        heightDisplay = `Panel: ${calculations.panelLength}'`;
     }
     
     ctx.fillText(heightDisplay, 0, 0);
@@ -645,11 +645,11 @@ function drawWallOnlyView(ctx, wallOffsetX, wallOffsetY, scaledWallWidth, scaled
     ctx.strokeStyle = '#333';
     ctx.lineWidth = 1;
     
-    // Format the dimension text
+    // Format the dimension text - CLEAN UP 0 INCHES
     const wallWidthText = wallWidthInches > 0 ? 
-        `Wall: ${wallWidthFeet}'-${wallWidthInches}"` : `Wall: ${wallWidthFeet}'-0"`;
+        `Wall: ${wallWidthFeet}'-${wallWidthInches}"` : `Wall: ${wallWidthFeet}'`;
     const wallHeightText = wallHeightInches > 0 ? 
-        `Wall: ${wallHeightFeet}'-${wallHeightInches}"` : `Wall: ${wallHeightFeet}'-0"`;
+        `Wall: ${wallHeightFeet}'-${wallHeightInches}"` : `Wall: ${wallHeightFeet}'`;
     
     // 1. WALL WIDTH (bottom of wall)
     const widthLineY = wallOffsetY + scaledWallHeight + 30;
