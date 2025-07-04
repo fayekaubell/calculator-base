@@ -286,7 +286,7 @@ function drawPreview() {
     drawWallOnlyView(ctx, wallOnlyOffsetX, currentY, scaledWallWidth, scaledWallHeight, scale);
 }
 
-// Draw Complete View with all annotations and labels
+// Draw Complete View with all annotations and labels - NO WALL DIMENSIONS
 function drawCompleteViewWithAnnotations(ctx, offsetX, offsetY, scaledTotalWidth, scaledTotalHeight, 
                                        scaledWallWidth, scaledWallHeight, wallOffsetX, wallOffsetY, scale) {
     const { pattern, calculations } = currentPreview;
@@ -400,7 +400,7 @@ function drawCompleteViewWithAnnotations(ctx, offsetX, offsetY, scaledTotalWidth
     drawCompleteViewOutlines(ctx, offsetX, offsetY, scaledTotalWidth, scaledTotalHeight, 
                            scaledWallWidth, scaledWallHeight, wallOffsetX, wallOffsetY, scale);
     
-    // Draw all dimension labels and annotations
+    // Draw ONLY panel dimension labels - NO WALL DIMENSIONS
     drawCompleteDimensionLabels(ctx, offsetX, offsetY, scaledTotalWidth, scaledTotalHeight, 
                               scaledWallWidth, scaledWallHeight, wallOffsetX, wallOffsetY, scale);
     
