@@ -1,4 +1,4 @@
-// Canvas Preview Generation Module - Fixed Two-Pass Opacity System
+// Canvas Preview Generation Module - Simple Overlay Approach
 
 // Generate preview function
 async function generatePreview() {
@@ -296,7 +296,7 @@ function calculateReferenceCoordinates() {
     };
 }
 
-// Draw pattern with consistent coordinate system across sections
+// SIMPLE: Draw pattern with consistent coordinate system
 function drawPatternInArea(ctx, areaX, areaY, areaWidth, areaHeight, referenceCoords, isSection2 = false) {
     const { pattern, calculations } = currentPreview;
     
@@ -335,163 +335,7 @@ function drawPatternInArea(ctx, areaX, areaY, areaWidth, areaHeight, referenceCo
         coordinateOffsetY = referenceCoords.section2.wallStartY - referenceCoords.section1.wallStartY;
     }
     
-    // Draw wall outline
-    ctx.strokeStyle = '#2c3e50';
-    ctx.lineWidth = 2;
-    ctx.strokeRect(wallOffsetX, wallOffsetY, scaledWallWidth, scaledWallHeight);
-    
-    // Draw wall dimensions
-    ctx.fillStyle = '#333';
-    ctx.font = '14px Arial, sans-serif';
-    ctx.strokeStyle = '#333';
-    ctx.lineWidth = 1;
-    
-    // Format the dimension text
-    const wallWidthText = wallWidthInches > 0 ? 
-        `Wall Width: ${wallWidthFeet}'-${wallWidthInches}"` : `Wall Width: ${wallWidthFeet}'`;
-    const wallHeightText = wallHeightInches > 0 ? 
-        `Wall Height: ${wallHeightFeet}'-${wallHeightInches}"` : `Wall Height: ${wallHeightFeet}'`;
-    
-    // Wall width annotation (bottom of wall)
-    const widthLineY = wallOffsetY + scaledWallHeight + 30;
-    const widthTextY = widthLineY + 15;
-    
-    ctx.beginPath();
-    ctx.moveTo(wallOffsetX, widthLineY);
-    ctx.lineTo(wallOffsetX + scaledWallWidth, widthLineY);
-    ctx.stroke();
-    
-    ctx.beginPath();
-    ctx.moveTo(wallOffsetX, widthLineY - 5);
-    ctx.lineTo(wallOffsetX, widthLineY + 5);
-    ctx.moveTo(wallOffsetX + scaledWallWidth, widthLineY - 5);
-    ctx.lineTo(wallOffsetX + scaledWallWidth, widthLineY + 5);
-    ctx.stroke();
-    
-    ctx.textAlign = 'center';
-    ctx.fillText(wallWidthText, wallOffsetX + scaledWallWidth / 2, widthTextY);
-    
-    // Wall height annotation (left side of wall)
-    const wallHeightOffset = 30;
-    const heightLineX = wallOffsetX - wallHeightOffset;
-    const heightTextX = heightLineX - 15;
-    
-    ctx.beginPath();
-    ctx.moveTo(heightLineX, wallOffsetY);
-    ctx.lineTo(heightLineX, wallOffsetY + scaledWallHeight);
-    ctx.stroke();
-    
-    ctx.beginPath();
-    ctx.moveTo(heightLineX - 5, wallOffsetY);
-    ctx.lineTo(heightLineX + 5, wallOffsetY);
-    ctx.moveTo(heightLineX - 5, wallOffsetY + scaledWallHeight);
-    ctx.lineTo(heightLineX + 5, wallOffsetY + scaledWallHeight);
-    ctx.stroke();
-    
-    ctx.save();
-    ctx.translate(heightTextX, wallOffsetY + scaledWallHeight / 2);
-    ctx.rotate(-Math.PI/2);
-    ctx.textAlign = 'center';
-    ctx.fillText(wallHeightText, 0, 0);
-    ctx.restore();
-}
-
-// Canvas modal functionality
-function openCanvasModal() {
-    const canvas = document.getElementById('previewCanvas');
-    
-    if (!currentPreview) {
-        console.error('No current preview data available for high-res rendering');
-        return;
-    }
-    
-    console.log('Creating high-res modal...');
-    
-    const modal = document.createElement('div');
-    modal.className = 'canvas-modal';
-    
-    const canvasContainer = document.createElement('div');
-    canvasContainer.style.width = '100%';
-    canvasContainer.style.maxWidth = '95vw';
-    canvasContainer.style.margin = '0 auto';
-    canvasContainer.style.overflowX = 'hidden';
-    canvasContainer.style.overflowY = 'visible';
-    
-    const largeCanvas = document.createElement('canvas');
-    
-    const hiResScale = 3;
-    const baseScale = 2;
-    largeCanvas.width = canvas.width * hiResScale * baseScale;
-    largeCanvas.height = canvas.height * hiResScale * baseScale;
-    
-    const displayWidth = window.innerWidth * 0.95;
-    const canvasAspectRatio = canvas.width / canvas.height;
-    const displayHeight = displayWidth / canvasAspectRatio;
-    
-    largeCanvas.style.width = displayWidth + 'px';
-    largeCanvas.style.height = displayHeight + 'px';
-    largeCanvas.style.maxWidth = 'none';
-    largeCanvas.style.display = 'block';
-    largeCanvas.style.margin = '0 auto';
-    
-    const largeCtx = largeCanvas.getContext('2d');
-    
-    largeCtx.imageSmoothingEnabled = true;
-    largeCtx.imageSmoothingQuality = 'high';
-    largeCtx.scale(hiResScale * baseScale, hiResScale * baseScale);
-    
-    largeCtx.fillStyle = '#ffffff';
-    largeCtx.fillRect(0, 0, canvas.width, canvas.height);
-    
-    renderHighQualityPreview(largeCtx, canvas.width, canvas.height);
-    
-    canvasContainer.appendChild(largeCanvas);
-    modal.appendChild(canvasContainer);
-    
-    modal.onclick = (e) => {
-        if (e.target === modal || e.target === canvasContainer) {
-            document.body.removeChild(modal);
-        }
-    };
-    
-    largeCanvas.onclick = () => {
-        document.body.removeChild(modal);
-    };
-    
-    document.body.appendChild(modal);
-}
-
-function renderHighQualityPreview(ctx, canvasWidth, canvasHeight) {
-    // For high-quality rendering, we need to recalculate coordinates for the given canvas size
-    const originalCanvas = document.getElementById('previewCanvas');
-    const originalCurrentPreview = currentPreview;
-    
-    // Temporarily adjust the canvas reference for coordinate calculations
-    const tempCanvas = { width: canvasWidth, height: canvasHeight };
-    const originalGetElementById = document.getElementById;
-    document.getElementById = function(id) {
-        if (id === 'previewCanvas') return tempCanvas;
-        return originalGetElementById.call(document, id);
-    };
-    
-    try {
-        // Calculate reference coordinates for the high-res canvas
-        const referenceCoords = calculateReferenceCoordinates();
-        
-        // Draw Section 1: Complete view
-        drawCompleteViewWithAnnotations(ctx, referenceCoords);
-        
-        // Draw Section 2: Wall only view  
-        drawWallOnlyView(ctx, referenceCoords);
-        
-    } finally {
-        // Restore original getElementById function
-        document.getElementById = originalGetElementById;
-    }
-}
-
-// Make generatePreview globally accessible
-window.generatePreview = generatePreview; pattern for each panel/strip
+    // Draw pattern for each panel/strip
     for (let panelIndex = 0; panelIndex < calculations.panelsNeeded; panelIndex++) {
         // Calculate panel position in the reference coordinate system
         const panelX = patternOriginX + (panelIndex * pattern.panelWidth * scale);
@@ -529,28 +373,59 @@ window.generatePreview = generatePreview; pattern for each panel/strip
     ctx.restore();
 }
 
-// Draw preview on canvas - Clean Two-Pass Opacity System
+// SIMPLE: Draw overage overlay rectangles to dim non-wall areas
+function drawOverageOverlay(ctx, panelStartX, panelStartY, panelTotalWidth, panelTotalHeight, 
+                           wallStartX, wallStartY, wallWidth, wallHeight) {
+    ctx.fillStyle = 'rgba(255, 255, 255, 0.5)'; // 50% white overlay to dim
+    
+    // Left overage
+    if (wallStartX > panelStartX) {
+        const overageWidth = wallStartX - panelStartX;
+        ctx.fillRect(panelStartX, panelStartY, overageWidth, panelTotalHeight);
+    }
+    
+    // Right overage
+    if (wallStartX + wallWidth < panelStartX + panelTotalWidth) {
+        const overageStartX = wallStartX + wallWidth;
+        const overageWidth = (panelStartX + panelTotalWidth) - overageStartX;
+        ctx.fillRect(overageStartX, panelStartY, overageWidth, panelTotalHeight);
+    }
+    
+    // Top overage
+    if (wallStartY > panelStartY) {
+        const overageHeight = wallStartY - panelStartY;
+        ctx.fillRect(wallStartX, panelStartY, wallWidth, overageHeight);
+    }
+    
+    // Bottom overage
+    if (wallStartY + wallHeight < panelStartY + panelTotalHeight) {
+        const overageStartY = wallStartY + wallHeight;
+        const overageHeight = (panelStartY + panelTotalHeight) - overageStartY;
+        ctx.fillRect(wallStartX, overageStartY, wallWidth, overageHeight);
+    }
+}
+
+// Draw preview on canvas - SIMPLE APPROACH
 function drawPreview() {
     const canvas = document.getElementById('previewCanvas');
     const ctx = canvas.getContext('2d');
-    const { pattern, wallWidth, wallHeight, calculations } = currentPreview;
     
     // Clear canvas
     ctx.fillStyle = '#ffffff';
     ctx.fillRect(0, 0, canvas.width, canvas.height);
     
-    // Calculate reference coordinates for consistent pattern positioning
+    // Calculate reference coordinates
     const referenceCoords = calculateReferenceCoordinates();
     
-    // Section 1: Complete view with wall overlay
-    drawCompleteViewWithAnnotations(ctx, referenceCoords);
+    // Section 1: Complete view with simple overlay
+    drawCompleteViewWithOverlay(ctx, referenceCoords);
     
     // Section 2: Wall only view
     drawWallOnlyView(ctx, referenceCoords);
 }
 
-// Draw Complete View with clean two-pass opacity system
-function drawCompleteViewWithAnnotations(ctx, referenceCoords) {
+// SIMPLE: Draw Complete View - pattern + overlay + annotations
+function drawCompleteViewWithOverlay(ctx, referenceCoords) {
     const { pattern, calculations } = currentPreview;
     const { scale, section1, dimensions } = referenceCoords;
     
@@ -563,48 +438,37 @@ function drawCompleteViewWithAnnotations(ctx, referenceCoords) {
     const wallOffsetX = section1.wallStartX;
     const wallOffsetY = section1.wallStartY;
     
-    // Calculate panel coverage for limitations
-    const actualPanelLengthToUse = calculations.exceedsAvailableLength ? 
-        calculations.actualPanelLength : calculations.panelLength;
-    const panelCoverageHeight = actualPanelLengthToUse * 12 * scale;
-    const panelStartY = wallOffsetY + Math.max(0, scaledWallHeight - panelCoverageHeight);
-    const actualPanelHeight = Math.min(panelCoverageHeight, scaledWallHeight);
-    
-    const hasLimitation = calculations.exceedsLimit || calculations.exceedsAvailableLength;
-    
-    // FIXED: Clean two-pass opacity system
+    // Step 1: Draw pattern at 100% opacity across entire panel coverage
     if (imageLoaded && patternImage) {
-        // Pass 1: Draw ALL panel coverage at 50% opacity
-        ctx.globalAlpha = 0.5;
-        drawPatternInArea(ctx, offsetX, offsetY, scaledTotalWidth, scaledTotalHeight, referenceCoords, false);
-        
-        // Pass 2: Redraw ONLY the wall area at 100% opacity (overwrites the 50% area)
         ctx.globalAlpha = 1.0;
-        if (hasLimitation) {
-            drawPatternInArea(ctx, wallOffsetX, panelStartY, scaledWallWidth, actualPanelHeight, referenceCoords, false);
-        } else {
-            drawPatternInArea(ctx, wallOffsetX, wallOffsetY, scaledWallWidth, scaledWallHeight, referenceCoords, false);
-        }
+        drawPatternInArea(ctx, offsetX, offsetY, scaledTotalWidth, scaledTotalHeight, referenceCoords, false);
     }
     
-    // Draw uncovered area if panels exceed any limit
+    // Step 2: Draw semi-transparent overlay on overage areas (dims them to 50%)
+    drawOverageOverlay(ctx, offsetX, offsetY, scaledTotalWidth, scaledTotalHeight,
+                      wallOffsetX, wallOffsetY, scaledWallWidth, scaledWallHeight);
+    
+    // Step 3: Handle limitations (uncovered areas)
+    const hasLimitation = calculations.exceedsLimit || calculations.exceedsAvailableLength;
     if (hasLimitation) {
-        const uncoveredAreaHeight = scaledWallHeight - actualPanelHeight;
+        const actualPanelLengthToUse = calculations.exceedsAvailableLength ? 
+            calculations.actualPanelLength : calculations.panelLength;
+        const panelCoverageHeight = actualPanelLengthToUse * 12 * scale;
+        const uncoveredAreaHeight = scaledWallHeight - panelCoverageHeight;
+        
         if (uncoveredAreaHeight > 0) {
             ctx.fillStyle = 'rgba(255, 0, 0, 0.5)';
             ctx.fillRect(wallOffsetX, wallOffsetY, scaledWallWidth, uncoveredAreaHeight);
         }
     }
     
-    // Draw all outlines and annotations
+    // Step 4: Draw outlines and annotations
     drawCompleteViewOutlines(ctx, offsetX, offsetY, scaledTotalWidth, scaledTotalHeight, 
                            scaledWallWidth, scaledWallHeight, wallOffsetX, wallOffsetY, scale);
     
-    // Draw dimension labels
     drawCompleteDimensionLabels(ctx, offsetX, offsetY, scaledTotalWidth, scaledTotalHeight, 
                               scaledWallWidth, scaledWallHeight, wallOffsetX, wallOffsetY, scale);
     
-    // Draw panel labels
     drawPanelLabels(ctx, offsetX, offsetY, scaledTotalWidth, scaledTotalHeight, scale);
 }
 
@@ -791,4 +655,160 @@ function drawWallOnlyView(ctx, referenceCoords) {
         }
     }
     
-    // Draw
+    // Draw wall outline
+    ctx.strokeStyle = '#2c3e50';
+    ctx.lineWidth = 2;
+    ctx.strokeRect(wallOffsetX, wallOffsetY, scaledWallWidth, scaledWallHeight);
+    
+    // Draw wall dimensions
+    ctx.fillStyle = '#333';
+    ctx.font = '14px Arial, sans-serif';
+    ctx.strokeStyle = '#333';
+    ctx.lineWidth = 1;
+    
+    // Format the dimension text
+    const wallWidthText = wallWidthInches > 0 ? 
+        `Wall Width: ${wallWidthFeet}'-${wallWidthInches}"` : `Wall Width: ${wallWidthFeet}'`;
+    const wallHeightText = wallHeightInches > 0 ? 
+        `Wall Height: ${wallHeightFeet}'-${wallHeightInches}"` : `Wall Height: ${wallHeightFeet}'`;
+    
+    // Wall width annotation (bottom of wall)
+    const widthLineY = wallOffsetY + scaledWallHeight + 30;
+    const widthTextY = widthLineY + 15;
+    
+    ctx.beginPath();
+    ctx.moveTo(wallOffsetX, widthLineY);
+    ctx.lineTo(wallOffsetX + scaledWallWidth, widthLineY);
+    ctx.stroke();
+    
+    ctx.beginPath();
+    ctx.moveTo(wallOffsetX, widthLineY - 5);
+    ctx.lineTo(wallOffsetX, widthLineY + 5);
+    ctx.moveTo(wallOffsetX + scaledWallWidth, widthLineY - 5);
+    ctx.lineTo(wallOffsetX + scaledWallWidth, widthLineY + 5);
+    ctx.stroke();
+    
+    ctx.textAlign = 'center';
+    ctx.fillText(wallWidthText, wallOffsetX + scaledWallWidth / 2, widthTextY);
+    
+    // Wall height annotation (left side of wall)
+    const wallHeightOffset = 30;
+    const heightLineX = wallOffsetX - wallHeightOffset;
+    const heightTextX = heightLineX - 15;
+    
+    ctx.beginPath();
+    ctx.moveTo(heightLineX, wallOffsetY);
+    ctx.lineTo(heightLineX, wallOffsetY + scaledWallHeight);
+    ctx.stroke();
+    
+    ctx.beginPath();
+    ctx.moveTo(heightLineX - 5, wallOffsetY);
+    ctx.lineTo(heightLineX + 5, wallOffsetY);
+    ctx.moveTo(heightLineX - 5, wallOffsetY + scaledWallHeight);
+    ctx.lineTo(heightLineX + 5, wallOffsetY + scaledWallHeight);
+    ctx.stroke();
+    
+    ctx.save();
+    ctx.translate(heightTextX, wallOffsetY + scaledWallHeight / 2);
+    ctx.rotate(-Math.PI/2);
+    ctx.textAlign = 'center';
+    ctx.fillText(wallHeightText, 0, 0);
+    ctx.restore();
+}
+
+// Canvas modal functionality
+function openCanvasModal() {
+    const canvas = document.getElementById('previewCanvas');
+    
+    if (!currentPreview) {
+        console.error('No current preview data available for high-res rendering');
+        return;
+    }
+    
+    console.log('Creating high-res modal...');
+    
+    const modal = document.createElement('div');
+    modal.className = 'canvas-modal';
+    
+    const canvasContainer = document.createElement('div');
+    canvasContainer.style.width = '100%';
+    canvasContainer.style.maxWidth = '95vw';
+    canvasContainer.style.margin = '0 auto';
+    canvasContainer.style.overflowX = 'hidden';
+    canvasContainer.style.overflowY = 'visible';
+    
+    const largeCanvas = document.createElement('canvas');
+    
+    const hiResScale = 3;
+    const baseScale = 2;
+    largeCanvas.width = canvas.width * hiResScale * baseScale;
+    largeCanvas.height = canvas.height * hiResScale * baseScale;
+    
+    const displayWidth = window.innerWidth * 0.95;
+    const canvasAspectRatio = canvas.width / canvas.height;
+    const displayHeight = displayWidth / canvasAspectRatio;
+    
+    largeCanvas.style.width = displayWidth + 'px';
+    largeCanvas.style.height = displayHeight + 'px';
+    largeCanvas.style.maxWidth = 'none';
+    largeCanvas.style.display = 'block';
+    largeCanvas.style.margin = '0 auto';
+    
+    const largeCtx = largeCanvas.getContext('2d');
+    
+    largeCtx.imageSmoothingEnabled = true;
+    largeCtx.imageSmoothingQuality = 'high';
+    largeCtx.scale(hiResScale * baseScale, hiResScale * baseScale);
+    
+    largeCtx.fillStyle = '#ffffff';
+    largeCtx.fillRect(0, 0, canvas.width, canvas.height);
+    
+    renderHighQualityPreview(largeCtx, canvas.width, canvas.height);
+    
+    canvasContainer.appendChild(largeCanvas);
+    modal.appendChild(canvasContainer);
+    
+    modal.onclick = (e) => {
+        if (e.target === modal || e.target === canvasContainer) {
+            document.body.removeChild(modal);
+        }
+    };
+    
+    largeCanvas.onclick = () => {
+        document.body.removeChild(modal);
+    };
+    
+    document.body.appendChild(modal);
+}
+
+function renderHighQualityPreview(ctx, canvasWidth, canvasHeight) {
+    // For high-quality rendering, we need to recalculate coordinates for the given canvas size
+    const originalCanvas = document.getElementById('previewCanvas');
+    const originalCurrentPreview = currentPreview;
+    
+    // Temporarily adjust the canvas reference for coordinate calculations
+    const tempCanvas = { width: canvasWidth, height: canvasHeight };
+    const originalGetElementById = document.getElementById;
+    document.getElementById = function(id) {
+        if (id === 'previewCanvas') return tempCanvas;
+        return originalGetElementById.call(document, id);
+    };
+    
+    try {
+        // Calculate reference coordinates for the high-res canvas
+        const referenceCoords = calculateReferenceCoordinates();
+        
+        // Draw Section 1: Complete view
+        drawCompleteViewWithOverlay(ctx, referenceCoords);
+        
+        // Draw Section 2: Wall only view  
+        drawWallOnlyView(ctx, referenceCoords);
+        
+    } finally {
+        // Restore original getElementById function
+        document.getElementById = originalGetElementById;
+    }
+}
+
+// Make generatePreview globally accessible
+window.generatePreview = generatePreview;
