@@ -454,9 +454,9 @@ function drawCompleteDimensionLabels(ctx, offsetX, offsetY, scaledTotalWidth, sc
     ctx.strokeStyle = '#333';
     ctx.lineWidth = 1;
     
-    // ONLY PANEL DIMENSIONS - ABSOLUTELY NO WALL DIMENSIONS HERE
+    // ONLY PANEL DIMENSIONS - CLEAN UP FORMATTING
     const panelWidthFeet = Math.floor(pattern.panelWidth / 12);
-    const panelWidthInches = pattern.panelWidth % 12;
+    const panelWidthInches = Math.round(pattern.panelWidth % 12);
     const panelWidthDisplay = panelWidthInches > 0 ? 
         `${panelWidthFeet}'-${panelWidthInches}"` : `${panelWidthFeet}'`;
     
@@ -483,7 +483,7 @@ function drawCompleteDimensionLabels(ctx, offsetX, offsetY, scaledTotalWidth, sc
     
     // Total panels width annotation (even higher)
     const totalWidthFeet = Math.floor(calculations.totalWidth / 12);
-    const totalWidthInches = calculations.totalWidth % 12;
+    const totalWidthInches = Math.round(calculations.totalWidth % 12);
     const totalWidthDisplay = totalWidthInches > 0 ? 
         `${totalWidthFeet}'-${totalWidthInches}"` : `${totalWidthFeet}'`;
     
@@ -504,8 +504,6 @@ function drawCompleteDimensionLabels(ctx, offsetX, offsetY, scaledTotalWidth, sc
     ctx.fillText(`All Panels: ${totalWidthDisplay}`, offsetX + scaledTotalWidth / 2, totalLabelY - 8);
     
     // Panel height annotation - SAME DISTANCE FROM PANELS AS WALL IS FROM WALL
-    // Wall height is 30px from wall edge: wallOffsetX - 30
-    // Panel height should be 30px from panel edge: offsetX - 30
     const panelHeightLineX = offsetX - 30;  // 30px from PANEL edge
     const panelHeightTextX = panelHeightLineX - 15;  // Text spacing
     
@@ -526,10 +524,8 @@ function drawCompleteDimensionLabels(ctx, offsetX, offsetY, scaledTotalWidth, sc
     ctx.rotate(-Math.PI/2);
     
     let heightDisplay;
-    if (pattern.saleType === 'yard' && calculations.panelLengthInches !== undefined) {
-        const inches = calculations.panelLengthInches;
-        heightDisplay = inches > 0 ? 
-            `Panel: ${calculations.panelLength}'-${inches}"` : `Panel: ${calculations.panelLength}'`;
+    if (pattern.saleType === 'yard' && calculations.panelLengthInches !== undefined && calculations.panelLengthInches > 0) {
+        heightDisplay = `Panel: ${calculations.panelLength}'-${calculations.panelLengthInches}"`;
     } else {
         heightDisplay = `Panel: ${calculations.panelLength}'`;
     }
