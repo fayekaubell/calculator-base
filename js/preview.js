@@ -404,7 +404,7 @@ function drawCompleteViewWithAnnotations(ctx, offsetX, offsetY, scaledTotalWidth
     drawCompleteDimensionLabels(ctx, offsetX, offsetY, scaledTotalWidth, scaledTotalHeight, 
                               scaledWallWidth, scaledWallHeight, wallOffsetX, wallOffsetY, scale);
     
-    // Draw panel labels
+    // Draw panel labels WITHOUT BOXES - call our clean function
     drawPanelLabels(ctx, offsetX, offsetY, scaledTotalWidth, scaledTotalHeight, scale);
 }
 
@@ -537,35 +537,37 @@ function drawCompleteDimensionLabels(ctx, offsetX, offsetY, scaledTotalWidth, sc
     // ABSOLUTELY NO WALL DIMENSIONS HERE - THEY'RE MOVED TO SECTION 2 ONLY
 }
 
-// Draw panel labels (A/B/C sequence) - NO BOXES, MATCH DIMENSION FONT
+// Draw panel labels (A/B/C sequence) - ABSOLUTELY NO BOXES OR BORDERS
 function drawPanelLabels(ctx, offsetX, offsetY, scaledTotalWidth, scaledTotalHeight, scale) {
     const { pattern, calculations } = currentPreview;
     
+    // ONLY draw labels if we have a panel sequence
     if (pattern.saleType === 'panel' && pattern.sequenceLength > 1) {
-        // Match dimension font exactly
+        // Set font and style
         ctx.fillStyle = '#333';
         ctx.font = '14px Arial, sans-serif';
         ctx.textAlign = 'center';
         
+        // Draw each label as PLAIN TEXT ONLY
         for (let i = 0; i < calculations.panelsNeeded; i++) {
-            const x = offsetX + (i * pattern.panelWidth + pattern.panelWidth / 2) * scale;
+            const centerX = offsetX + (i * pattern.panelWidth + pattern.panelWidth / 2) * scale;
             const sequencePosition = i % pattern.sequenceLength;
-            const label = pattern.panelSequence[sequencePosition];
+            const labelText = pattern.panelSequence[sequencePosition];
             
-            // Position labels with clear gap from panels
-            const labelY = offsetY - 25;
+            // Position above panels with clear spacing
+            const textY = offsetY - 25;
             
-            // NO BACKGROUND, NO BORDER - just plain text
-            ctx.fillStyle = '#333';
-            ctx.fillText(label, x, labelY);
+            // ONLY draw text - NO fillRect, NO strokeRect, NO background, NO border
+            ctx.fillText(labelText, centerX, textY);
         }
     }
 }
 
-// Draw Wall Only View (simplified)
+// Draw Wall Only View - COMPLETELY REWRITTEN WITH LEFT SIDE HEIGHT
 function drawWallOnlyView(ctx, wallOffsetX, wallOffsetY, scaledWallWidth, scaledWallHeight, scale) {
     const { pattern, wallWidth, wallHeight, calculations, wallWidthFeet, wallWidthInches, wallHeightFeet, wallHeightInches } = currentPreview;
     
+    // Draw the pattern first
     if (imageLoaded && patternImage) {
         ctx.save();
         ctx.imageSmoothingEnabled = false;
@@ -640,54 +642,64 @@ function drawWallOnlyView(ctx, wallOffsetX, wallOffsetY, scaledWallWidth, scaled
     ctx.textAlign = 'center';
     ctx.fillText('Final Result', wallOffsetX + scaledWallWidth / 2, wallOffsetY - 15);
     
-    // Add WALL DIMENSIONS here - HEIGHT ON LEFT SIDE
+    // WALL DIMENSIONS - COMPLETELY REWRITTEN
     ctx.fillStyle = '#333';
     ctx.font = '14px Arial, sans-serif';
-    ctx.textAlign = 'center';
     ctx.strokeStyle = '#333';
     ctx.lineWidth = 1;
     
-    const wallWidthDisplay = wallWidthInches > 0 ? 
-        `${wallWidthFeet}'-${wallWidthInches}"` : `${wallWidthFeet}'-0"`;
-    const wallHeightDisplay = wallHeightInches > 0 ? 
-        `${wallHeightFeet}'-${wallHeightInches}"` : `${wallHeightFeet}'-0"`;
+    // Format the dimension text
+    const wallWidthText = wallWidthInches > 0 ? 
+        `Wall: ${wallWidthFeet}'-${wallWidthInches}"` : `Wall: ${wallWidthFeet}'-0"`;
+    const wallHeightText = wallHeightInches > 0 ? 
+        `Wall: ${wallHeightFeet}'-${wallHeightInches}"` : `Wall: ${wallHeightFeet}'-0"`;
     
-    // Wall width annotation (bottom)
-    const wallWidthLabelY = wallOffsetY + scaledWallHeight + 30;
+    // 1. WALL WIDTH (bottom of wall)
+    const widthLineY = wallOffsetY + scaledWallHeight + 30;
+    const widthTextY = widthLineY + 15;
     
+    // Draw width dimension line
     ctx.beginPath();
-    ctx.moveTo(wallOffsetX, wallWidthLabelY);
-    ctx.lineTo(wallOffsetX + scaledWallWidth, wallWidthLabelY);
+    ctx.moveTo(wallOffsetX, widthLineY);
+    ctx.lineTo(wallOffsetX + scaledWallWidth, widthLineY);
     ctx.stroke();
     
+    // Draw width end marks
     ctx.beginPath();
-    ctx.moveTo(wallOffsetX, wallWidthLabelY - 5);
-    ctx.lineTo(wallOffsetX, wallWidthLabelY + 5);
-    ctx.moveTo(wallOffsetX + scaledWallWidth, wallWidthLabelY - 5);
-    ctx.lineTo(wallOffsetX + scaledWallWidth, wallWidthLabelY + 5);
+    ctx.moveTo(wallOffsetX, widthLineY - 5);
+    ctx.lineTo(wallOffsetX, widthLineY + 5);
+    ctx.moveTo(wallOffsetX + scaledWallWidth, widthLineY - 5);
+    ctx.lineTo(wallOffsetX + scaledWallWidth, widthLineY + 5);
     ctx.stroke();
     
-    ctx.fillText(`Wall: ${wallWidthDisplay}`, wallOffsetX + scaledWallWidth / 2, wallWidthLabelY + 15);
+    // Draw width text
+    ctx.textAlign = 'center';
+    ctx.fillText(wallWidthText, wallOffsetX + scaledWallWidth / 2, widthTextY);
     
-    // Wall height annotation (LEFT SIDE - MOVED FROM RIGHT)
-    const wallHeightLabelX = wallOffsetX - 30;  // LEFT SIDE instead of right
+    // 2. WALL HEIGHT (LEFT SIDE OF WALL) - MOVED FROM RIGHT
+    const heightLineX = wallOffsetX - 30;  // LEFT SIDE - 30px to the left of wall
+    const heightTextX = heightLineX - 15;   // Text even further left
     
+    // Draw height dimension line
     ctx.beginPath();
-    ctx.moveTo(wallHeightLabelX, wallOffsetY);
-    ctx.lineTo(wallHeightLabelX, wallOffsetY + scaledWallHeight);
+    ctx.moveTo(heightLineX, wallOffsetY);
+    ctx.lineTo(heightLineX, wallOffsetY + scaledWallHeight);
     ctx.stroke();
     
+    // Draw height end marks
     ctx.beginPath();
-    ctx.moveTo(wallHeightLabelX - 5, wallOffsetY);
-    ctx.lineTo(wallHeightLabelX + 5, wallOffsetY);
-    ctx.moveTo(wallHeightLabelX - 5, wallOffsetY + scaledWallHeight);
-    ctx.lineTo(wallHeightLabelX + 5, wallOffsetY + scaledWallHeight);
+    ctx.moveTo(heightLineX - 5, wallOffsetY);
+    ctx.lineTo(heightLineX + 5, wallOffsetY);
+    ctx.moveTo(heightLineX - 5, wallOffsetY + scaledWallHeight);
+    ctx.lineTo(heightLineX + 5, wallOffsetY + scaledWallHeight);
     ctx.stroke();
     
+    // Draw height text (rotated)
     ctx.save();
-    ctx.translate(wallHeightLabelX - 15, wallOffsetY + scaledWallHeight / 2);  // LEFT SIDE
+    ctx.translate(heightTextX, wallOffsetY + scaledWallHeight / 2);
     ctx.rotate(-Math.PI/2);
-    ctx.fillText(`Wall: ${wallHeightDisplay}`, 0, 0);
+    ctx.textAlign = 'center';
+    ctx.fillText(wallHeightText, 0, 0);
     ctx.restore();
 }
 
