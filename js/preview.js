@@ -594,14 +594,37 @@ function drawWallOnlyView(ctx, wallOffsetX, wallOffsetY, scaledWallWidth, scaled
         ctx.clip();
         
         // CRITICAL FIX: Use the EXACT SAME coordinate system as Section 1
-        // Calculate the Section 1 coordinates
+        // Calculate the Section 1 coordinates - BOTH X AND Y
         const leftMargin = 120;
-        const maxWidth = 1400 - leftMargin - 120;
-        const scaledTotalWidth = calculations.totalWidth * scale;
-        const section1OffsetX = leftMargin + (maxWidth - scaledTotalWidth) / 2;
+        const rightMargin = 120;
+        const topMargin = 140;
+        const bottomMargin = 120;
+        const sectionGap = 60;
         
-        // Calculate Section 1's wall position within the strip coverage
-        const section1WallOffsetX = section1OffsetX + (scaledTotalWidth - (wallWidth * scale)) / 2;
+        const maxWidth = 1400 - leftMargin - rightMargin;
+        const maxHeight = 1200 - topMargin - bottomMargin;
+        
+        // Recreate Section 1's layout calculations
+        const wallOnlyHeight = wallHeight;
+        const completeViewHeight = Math.max(calculations.totalHeight, wallHeight);
+        const totalContentHeight = completeViewHeight + wallOnlyHeight + sectionGap;
+        const effectiveWidth = Math.max(calculations.totalWidth, wallWidth);
+        
+        const actualContentHeight = (completeViewHeight * scale) + (wallOnlyHeight * scale) + sectionGap;
+        const section1CurrentY = topMargin + (maxHeight - actualContentHeight) / 2;
+        
+        const scaledTotalWidth = calculations.totalWidth * scale;
+        const scaledTotalHeight = calculations.totalHeight * scale;
+        const scaledWallWidth = wallWidth * scale;
+        const scaledWallHeight = wallHeight * scale;
+        
+        // Section 1's pattern start position
+        const section1OffsetX = leftMargin + (maxWidth - scaledTotalWidth) / 2;
+        const section1OffsetY = section1CurrentY;
+        
+        // Section 1's wall position within the coverage
+        const section1WallOffsetX = section1OffsetX + (scaledTotalWidth - scaledWallWidth) / 2;
+        const section1WallOffsetY = section1OffsetY + ((completeViewHeight * scale) - scaledWallHeight) / 2;
         
         // Use the same pattern drawing logic as Section 1, but with Section 1 coordinates
         const repeatW = pattern.saleType === 'yard' ? pattern.repeatWidth * scale :
@@ -622,20 +645,23 @@ function drawWallOnlyView(ctx, wallOffsetX, wallOffsetY, scaledWallWidth, scaled
             const sourceOffsetX = sequencePosition * offsetPerPanel;
             
             // Calculate where this panel's pattern should appear in Section 2's coordinate space
-            // The key insight: maintain the same pattern positioning, just draw it at different canvas coordinates
-            const coordinateShift = wallOffsetX - section1WallOffsetX;
-            const panelX = section1PanelX + coordinateShift;
+            // Apply BOTH X and Y coordinate shifts to maintain exact pattern positioning
+            const xCoordinateShift = wallOffsetX - section1WallOffsetX;
+            const yCoordinateShift = wallOffsetY - section1WallOffsetY;
+            const panelX = section1PanelX + xCoordinateShift;
+            const patternStartY = section1OffsetY + yCoordinateShift;
             
             for (let x = -repeatW; x < pattern.panelWidth * scale + repeatW; x += repeatW) {
                 if (pattern.hasRepeatHeight) {
                     for (let y = -repeatH; y < scaledWallHeight + repeatH; y += repeatH) {
                         const drawX = Math.floor(panelX + x - (sourceOffsetX * scale));
-                        const drawY = Math.floor(wallOffsetY + y);
+                        const drawY = Math.floor(patternStartY + y);
                         ctx.drawImage(patternImage, drawX, drawY, Math.ceil(repeatW), Math.ceil(repeatH));
                     }
                 } else {
                     const drawX = Math.floor(panelX + x - (sourceOffsetX * scale));
-                    const drawY = Math.floor(wallOffsetY + scaledWallHeight - repeatH);
+                    // For patterns without repeat height, align to bottom of coverage area
+                    const drawY = Math.floor(patternStartY + (completeViewHeight * scale) - repeatH);
                     ctx.drawImage(patternImage, drawX, drawY, Math.ceil(repeatW), Math.ceil(repeatH));
                 }
             }
