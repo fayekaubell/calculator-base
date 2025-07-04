@@ -296,7 +296,7 @@ function calculateReferenceCoordinates() {
     };
 }
 
-// SIMPLE: Draw pattern with consistent coordinate system
+// FIXED: Draw pattern with proper bottom-left corner alignment
 function drawPatternInArea(ctx, areaX, areaY, areaWidth, areaHeight, referenceCoords, isSection2 = false) {
     const { pattern, calculations } = currentPreview;
     
@@ -348,24 +348,53 @@ function drawPatternInArea(ctx, areaX, areaY, areaWidth, areaHeight, referenceCo
         const sequencePosition = pattern.sequenceLength === 0 ? 0 : panelIndex % pattern.sequenceLength;
         const sourceOffsetX = sequencePosition * offsetPerPanel;
         
-        // Draw pattern repeats for this panel
+        // FIXED: Calculate panel dimensions and bottom reference
         const panelWidth = pattern.panelWidth * scale;
         const drawHeight = isSection2 ? areaHeight : referenceCoords.dimensions.scaledTotalHeight;
         
-        // Draw horizontal repeats
-        for (let x = -repeatW; x < panelWidth + repeatW; x += repeatW) {
-            const drawX = Math.floor(drawPanelX + x - (sourceOffsetX * scale));
-            
-            if (pattern.hasRepeatHeight) {
-                // Patterns with height repeats
-                for (let y = -repeatH; y < drawHeight + repeatH; y += repeatH) {
-                    const drawY = Math.floor(drawPanelY + y);
-                    ctx.drawImage(patternImage, drawX, drawY, Math.ceil(repeatW), Math.ceil(repeatH));
+        // FIXED: Calculate bottom-left corner of this panel as the reference point
+        const panelBottomY = drawPanelY + drawHeight;
+        const panelLeftX = drawPanelX - (sourceOffsetX * scale);
+        
+        // FIXED: Calculate the grid starting position to ensure bottom-left alignment
+        let gridStartX, gridStartY;
+        
+        if (pattern.hasRepeatHeight) {
+            // For patterns with height repeats, align bottom-left corner to repeat grid
+            gridStartX = Math.floor(panelLeftX / repeatW) * repeatW;
+            gridStartY = Math.floor(panelBottomY / repeatH) * repeatH - repeatH;
+        } else {
+            // For patterns without height repeats, align horizontally but place at bottom
+            gridStartX = Math.floor(panelLeftX / repeatW) * repeatW;
+            gridStartY = panelBottomY - repeatH;
+        }
+        
+        // FIXED: Draw from grid-aligned positions to ensure proper alignment
+        if (pattern.hasRepeatHeight) {
+            // Draw repeating pattern in both directions
+            for (let x = gridStartX; x < drawPanelX + panelWidth + repeatW; x += repeatW) {
+                for (let y = gridStartY; y < drawPanelY + drawHeight + repeatH; y += repeatH) {
+                    // Only draw if the repeat intersects with the current panel area
+                    if (x + repeatW > drawPanelX && x < drawPanelX + panelWidth) {
+                        ctx.drawImage(patternImage, 
+                            Math.floor(x), 
+                            Math.floor(y), 
+                            Math.ceil(repeatW), 
+                            Math.ceil(repeatH));
+                    }
                 }
-            } else {
-                // Patterns without height repeats (bottom-aligned)
-                const drawY = Math.floor(drawPanelY + drawHeight - repeatH);
-                ctx.drawImage(patternImage, drawX, drawY, Math.ceil(repeatW), Math.ceil(repeatH));
+            }
+        } else {
+            // Draw single row at bottom, aligned horizontally
+            for (let x = gridStartX; x < drawPanelX + panelWidth + repeatW; x += repeatW) {
+                // Only draw if the repeat intersects with the current panel area
+                if (x + repeatW > drawPanelX && x < drawPanelX + panelWidth) {
+                    ctx.drawImage(patternImage, 
+                        Math.floor(x), 
+                        Math.floor(gridStartY), 
+                        Math.ceil(repeatW), 
+                        Math.ceil(repeatH));
+                }
             }
         }
     }
