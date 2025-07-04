@@ -503,23 +503,25 @@ function drawCompleteDimensionLabels(ctx, offsetX, offsetY, scaledTotalWidth, sc
     
     ctx.fillText(`Total Panels: ${totalWidthDisplay}`, offsetX + scaledTotalWidth / 2, totalLabelY - 8);
     
-    // Panel height annotation - MATCH WALL SPACING (30px from panels)
-    const heightLabelX = offsetX - 30;  // CHANGED FROM -60 TO -30 (same as wall)
+    // Panel height annotation - EXACTLY MATCH WALL SPACING AND POSITIONING
+    // Wall uses: wallOffsetX - 30 for line, wallOffsetX - 30 - 15 for text
+    const panelHeightLineX = offsetX - 30;  // EXACT SAME AS WALL: -30
+    const panelHeightTextX = panelHeightLineX - 15;  // EXACT SAME AS WALL: -15 more
     
     ctx.beginPath();
-    ctx.moveTo(heightLabelX, offsetY);
-    ctx.lineTo(heightLabelX, offsetY + scaledTotalHeight);
+    ctx.moveTo(panelHeightLineX, offsetY);
+    ctx.lineTo(panelHeightLineX, offsetY + scaledTotalHeight);
     ctx.stroke();
     
     ctx.beginPath();
-    ctx.moveTo(heightLabelX - 5, offsetY);
-    ctx.lineTo(heightLabelX + 5, offsetY);
-    ctx.moveTo(heightLabelX - 5, offsetY + scaledTotalHeight);
-    ctx.lineTo(heightLabelX + 5, offsetY + scaledTotalHeight);
+    ctx.moveTo(panelHeightLineX - 5, offsetY);
+    ctx.lineTo(panelHeightLineX + 5, offsetY);
+    ctx.moveTo(panelHeightLineX - 5, offsetY + scaledTotalHeight);
+    ctx.lineTo(panelHeightLineX + 5, offsetY + scaledTotalHeight);
     ctx.stroke();
     
     ctx.save();
-    ctx.translate(heightLabelX - 15, offsetY + scaledTotalHeight / 2);  // ADJUSTED TEXT POSITION
+    ctx.translate(panelHeightTextX, offsetY + scaledTotalHeight / 2);  // EXACT SAME POSITIONING
     ctx.rotate(-Math.PI/2);
     
     let heightDisplay;
