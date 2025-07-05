@@ -423,8 +423,9 @@ function drawPatternInArea(ctx, areaX, areaY, areaWidth, areaHeight, referenceCo
                 
                 if (isSection2) {
                     // Section 2: Bottom-align to the wall area directly
-                    drawY = Math.floor(drawPanelY + drawHeight - repeatH);
-                    console.log(`    Section 2: drawY = drawPanelY(${drawPanelY.toFixed(1)}) + drawHeight(${drawHeight.toFixed(1)}) - repeatH(${repeatH.toFixed(1)}) = ${drawY.toFixed(1)}`);
+                    const wallBottom = drawPanelY + drawHeight;
+                    drawY = Math.floor(wallBottom - repeatH);
+                    console.log(`    Section 2: Wall bottom(${wallBottom.toFixed(1)}) - repeatH(${repeatH.toFixed(1)}) = ${drawY.toFixed(1)}`);
                 } else {
                     // Section 1: Position relative to where the wall would be within the panel coverage
                     const { wallStartY, wallHeight } = getWallPositionInSection1(referenceCoords);
