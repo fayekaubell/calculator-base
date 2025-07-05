@@ -381,11 +381,20 @@ function drawPatternInArea(ctx, areaX, areaY, areaWidth, areaHeight, referenceCo
         // Calculate panel position in the reference coordinate system
         const panelX = patternOriginX + (panelIndex * pattern.panelWidth * scale);
         
-        // Apply coordinate offset for Section 2
-        const drawPanelX = panelX + coordinateOffsetX;
-        const drawPanelY = patternOriginY + coordinateOffsetY;
+        // FIXED: For repeating patterns, don't apply coordinate offset - use same coordinate system
+        let drawPanelX, drawPanelY;
         
-        console.log(`  Panel ${panelIndex}: drawPanel position (${drawPanelX.toFixed(1)}, ${drawPanelY.toFixed(1)})`);
+        if (pattern.hasRepeatHeight) {
+            // Repeating patterns: Use the SAME coordinate system for both sections
+            drawPanelX = panelX;
+            drawPanelY = patternOriginY;
+            console.log(`  Panel ${panelIndex}: REPEATING - using same coordinates (${drawPanelX.toFixed(1)}, ${drawPanelY.toFixed(1)})`);
+        } else {
+            // Non-repeating patterns: Apply coordinate offset for Section 2
+            drawPanelX = panelX + coordinateOffsetX;
+            drawPanelY = patternOriginY + coordinateOffsetY;
+            console.log(`  Panel ${panelIndex}: NON-REPEATING - offset coordinates (${drawPanelX.toFixed(1)}, ${drawPanelY.toFixed(1)})`);
+        }
         
         // Calculate sequence offset for panel patterns
         const sequencePosition = pattern.sequenceLength === 0 ? 0 : panelIndex % pattern.sequenceLength;
