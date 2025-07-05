@@ -352,37 +352,20 @@ function drawPatternInArea(ctx, areaX, areaY, areaWidth, areaHeight, referenceCo
         const panelWidth = pattern.panelWidth * scale;
         const drawHeight = isSection2 ? areaHeight : referenceCoords.dimensions.scaledTotalHeight;
         
-        // FIXED: Calculate the bottom-left corner of the panel as reference
-        const panelBottomY = drawPanelY + drawHeight;
-        const panelLeftX = drawPanelX - (sourceOffsetX * scale);
-        
-        // FIXED: Calculate grid-aligned starting positions
-        const gridStartX = Math.floor(panelLeftX / repeatW) * repeatW;
-        const gridStartY = pattern.hasRepeatHeight ? 
-            Math.floor(panelBottomY / repeatH) * repeatH - repeatH : 
-            panelBottomY - repeatH;
-        
-        // FIXED: Draw horizontal repeats with proper alignment
-        for (let x = gridStartX; x < drawPanelX + panelWidth + repeatW; x += repeatW) {
-            // Only draw if within panel bounds
-            if (x + repeatW > drawPanelX && x < drawPanelX + panelWidth) {
-                if (pattern.hasRepeatHeight) {
-                    // Patterns with height repeats
-                    for (let y = gridStartY; y < drawPanelY + drawHeight + repeatH; y += repeatH) {
-                        ctx.drawImage(patternImage, 
-                            Math.floor(x), 
-                            Math.floor(y), 
-                            Math.ceil(repeatW), 
-                            Math.ceil(repeatH));
-                    }
-                } else {
-                    // Patterns without height repeats (bottom-aligned)
-                    ctx.drawImage(patternImage, 
-                        Math.floor(x), 
-                        Math.floor(gridStartY), 
-                        Math.ceil(repeatW), 
-                        Math.ceil(repeatH));
+        // Draw horizontal repeats
+        for (let x = -repeatW; x < panelWidth + repeatW; x += repeatW) {
+            const drawX = Math.floor(drawPanelX + x - (sourceOffsetX * scale));
+            
+            if (pattern.hasRepeatHeight) {
+                // Patterns with height repeats
+                for (let y = -repeatH; y < drawHeight + repeatH; y += repeatH) {
+                    const drawY = Math.floor(drawPanelY + y);
+                    ctx.drawImage(patternImage, drawX, drawY, Math.ceil(repeatW), Math.ceil(repeatH));
                 }
+            } else {
+                // Patterns without height repeats (bottom-aligned)
+                const drawY = Math.floor(drawPanelY + drawHeight - repeatH);
+                ctx.drawImage(patternImage, drawX, drawY, Math.ceil(repeatW), Math.ceil(repeatH));
             }
         }
     }
