@@ -1,4 +1,4 @@
-// Canvas Preview Generation Module - Simple Overlay Approach
+// Canvas Preview Generation Module - DEBUG VERSION with Y-Axis Logging
 
 // Generate preview function
 async function generatePreview() {
@@ -84,6 +84,15 @@ async function generatePreview() {
             formattedWidth: formattedWidth,
             formattedHeight: formattedHeight
         };
+        
+        // DEBUG: Log pattern Y-axis properties
+        console.log('🔍 DEBUG: Pattern Y-Axis Properties:');
+        console.log(`  Pattern: ${pattern.name} (${pattern.sku})`);
+        console.log(`  Sale Type: ${pattern.saleType}`);
+        console.log(`  Repeat Height: ${pattern.repeatHeight}`);
+        console.log(`  Has Repeat Height: ${pattern.hasRepeatHeight}`);
+        console.log(`  Wall Height: ${wallHeight}" (${wallHeight/12}' or ${wallHeightFeet}'${wallHeightInches}")`);
+        console.log(`  Panel Length: ${calculations.panelLength}' (${calculations.panelLength * 12}")`);
         
         if (previewTitle) {
             previewTitle.textContent = `${pattern.name}: ${pattern.sku || 'N/A'}: ${formattedWidth}w x ${formattedHeight}h Wall`;
@@ -275,6 +284,15 @@ function calculateReferenceCoordinates() {
     const section2WallOffsetX = leftMargin + (maxWidth - scaledWallWidth) / 2;
     const section2WallOffsetY = section2StartY;
     
+    // DEBUG: Log coordinate calculations
+    console.log('🔍 DEBUG: Reference Coordinates:');
+    console.log(`  Canvas: ${canvas.width}x${canvas.height}`);
+    console.log(`  Scale: ${scale.toFixed(4)}`);
+    console.log(`  Section 1 Pattern Start: (${section1OffsetX.toFixed(1)}, ${section1OffsetY.toFixed(1)})`);
+    console.log(`  Section 1 Wall Start: (${section1WallOffsetX.toFixed(1)}, ${section1WallOffsetY.toFixed(1)})`);
+    console.log(`  Section 2 Wall Start: (${section2WallOffsetX.toFixed(1)}, ${section2WallOffsetY.toFixed(1)})`);
+    console.log(`  Scaled Dimensions: ${scaledTotalWidth.toFixed(1)}x${scaledTotalHeight.toFixed(1)} (pattern), ${scaledWallWidth.toFixed(1)}x${scaledWallHeight.toFixed(1)} (wall)`);
+    
     return {
         scale,
         section1: {
@@ -296,9 +314,14 @@ function calculateReferenceCoordinates() {
     };
 }
 
-// SIMPLE: Draw pattern with consistent coordinate system
+// SIMPLE: Draw pattern with consistent coordinate system - DEBUG VERSION
 function drawPatternInArea(ctx, areaX, areaY, areaWidth, areaHeight, referenceCoords, isSection2 = false) {
     const { pattern, calculations } = currentPreview;
+    
+    console.log(`🔍 DEBUG: drawPatternInArea called for ${isSection2 ? 'Section 2' : 'Section 1'}`);
+    console.log(`  Pattern: ${pattern.name} (${pattern.sku})`);
+    console.log(`  Has Repeat Height: ${pattern.hasRepeatHeight}`);
+    console.log(`  Area: (${areaX.toFixed(1)}, ${areaY.toFixed(1)}) ${areaWidth.toFixed(1)}x${areaHeight.toFixed(1)}`);
     
     if (!imageLoaded || !patternImage) {
         console.warn('Pattern image not loaded, skipping pattern drawing');
@@ -311,6 +334,9 @@ function drawPatternInArea(ctx, areaX, areaY, areaWidth, areaHeight, referenceCo
     const repeatW = pattern.saleType === 'yard' ? pattern.repeatWidth * scale :
         (pattern.sequenceLength === 1 ? pattern.panelWidth * scale : pattern.repeatWidth * scale);
     const repeatH = pattern.repeatHeight * scale;
+    
+    console.log(`  Repeat Dimensions: ${repeatW.toFixed(1)}x${repeatH.toFixed(1)} (scaled)`);
+    console.log(`  Original Repeat: ${pattern.repeatWidth}x${pattern.repeatHeight} (inches)`);
     
     // Handle yard patterns (sequenceLength = 0) correctly
     const offsetPerPanel = (pattern.sequenceLength === 0 || pattern.sequenceLength === 1) ? 0 : 
@@ -326,6 +352,8 @@ function drawPatternInArea(ctx, areaX, areaY, areaWidth, areaHeight, referenceCo
     const patternOriginX = referenceCoords.section1.patternStartX;
     const patternOriginY = referenceCoords.section1.patternStartY;
     
+    console.log(`  Pattern Origin: (${patternOriginX.toFixed(1)}, ${patternOriginY.toFixed(1)})`);
+    
     // For Section 2, calculate the coordinate offset but maintain the same pattern grid
     let coordinateOffsetX = 0;
     let coordinateOffsetY = 0;
@@ -333,6 +361,7 @@ function drawPatternInArea(ctx, areaX, areaY, areaWidth, areaHeight, referenceCo
     if (isSection2) {
         coordinateOffsetX = referenceCoords.section2.wallStartX - referenceCoords.section1.wallStartX;
         coordinateOffsetY = referenceCoords.section2.wallStartY - referenceCoords.section1.wallStartY;
+        console.log(`  Section 2 Coordinate Offset: (${coordinateOffsetX.toFixed(1)}, ${coordinateOffsetY.toFixed(1)})`);
     }
     
     // Draw pattern for each panel/strip
@@ -344,6 +373,8 @@ function drawPatternInArea(ctx, areaX, areaY, areaWidth, areaHeight, referenceCo
         const drawPanelX = panelX + coordinateOffsetX;
         const drawPanelY = patternOriginY + coordinateOffsetY;
         
+        console.log(`  Panel ${panelIndex}: drawPanel position (${drawPanelX.toFixed(1)}, ${drawPanelY.toFixed(1)})`);
+        
         // Calculate sequence offset for panel patterns
         const sequencePosition = pattern.sequenceLength === 0 ? 0 : panelIndex % pattern.sequenceLength;
         const sourceOffsetX = sequencePosition * offsetPerPanel;
@@ -352,19 +383,25 @@ function drawPatternInArea(ctx, areaX, areaY, areaWidth, areaHeight, referenceCo
         const panelWidth = pattern.panelWidth * scale;
         const drawHeight = isSection2 ? areaHeight : referenceCoords.dimensions.scaledTotalHeight;
         
+        console.log(`  Panel ${panelIndex}: drawHeight = ${drawHeight.toFixed(1)}, panelWidth = ${panelWidth.toFixed(1)}`);
+        
         // Draw horizontal repeats
         for (let x = -repeatW; x < panelWidth + repeatW; x += repeatW) {
             const drawX = Math.floor(drawPanelX + x - (sourceOffsetX * scale));
             
             if (pattern.hasRepeatHeight) {
-                // Patterns with height repeats
+                // Patterns with height repeats - CURRENT LOGIC: starts from top
+                console.log(`  Panel ${panelIndex}: WITH repeat height - tiling from TOP`);
                 for (let y = -repeatH; y < drawHeight + repeatH; y += repeatH) {
                     const drawY = Math.floor(drawPanelY + y);
+                    console.log(`    Drawing repeat at (${drawX}, ${drawY}) - y offset: ${y.toFixed(1)}`);
                     ctx.drawImage(patternImage, drawX, drawY, Math.ceil(repeatW), Math.ceil(repeatH));
                 }
             } else {
-                // Patterns without height repeats (bottom-aligned)
+                // Patterns without height repeats (bottom-aligned) - CURRENT LOGIC
                 const drawY = Math.floor(drawPanelY + drawHeight - repeatH);
+                console.log(`  Panel ${panelIndex}: WITHOUT repeat height - bottom aligned at drawY: ${drawY.toFixed(1)}`);
+                console.log(`    Calculation: drawPanelY(${drawPanelY.toFixed(1)}) + drawHeight(${drawHeight.toFixed(1)}) - repeatH(${repeatH.toFixed(1)}) = ${drawY.toFixed(1)}`);
                 ctx.drawImage(patternImage, drawX, drawY, Math.ceil(repeatW), Math.ceil(repeatH));
             }
         }
@@ -410,6 +447,8 @@ function drawPreview() {
     const canvas = document.getElementById('previewCanvas');
     const ctx = canvas.getContext('2d');
     
+    console.log('🔍 DEBUG: Starting drawPreview()');
+    
     // Clear canvas
     ctx.fillStyle = '#ffffff';
     ctx.fillRect(0, 0, canvas.width, canvas.height);
@@ -418,10 +457,14 @@ function drawPreview() {
     const referenceCoords = calculateReferenceCoordinates();
     
     // Section 1: Complete view with simple overlay
+    console.log('🔍 DEBUG: Drawing Section 1 (Complete View)');
     drawCompleteViewWithOverlay(ctx, referenceCoords);
     
     // Section 2: Wall only view
+    console.log('🔍 DEBUG: Drawing Section 2 (Wall Only View)');
     drawWallOnlyView(ctx, referenceCoords);
+    
+    console.log('🔍 DEBUG: drawPreview() complete');
 }
 
 // SIMPLE: Draw Complete View - pattern + overlay + annotations
@@ -437,6 +480,10 @@ function drawCompleteViewWithOverlay(ctx, referenceCoords) {
     const scaledWallHeight = dimensions.scaledWallHeight;
     const wallOffsetX = section1.wallStartX;
     const wallOffsetY = section1.wallStartY;
+    
+    console.log(`🔍 DEBUG: Section 1 Complete View:`);
+    console.log(`  Pattern Area: (${offsetX.toFixed(1)}, ${offsetY.toFixed(1)}) ${scaledTotalWidth.toFixed(1)}x${scaledTotalHeight.toFixed(1)}`);
+    console.log(`  Wall Area: (${wallOffsetX.toFixed(1)}, ${wallOffsetY.toFixed(1)}) ${scaledWallWidth.toFixed(1)}x${scaledWallHeight.toFixed(1)}`);
     
     // Step 1: Draw pattern at 100% opacity across entire panel coverage
     if (imageLoaded && patternImage) {
@@ -635,6 +682,9 @@ function drawWallOnlyView(ctx, referenceCoords) {
     const wallOffsetY = section2.wallStartY;
     const scaledWallWidth = dimensions.scaledWallWidth;
     const scaledWallHeight = dimensions.scaledWallHeight;
+    
+    console.log(`🔍 DEBUG: Section 2 Wall Only View:`);
+    console.log(`  Wall Area: (${wallOffsetX.toFixed(1)}, ${wallOffsetY.toFixed(1)}) ${scaledWallWidth.toFixed(1)}x${scaledWallHeight.toFixed(1)}`);
     
     // Draw pattern using the same coordinate system as Section 1
     if (imageLoaded && patternImage) {
