@@ -402,10 +402,10 @@ function drawPatternInArea(ctx, areaX, areaY, areaWidth, areaHeight, referenceCo
             const drawX = Math.floor(drawPanelX + x - (sourceOffsetX * scale));
             
             if (pattern.hasRepeatHeight) {
-                // FIXED: Patterns with height repeats - START FROM BOTTOM (bottom-left alignment)
-                console.log(`  Panel ${panelIndex}: WITH repeat height - tiling from BOTTOM (FIXED)`);
+                // FIXED: Patterns with height repeats - START FROM BOTTOM OF PANEL/AREA
+                console.log(`  Panel ${panelIndex}: WITH repeat height - tiling from BOTTOM`);
                 
-                // Calculate the bottom of the draw area
+                // Calculate the bottom of the draw area (panel in Section 1, wall in Section 2)
                 const bottomY = drawPanelY + drawHeight;
                 
                 // Start from the bottom and tile upward (negative y offsets go up)
@@ -415,24 +415,32 @@ function drawPatternInArea(ctx, areaX, areaY, areaWidth, areaHeight, referenceCo
                     ctx.drawImage(patternImage, drawX, drawY, Math.ceil(repeatW), Math.ceil(repeatH));
                 }
             } else {
-                // FIXED: Patterns without height repeats - use CONSISTENT bottom alignment
-                console.log(`  Panel ${panelIndex}: WITHOUT repeat height - consistent bottom alignment (FIXED)`);
+                // FIXED: Patterns without height repeats - calculate exact relative position
+                console.log(`  Panel ${panelIndex}: WITHOUT repeat height - maintaining exact relative position`);
                 
                 let drawY;
                 
-                // FIXED: Always use the same reference bottom position for both sections
-                // The key insight: both sections should align to the same virtual bottom reference
                 if (isSection2) {
-                    // Section 2: Use the actual area bottom
-                    const areaBottom = areaY + areaHeight;
-                    drawY = Math.floor(areaBottom - repeatH);
-                    console.log(`    Section 2: Area bottom(${areaBottom.toFixed(1)}) - repeatH(${repeatH.toFixed(1)}) = ${drawY.toFixed(1)}`);
+                    // Section 2: Calculate the exact same relative position as Section 1
+                    // First, determine where the pattern appears relative to the wall in Section 1
+                    const section1PanelBottom = referenceCoords.section1.patternStartY + referenceCoords.dimensions.scaledTotalHeight;
+                    const section1WallBottom = referenceCoords.section1.wallStartY + referenceCoords.dimensions.scaledWallHeight;
+                    const section1PatternBottom = section1PanelBottom - repeatH;
+                    
+                    // Calculate the offset of pattern bottom relative to wall bottom in Section 1
+                    const patternOffsetFromWallBottom = section1WallBottom - (section1PatternBottom + repeatH);
+                    
+                    // Apply the EXACT same offset in Section 2
+                    const section2WallBottom = areaY + areaHeight;
+                    drawY = Math.floor(section2WallBottom - repeatH - patternOffsetFromWallBottom);
+                    
+                    console.log(`    Section 2: Pattern offset from wall bottom: ${patternOffsetFromWallBottom.toFixed(1)}`);
+                    console.log(`    Section 2: Wall bottom(${section2WallBottom.toFixed(1)}) - repeatH(${repeatH.toFixed(1)}) - offset(${patternOffsetFromWallBottom.toFixed(1)}) = ${drawY.toFixed(1)}`);
                 } else {
-                    // Section 1: Use the wall bottom position within the pattern coverage area
-                    // This ensures both sections reference the same conceptual "wall bottom"
-                    const wallBottom = referenceCoords.section1.wallStartY + referenceCoords.dimensions.scaledWallHeight;
-                    drawY = Math.floor(wallBottom - repeatH);
-                    console.log(`    Section 1: Wall bottom(${wallBottom.toFixed(1)}) - repeatH(${repeatH.toFixed(1)}) = ${drawY.toFixed(1)}`);
+                    // Section 1: Position pattern at bottom of PANEL (not wall)
+                    const panelBottom = drawPanelY + drawHeight;
+                    drawY = Math.floor(panelBottom - repeatH);
+                    console.log(`    Section 1: Panel bottom(${panelBottom.toFixed(1)}) - repeatH(${repeatH.toFixed(1)}) = ${drawY.toFixed(1)}`);
                 }
                 
                 console.log(`    Final bottom alignment drawY = ${drawY.toFixed(1)}`);
