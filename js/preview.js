@@ -402,10 +402,10 @@ function drawPatternInArea(ctx, areaX, areaY, areaWidth, areaHeight, referenceCo
             const drawX = Math.floor(drawPanelX + x - (sourceOffsetX * scale));
             
             if (pattern.hasRepeatHeight) {
-                // FIXED: Patterns with height repeats - START FROM BOTTOM OF PANEL/AREA
+                // Patterns with height repeats - tile from bottom upward (KEEP ORIGINAL WORKING LOGIC)
                 console.log(`  Panel ${panelIndex}: WITH repeat height - tiling from BOTTOM`);
                 
-                // Calculate the bottom of the draw area (panel in Section 1, wall in Section 2)
+                // Calculate the bottom of the draw area
                 const bottomY = drawPanelY + drawHeight;
                 
                 // Start from the bottom and tile upward (negative y offsets go up)
@@ -415,8 +415,8 @@ function drawPatternInArea(ctx, areaX, areaY, areaWidth, areaHeight, referenceCo
                     ctx.drawImage(patternImage, drawX, drawY, Math.ceil(repeatW), Math.ceil(repeatH));
                 }
             } else {
-                // FIXED: Patterns without height repeats - calculate exact relative position
-                console.log(`  Panel ${panelIndex}: WITHOUT repeat height - maintaining exact relative position`);
+                // FIXED: Patterns WITHOUT height repeats ONLY - calculate exact relative position
+                console.log(`  Panel ${panelIndex}: WITHOUT repeat height - maintaining exact relative position (FIXED)`);
                 
                 let drawY;
                 
