@@ -381,14 +381,26 @@ function drawPatternInArea(ctx, areaX, areaY, areaWidth, areaHeight, referenceCo
         // Calculate panel position in the reference coordinate system
         const panelX = patternOriginX + (panelIndex * pattern.panelWidth * scale);
         
-        // FIXED: For repeating patterns, don't apply coordinate offset - use same coordinate system
+        // FIXED: For repeating patterns, maintain pattern alignment but adjust for clipping area
         let drawPanelX, drawPanelY;
         
         if (pattern.hasRepeatHeight) {
-            // Repeating patterns: Use the SAME coordinate system for both sections
-            drawPanelX = panelX;
-            drawPanelY = patternOriginY;
-            console.log(`  Panel ${panelIndex}: REPEATING - using same coordinates (${drawPanelX.toFixed(1)}, ${drawPanelY.toFixed(1)})`);
+            // Repeating patterns: Maintain the same pattern grid but adjust Y for Section 2 clipping area
+            drawPanelX = panelX + coordinateOffsetX;
+            if (isSection2) {
+                // For Section 2, we need to shift the pattern grid to align with the clipping area
+                // Calculate how the pattern should appear in the wall area
+                const section1WallStartY = referenceCoords.section1.wallStartY;
+                const section1PatternStartY = referenceCoords.section1.patternStartY;
+                const patternOffsetInSection1 = section1WallStartY - section1PatternStartY;
+                
+                // Apply the same offset relative to Section 2 wall area
+                drawPanelY = areaY - patternOffsetInSection1;
+                console.log(`  Panel ${panelIndex}: REPEATING Section 2 - adjusted Y (${drawPanelX.toFixed(1)}, ${drawPanelY.toFixed(1)})`);
+            } else {
+                drawPanelY = patternOriginY;
+                console.log(`  Panel ${panelIndex}: REPEATING Section 1 - original Y (${drawPanelX.toFixed(1)}, ${drawPanelY.toFixed(1)})`);
+            }
         } else {
             // Non-repeating patterns: Apply coordinate offset for Section 2
             drawPanelX = panelX + coordinateOffsetX;
