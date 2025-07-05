@@ -85,20 +85,20 @@ async function generatePreview() {
             formattedHeight: formattedHeight
         };
         
-        if (previewTitle) {
-            previewTitle.textContent = `${pattern.name}: ${pattern.sku || 'N/A'}: ${formattedWidth}w x ${formattedHeight}h Wall`;
-        }
-        
         // DEBUG: Log pattern Y-axis properties
         console.log('🔍 DEBUG: Pattern Y-Axis Properties:');
         console.log(`  Pattern: ${pattern.name} (${pattern.sku})`);
         console.log(`  Sale Type: ${pattern.saleType}`);
         console.log(`  Repeat Height: ${pattern.repeatHeight}`);
         console.log(`  Has Repeat Height: ${pattern.hasRepeatHeight}`);
-        console.log(`  Wall Height: ${wallHeight}" (${wallHeight/12}' or ${heightFeet}'${heightInches}")`);
+        console.log(`  Wall Height: ${wallHeight}" (${(wallHeight/12).toFixed(1)}' total)`);
         console.log(`  Panel Length: ${calculations.panelLength}' (${calculations.panelLength * 12}")`);
-        console.log(`  Wall dimensions: ${widthFeet}'${widthInches}" x ${heightFeet}'${heightInches}"`);
+        console.log(`  Input dimensions: ${widthFeet}'${widthInches}" x ${heightFeet}'${heightInches}"`);
         console.log(`  Formatted: ${formattedWidth} x ${formattedHeight}`);
+        
+        if (previewTitle) {
+            previewTitle.textContent = `${pattern.name}: ${pattern.sku || 'N/A'}: ${formattedWidth}w x ${formattedHeight}h Wall`;
+        }
         
         if (loadingOverlay) {
             loadingOverlay.style.display = 'flex';
@@ -392,15 +392,20 @@ function drawPatternInArea(ctx, areaX, areaY, areaWidth, areaHeight, referenceCo
             const drawX = Math.floor(drawPanelX + x - (sourceOffsetX * scale));
             
             if (pattern.hasRepeatHeight) {
-                // Patterns with height repeats - CURRENT LOGIC: starts from top
-                console.log(`  Panel ${panelIndex}: WITH repeat height - tiling from TOP`);
-                for (let y = -repeatH; y < drawHeight + repeatH; y += repeatH) {
-                    const drawY = Math.floor(drawPanelY + y);
-                    console.log(`    Drawing repeat at (${drawX}, ${drawY}) - y offset: ${y.toFixed(1)}`);
+                // FIXED: Patterns with height repeats - START FROM BOTTOM (bottom-left alignment)
+                console.log(`  Panel ${panelIndex}: WITH repeat height - tiling from BOTTOM (FIXED)`);
+                
+                // Calculate the bottom of the draw area
+                const bottomY = drawPanelY + drawHeight;
+                
+                // Start from the bottom and tile upward (negative y offsets go up)
+                for (let y = 0; y >= -drawHeight - repeatH; y -= repeatH) {
+                    const drawY = Math.floor(bottomY + y - repeatH);
+                    console.log(`    Drawing repeat at (${drawX}, ${drawY}) - y offset from bottom: ${y.toFixed(1)}`);
                     ctx.drawImage(patternImage, drawX, drawY, Math.ceil(repeatW), Math.ceil(repeatH));
                 }
             } else {
-                // Patterns without height repeats (bottom-aligned) - CURRENT LOGIC
+                // Patterns without height repeats (bottom-aligned) - UNCHANGED
                 const drawY = Math.floor(drawPanelY + drawHeight - repeatH);
                 console.log(`  Panel ${panelIndex}: WITHOUT repeat height - bottom aligned at drawY: ${drawY.toFixed(1)}`);
                 console.log(`    Calculation: drawPanelY(${drawPanelY.toFixed(1)}) + drawHeight(${drawHeight.toFixed(1)}) - repeatH(${repeatH.toFixed(1)}) = ${drawY.toFixed(1)}`);
