@@ -85,18 +85,20 @@ async function generatePreview() {
             formattedHeight: formattedHeight
         };
         
+        if (previewTitle) {
+            previewTitle.textContent = `${pattern.name}: ${pattern.sku || 'N/A'}: ${formattedWidth}w x ${formattedHeight}h Wall`;
+        }
+        
         // DEBUG: Log pattern Y-axis properties
         console.log('🔍 DEBUG: Pattern Y-Axis Properties:');
         console.log(`  Pattern: ${pattern.name} (${pattern.sku})`);
         console.log(`  Sale Type: ${pattern.saleType}`);
         console.log(`  Repeat Height: ${pattern.repeatHeight}`);
         console.log(`  Has Repeat Height: ${pattern.hasRepeatHeight}`);
-        console.log(`  Wall Height: ${wallHeight}" (${wallHeight/12}' or ${wallHeightFeet}'${wallHeightInches}")`);
+        console.log(`  Wall Height: ${wallHeight}" (${wallHeight/12}' or ${heightFeet}'${heightInches}")`);
         console.log(`  Panel Length: ${calculations.panelLength}' (${calculations.panelLength * 12}")`);
-        
-        if (previewTitle) {
-            previewTitle.textContent = `${pattern.name}: ${pattern.sku || 'N/A'}: ${formattedWidth}w x ${formattedHeight}h Wall`;
-        }
+        console.log(`  Wall dimensions: ${widthFeet}'${widthInches}" x ${heightFeet}'${heightInches}"`);
+        console.log(`  Formatted: ${formattedWidth} x ${formattedHeight}`);
         
         if (loadingOverlay) {
             loadingOverlay.style.display = 'flex';
@@ -716,7 +718,7 @@ function drawWallOnlyView(ctx, referenceCoords) {
     ctx.strokeStyle = '#333';
     ctx.lineWidth = 1;
     
-    // Format the dimension text
+    // Format the dimension text - using the correct variable names
     const wallWidthText = wallWidthInches > 0 ? 
         `Wall Width: ${wallWidthFeet}'-${wallWidthInches}"` : `Wall Width: ${wallWidthFeet}'`;
     const wallHeightText = wallHeightInches > 0 ? 
