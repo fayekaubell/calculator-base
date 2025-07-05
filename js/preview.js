@@ -151,6 +151,7 @@ async function generatePreview() {
         
     } catch (error) {
         console.error('❌ Error in generatePreview:', error);
+        const loadingOverlay = document.getElementById('loadingOverlay');
         if (loadingOverlay) {
             loadingOverlay.style.display = 'none';
         }
@@ -590,3 +591,308 @@ function drawCompleteViewOutlines(ctx, offsetX, offsetY, scaledTotalWidth, scale
 // Draw all dimension labels for complete view
 function drawCompleteDimensionLabels(ctx, offsetX, offsetY, scaledTotalWidth, scaledTotalHeight, 
                                    scaledWallWidth, scaledWallHeight, wallOffsetX, wallOffsetY, scale) {
+    const { pattern, calculations } = currentPreview;
+    
+    ctx.fillStyle = '#333';
+    ctx.font = '14px Arial, sans-serif';
+    ctx.textAlign = 'center';
+    ctx.strokeStyle = '#333';
+    ctx.lineWidth = 1;
+    
+    // Panel dimensions formatting
+    const panelWidthFeet = Math.floor(pattern.panelWidth / 12);
+    const panelWidthInches = Math.round(pattern.panelWidth % 12);
+    const panelWidthDisplay = panelWidthInches > 0 ? 
+        `${panelWidthFeet}'-${panelWidthInches}"` : `${panelWidthFeet}'`;
+    
+    // Individual panel width annotation
+    if (calculations.panelsNeeded > 0) {
+        const panelStartX = offsetX;
+        const panelEndX = offsetX + (pattern.panelWidth * scale);
+        const labelY = offsetY - 50;
+        
+        ctx.beginPath();
+        ctx.moveTo(panelStartX, labelY);
+        ctx.lineTo(panelEndX, labelY);
+        ctx.stroke();
+        
+        ctx.beginPath();
+        ctx.moveTo(panelStartX, labelY - 5);
+        ctx.lineTo(panelStartX, labelY + 5);
+        ctx.moveTo(panelEndX, labelY - 5);
+        ctx.lineTo(panelEndX, labelY + 5);
+        ctx.stroke();
+        
+        const labelText = pattern.saleType === 'yard' ? 
+            `Strip Width: ${panelWidthDisplay}` : 
+            `Panel Width: ${panelWidthDisplay}`;
+        ctx.fillText(labelText, (panelStartX + panelEndX) / 2, labelY - 8);
+    }
+    
+    // Total panels width annotation
+    const totalWidthFeet = Math.floor(calculations.totalWidth / 12);
+    const totalWidthInches = Math.round(calculations.totalWidth % 12);
+    const totalWidthDisplay = totalWidthInches > 0 ? 
+        `${totalWidthFeet}'-${totalWidthInches}"` : `${totalWidthFeet}'`;
+    
+    const totalLabelY = offsetY - 80;
+    
+    ctx.beginPath();
+    ctx.moveTo(offsetX, totalLabelY);
+    ctx.lineTo(offsetX + scaledTotalWidth, totalLabelY);
+    ctx.stroke();
+    
+    ctx.beginPath();
+    ctx.moveTo(offsetX, totalLabelY - 5);
+    ctx.lineTo(offsetX, totalLabelY + 5);
+    ctx.moveTo(offsetX + scaledTotalWidth, totalLabelY - 5);
+    ctx.lineTo(offsetX + scaledTotalWidth, totalLabelY + 5);
+    ctx.stroke();
+    
+    const totalLabelText = pattern.saleType === 'yard' ? 
+        `All Strips: ${totalWidthDisplay}` : 
+        `All Panels: ${totalWidthDisplay}`;
+    ctx.fillText(totalLabelText, offsetX + scaledTotalWidth / 2, totalLabelY - 8);
+    
+    // Panel height annotation
+    const panelHeightLineX = offsetX - 30;
+    const panelHeightTextX = panelHeightLineX - 15;
+    
+    ctx.beginPath();
+    ctx.moveTo(panelHeightLineX, offsetY);
+    ctx.lineTo(panelHeightLineX, offsetY + scaledTotalHeight);
+    ctx.stroke();
+    
+    ctx.beginPath();
+    ctx.moveTo(panelHeightLineX - 5, offsetY);
+    ctx.lineTo(panelHeightLineX + 5, offsetY);
+    ctx.moveTo(panelHeightLineX - 5, offsetY + scaledTotalHeight);
+    ctx.lineTo(panelHeightLineX + 5, offsetY + scaledTotalHeight);
+    ctx.stroke();
+    
+    ctx.save();
+    ctx.translate(panelHeightTextX, offsetY + scaledTotalHeight / 2);
+    ctx.rotate(-Math.PI/2);
+    
+    let heightDisplay;
+    if (pattern.saleType === 'yard' && calculations.panelLengthInches !== undefined && calculations.panelLengthInches > 0) {
+        heightDisplay = `Strip Height: ${calculations.panelLength}'-${calculations.panelLengthInches}"`;
+    } else if (pattern.saleType === 'yard') {
+        heightDisplay = `Strip Height: ${calculations.panelLength}'`;
+    } else {
+        heightDisplay = `Panel Height: ${calculations.panelLength}'`;
+    }
+    
+    ctx.fillText(heightDisplay, 0, 0);
+    ctx.restore();
+}
+
+// Draw panel labels (A/B/C sequence)
+function drawPanelLabels(ctx, offsetX, offsetY, scaledTotalWidth, scaledTotalHeight, scale) {
+    const { pattern, calculations } = currentPreview;
+    
+    if (pattern.saleType === 'panel' && pattern.sequenceLength > 1) {
+        ctx.fillStyle = '#333';
+        ctx.font = '14px Arial, sans-serif';
+        ctx.textAlign = 'center';
+        
+        for (let i = 0; i < calculations.panelsNeeded; i++) {
+            const centerX = offsetX + (i * pattern.panelWidth + pattern.panelWidth / 2) * scale;
+            const sequencePosition = i % pattern.sequenceLength;
+            const labelText = pattern.panelSequence[sequencePosition];
+            const textY = offsetY - 25;
+            
+            ctx.fillText(labelText, centerX, textY);
+        }
+    }
+}
+
+// Draw Wall Only View with perfect pattern alignment
+function drawWallOnlyView(ctx, referenceCoords) {
+    const { pattern, wallWidth, wallHeight, calculations, wallWidthFeet, wallWidthInches, wallHeightFeet, wallHeightInches } = currentPreview;
+    const { section2, dimensions } = referenceCoords;
+    
+    const wallOffsetX = section2.wallStartX;
+    const wallOffsetY = section2.wallStartY;
+    const scaledWallWidth = dimensions.scaledWallWidth;
+    const scaledWallHeight = dimensions.scaledWallHeight;
+    
+    console.log(`🔍 DEBUG: Section 2 Wall Only View:`);
+    console.log(`  Wall Area: (${wallOffsetX.toFixed(1)}, ${wallOffsetY.toFixed(1)}) ${scaledWallWidth.toFixed(1)}x${scaledWallHeight.toFixed(1)}`);
+    
+    // Draw pattern using the same coordinate system as Section 1
+    if (imageLoaded && patternImage) {
+        drawPatternInArea(ctx, wallOffsetX, wallOffsetY, scaledWallWidth, scaledWallHeight, referenceCoords, true);
+    }
+    
+    // Draw uncovered area if needed
+    const hasLimitation = calculations.exceedsLimit || calculations.exceedsAvailableLength;
+    if (hasLimitation) {
+        const actualPanelLengthToUse = calculations.exceedsAvailableLength ? 
+            calculations.actualPanelLength : calculations.panelLength;
+        const coveredHeight = actualPanelLengthToUse * 12 * referenceCoords.scale;
+        const uncoveredAreaHeight = scaledWallHeight - coveredHeight;
+        
+        if (uncoveredAreaHeight > 0) {
+            ctx.fillStyle = 'rgba(255, 0, 0, 0.5)';
+            ctx.fillRect(wallOffsetX, wallOffsetY, scaledWallWidth, uncoveredAreaHeight);
+        }
+    }
+    
+    // Draw wall outline
+    ctx.strokeStyle = '#2c3e50';
+    ctx.lineWidth = 2;
+    ctx.strokeRect(wallOffsetX, wallOffsetY, scaledWallWidth, scaledWallHeight);
+    
+    // Draw wall dimensions
+    ctx.fillStyle = '#333';
+    ctx.font = '14px Arial, sans-serif';
+    ctx.strokeStyle = '#333';
+    ctx.lineWidth = 1;
+    
+    // Format the dimension text - using the correct variable names
+    const wallWidthText = wallWidthInches > 0 ? 
+        `Wall Width: ${wallWidthFeet}'-${wallWidthInches}"` : `Wall Width: ${wallWidthFeet}'`;
+    const wallHeightText = wallHeightInches > 0 ? 
+        `Wall Height: ${wallHeightFeet}'-${wallHeightInches}"` : `Wall Height: ${wallHeightFeet}'`;
+    
+    // Wall width annotation (bottom of wall)
+    const widthLineY = wallOffsetY + scaledWallHeight + 30;
+    const widthTextY = widthLineY + 15;
+    
+    ctx.beginPath();
+    ctx.moveTo(wallOffsetX, widthLineY);
+    ctx.lineTo(wallOffsetX + scaledWallWidth, widthLineY);
+    ctx.stroke();
+    
+    ctx.beginPath();
+    ctx.moveTo(wallOffsetX, widthLineY - 5);
+    ctx.lineTo(wallOffsetX, widthLineY + 5);
+    ctx.moveTo(wallOffsetX + scaledWallWidth, widthLineY - 5);
+    ctx.lineTo(wallOffsetX + scaledWallWidth, widthLineY + 5);
+    ctx.stroke();
+    
+    ctx.textAlign = 'center';
+    ctx.fillText(wallWidthText, wallOffsetX + scaledWallWidth / 2, widthTextY);
+    
+    // Wall height annotation (left side of wall)
+    const wallHeightOffset = 30;
+    const heightLineX = wallOffsetX - wallHeightOffset;
+    const heightTextX = heightLineX - 15;
+    
+    ctx.beginPath();
+    ctx.moveTo(heightLineX, wallOffsetY);
+    ctx.lineTo(heightLineX, wallOffsetY + scaledWallHeight);
+    ctx.stroke();
+    
+    ctx.beginPath();
+    ctx.moveTo(heightLineX - 5, wallOffsetY);
+    ctx.lineTo(heightLineX + 5, wallOffsetY);
+    ctx.moveTo(heightLineX - 5, wallOffsetY + scaledWallHeight);
+    ctx.lineTo(heightLineX + 5, wallOffsetY + scaledWallHeight);
+    ctx.stroke();
+    
+    ctx.save();
+    ctx.translate(heightTextX, wallOffsetY + scaledWallHeight / 2);
+    ctx.rotate(-Math.PI/2);
+    ctx.textAlign = 'center';
+    ctx.fillText(wallHeightText, 0, 0);
+    ctx.restore();
+}
+
+// Canvas modal functionality
+function openCanvasModal() {
+    const canvas = document.getElementById('previewCanvas');
+    
+    if (!currentPreview) {
+        console.error('No current preview data available for high-res rendering');
+        return;
+    }
+    
+    console.log('Creating high-res modal...');
+    
+    const modal = document.createElement('div');
+    modal.className = 'canvas-modal';
+    
+    const canvasContainer = document.createElement('div');
+    canvasContainer.style.width = '100%';
+    canvasContainer.style.maxWidth = '95vw';
+    canvasContainer.style.margin = '0 auto';
+    canvasContainer.style.overflowX = 'hidden';
+    canvasContainer.style.overflowY = 'visible';
+    
+    const largeCanvas = document.createElement('canvas');
+    
+    const hiResScale = 3;
+    const baseScale = 2;
+    largeCanvas.width = canvas.width * hiResScale * baseScale;
+    largeCanvas.height = canvas.height * hiResScale * baseScale;
+    
+    const displayWidth = window.innerWidth * 0.95;
+    const canvasAspectRatio = canvas.width / canvas.height;
+    const displayHeight = displayWidth / canvasAspectRatio;
+    
+    largeCanvas.style.width = displayWidth + 'px';
+    largeCanvas.style.height = displayHeight + 'px';
+    largeCanvas.style.maxWidth = 'none';
+    largeCanvas.style.display = 'block';
+    largeCanvas.style.margin = '0 auto';
+    
+    const largeCtx = largeCanvas.getContext('2d');
+    
+    largeCtx.imageSmoothingEnabled = true;
+    largeCtx.imageSmoothingQuality = 'high';
+    largeCtx.scale(hiResScale * baseScale, hiResScale * baseScale);
+    
+    largeCtx.fillStyle = '#ffffff';
+    largeCtx.fillRect(0, 0, canvas.width, canvas.height);
+    
+    renderHighQualityPreview(largeCtx, canvas.width, canvas.height);
+    
+    canvasContainer.appendChild(largeCanvas);
+    modal.appendChild(canvasContainer);
+    
+    modal.onclick = (e) => {
+        if (e.target === modal || e.target === canvasContainer) {
+            document.body.removeChild(modal);
+        }
+    };
+    
+    largeCanvas.onclick = () => {
+        document.body.removeChild(modal);
+    };
+    
+    document.body.appendChild(modal);
+}
+
+function renderHighQualityPreview(ctx, canvasWidth, canvasHeight) {
+    // For high-quality rendering, we need to recalculate coordinates for the given canvas size
+    const originalCanvas = document.getElementById('previewCanvas');
+    const originalCurrentPreview = currentPreview;
+    
+    // Temporarily adjust the canvas reference for coordinate calculations
+    const tempCanvas = { width: canvasWidth, height: canvasHeight };
+    const originalGetElementById = document.getElementById;
+    document.getElementById = function(id) {
+        if (id === 'previewCanvas') return tempCanvas;
+        return originalGetElementById.call(document, id);
+    };
+    
+    try {
+        // Calculate reference coordinates for the high-res canvas
+        const referenceCoords = calculateReferenceCoordinates();
+        
+        // Draw Section 1: Complete view
+        drawCompleteViewWithOverlay(ctx, referenceCoords);
+        
+        // Draw Section 2: Wall only view  
+        drawWallOnlyView(ctx, referenceCoords);
+        
+    } finally {
+        // Restore original getElementById function
+        document.getElementById = originalGetElementById;
+    }
+}
+
+// Make generatePreview globally accessible
+window.generatePreview = generatePreview;
