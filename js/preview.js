@@ -385,18 +385,24 @@ function drawPatternInArea(ctx, areaX, areaY, areaWidth, areaHeight, referenceCo
         let drawPanelX, drawPanelY;
         
         if (pattern.hasRepeatHeight) {
-            // Repeating patterns: Maintain the same pattern grid but adjust Y for Section 2 clipping area
+            // Repeating patterns: Calculate EXACT same position relative to wall in both sections
             drawPanelX = panelX + coordinateOffsetX;
             if (isSection2) {
-                // For Section 2, we need to shift the pattern grid to align with the clipping area
-                // Calculate how the pattern should appear in the wall area
-                const section1WallStartY = referenceCoords.section1.wallStartY;
-                const section1PatternStartY = referenceCoords.section1.patternStartY;
-                const patternOffsetInSection1 = section1WallStartY - section1PatternStartY;
+                // For Section 2, calculate where pattern appears relative to wall in Section 1
+                // then apply EXACT same relative position
                 
-                // Apply the same offset relative to Section 2 wall area
-                drawPanelY = areaY - patternOffsetInSection1;
-                console.log(`  Panel ${panelIndex}: REPEATING Section 2 - adjusted Y (${drawPanelX.toFixed(1)}, ${drawPanelY.toFixed(1)})`);
+                // Section 1: Calculate pattern position relative to wall bottom
+                const section1WallBottom = referenceCoords.section1.wallStartY + referenceCoords.dimensions.scaledWallHeight;
+                const section1PanelBottom = referenceCoords.section1.patternStartY + referenceCoords.dimensions.scaledTotalHeight;
+                const section1PatternRelativeToWall = section1WallBottom - section1PanelBottom;
+                
+                // Section 2: Apply EXACT same relative position
+                const section2WallBottom = areaY + areaHeight;
+                const section2PanelBottom = section2WallBottom - section1PatternRelativeToWall;
+                drawPanelY = section2PanelBottom - drawHeight;
+                
+                console.log(`  Panel ${panelIndex}: REPEATING Section 2 - pattern relative to wall: ${section1PatternRelativeToWall.toFixed(1)}`);
+                console.log(`  Panel ${panelIndex}: REPEATING Section 2 - final Y (${drawPanelX.toFixed(1)}, ${drawPanelY.toFixed(1)})`);
             } else {
                 drawPanelY = patternOriginY;
                 console.log(`  Panel ${panelIndex}: REPEATING Section 1 - original Y (${drawPanelX.toFixed(1)}, ${drawPanelY.toFixed(1)})`);
