@@ -316,6 +316,15 @@ function calculateReferenceCoordinates() {
     };
 }
 
+// Helper function to get wall position within Section 1 for consistent non-repeating pattern alignment
+function getWallPositionInSection1(referenceCoords) {
+    const { wallHeight } = currentPreview;
+    return {
+        wallStartY: referenceCoords.section1.wallStartY,
+        wallHeight: wallHeight
+    };
+}
+
 // SIMPLE: Draw pattern with consistent coordinate system - DEBUG VERSION
 function drawPatternInArea(ctx, areaX, areaY, areaWidth, areaHeight, referenceCoords, isSection2 = false) {
     const { pattern, calculations } = currentPreview;
@@ -405,10 +414,25 @@ function drawPatternInArea(ctx, areaX, areaY, areaWidth, areaHeight, referenceCo
                     ctx.drawImage(patternImage, drawX, drawY, Math.ceil(repeatW), Math.ceil(repeatH));
                 }
             } else {
-                // Patterns without height repeats (bottom-aligned) - UNCHANGED
-                const drawY = Math.floor(drawPanelY + drawHeight - repeatH);
-                console.log(`  Panel ${panelIndex}: WITHOUT repeat height - bottom aligned at drawY: ${drawY.toFixed(1)}`);
-                console.log(`    Calculation: drawPanelY(${drawPanelY.toFixed(1)}) + drawHeight(${drawHeight.toFixed(1)}) - repeatH(${repeatH.toFixed(1)}) = ${drawY.toFixed(1)}`);
+                // FIXED: Patterns without height repeats - maintain consistent positioning between sections
+                console.log(`  Panel ${panelIndex}: WITHOUT repeat height - consistent bottom alignment (FIXED)`);
+                
+                // For Section 1: Position relative to the wall area within the panel coverage
+                // For Section 2: Position relative to the wall area directly
+                let drawY;
+                
+                if (isSection2) {
+                    // Section 2: Bottom-align to the wall area directly
+                    drawY = Math.floor(drawPanelY + drawHeight - repeatH);
+                    console.log(`    Section 2: drawY = drawPanelY(${drawPanelY.toFixed(1)}) + drawHeight(${drawHeight.toFixed(1)}) - repeatH(${repeatH.toFixed(1)}) = ${drawY.toFixed(1)}`);
+                } else {
+                    // Section 1: Position relative to where the wall would be within the panel coverage
+                    const { wallStartY, wallHeight } = getWallPositionInSection1(referenceCoords);
+                    const wallBottomY = wallStartY + (wallHeight * referenceCoords.scale);
+                    drawY = Math.floor(wallBottomY - repeatH);
+                    console.log(`    Section 1: Wall bottom Y(${wallBottomY.toFixed(1)}) - repeatH(${repeatH.toFixed(1)}) = ${drawY.toFixed(1)}`);
+                }
+                
                 ctx.drawImage(patternImage, drawX, drawY, Math.ceil(repeatW), Math.ceil(repeatH));
             }
         }
