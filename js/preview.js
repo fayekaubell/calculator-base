@@ -376,6 +376,9 @@ function drawPatternInArea(ctx, areaX, areaY, areaWidth, areaHeight, referenceCo
         console.log(`  Section 2 Coordinate Offset: (${coordinateOffsetX.toFixed(1)}, ${coordinateOffsetY.toFixed(1)})`);
     }
     
+    // Calculate draw height first (needed for coordinate calculations)
+    const drawHeight = isSection2 ? areaHeight : referenceCoords.dimensions.scaledTotalHeight;
+    
     // Draw pattern for each panel/strip
     for (let panelIndex = 0; panelIndex < calculations.panelsNeeded; panelIndex++) {
         // Calculate panel position in the reference coordinate system
@@ -420,7 +423,6 @@ function drawPatternInArea(ctx, areaX, areaY, areaWidth, areaHeight, referenceCo
         
         // Draw pattern repeats for this panel
         const panelWidth = pattern.panelWidth * scale;
-        const drawHeight = isSection2 ? areaHeight : referenceCoords.dimensions.scaledTotalHeight;
         
         console.log(`  Panel ${panelIndex}: drawHeight = ${drawHeight.toFixed(1)}, panelWidth = ${panelWidth.toFixed(1)}`);
         
