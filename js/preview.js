@@ -402,27 +402,26 @@ function drawPatternInArea(ctx, areaX, areaY, areaWidth, areaHeight, referenceCo
             const drawX = Math.floor(drawPanelX + x - (sourceOffsetX * scale));
             
             if (pattern.hasRepeatHeight) {
-                // Patterns with height repeats - tile from bottom upward (KEEP ORIGINAL WORKING LOGIC)
-                console.log(`  Panel ${panelIndex}: WITH repeat height - tiling from BOTTOM`);
+                // Patterns with height repeats - RESTORE ORIGINAL WORKING LOGIC
+                console.log(`  Panel ${panelIndex}: WITH repeat height - tiling from BOTTOM (ORIGINAL LOGIC)`);
                 
-                // Calculate the bottom of the draw area
+                // ORIGINAL: Calculate the bottom of the draw area (this was working before!)
                 const bottomY = drawPanelY + drawHeight;
                 
-                // Start from the bottom and tile upward (negative y offsets go up)
+                // ORIGINAL: Start from the bottom and tile upward
                 for (let y = 0; y >= -drawHeight - repeatH; y -= repeatH) {
                     const drawY = Math.floor(bottomY + y - repeatH);
                     console.log(`    Drawing repeat at (${drawX}, ${drawY}) - y offset from bottom: ${y.toFixed(1)}`);
                     ctx.drawImage(patternImage, drawX, drawY, Math.ceil(repeatW), Math.ceil(repeatH));
                 }
             } else {
-                // FIXED: Patterns WITHOUT height repeats ONLY - calculate exact relative position
-                console.log(`  Panel ${panelIndex}: WITHOUT repeat height - maintaining exact relative position (FIXED)`);
+                // ONLY for patterns WITHOUT height repeats - calculate exact relative position
+                console.log(`  Panel ${panelIndex}: WITHOUT repeat height - maintaining exact relative position`);
                 
                 let drawY;
                 
                 if (isSection2) {
                     // Section 2: Calculate the exact same relative position as Section 1
-                    // First, determine where the pattern appears relative to the wall in Section 1
                     const section1PanelBottom = referenceCoords.section1.patternStartY + referenceCoords.dimensions.scaledTotalHeight;
                     const section1WallBottom = referenceCoords.section1.wallStartY + referenceCoords.dimensions.scaledWallHeight;
                     const section1PatternBottom = section1PanelBottom - repeatH;
@@ -434,16 +433,15 @@ function drawPatternInArea(ctx, areaX, areaY, areaWidth, areaHeight, referenceCo
                     const section2WallBottom = areaY + areaHeight;
                     drawY = Math.floor(section2WallBottom - repeatH - patternOffsetFromWallBottom);
                     
-                    console.log(`    Section 2: Pattern offset from wall bottom: ${patternOffsetFromWallBottom.toFixed(1)}`);
-                    console.log(`    Section 2: Wall bottom(${section2WallBottom.toFixed(1)}) - repeatH(${repeatH.toFixed(1)}) - offset(${patternOffsetFromWallBottom.toFixed(1)}) = ${drawY.toFixed(1)}`);
+                    console.log(`    Section 2 NON-REPEAT: Pattern offset from wall bottom: ${patternOffsetFromWallBottom.toFixed(1)}`);
+                    console.log(`    Section 2 NON-REPEAT: Final drawY = ${drawY.toFixed(1)}`);
                 } else {
-                    // Section 1: Position pattern at bottom of PANEL (not wall)
+                    // Section 1: Position pattern at bottom of PANEL
                     const panelBottom = drawPanelY + drawHeight;
                     drawY = Math.floor(panelBottom - repeatH);
-                    console.log(`    Section 1: Panel bottom(${panelBottom.toFixed(1)}) - repeatH(${repeatH.toFixed(1)}) = ${drawY.toFixed(1)}`);
+                    console.log(`    Section 1 NON-REPEAT: Panel bottom(${panelBottom.toFixed(1)}) - repeatH(${repeatH.toFixed(1)}) = ${drawY.toFixed(1)}`);
                 }
                 
-                console.log(`    Final bottom alignment drawY = ${drawY.toFixed(1)}`);
                 ctx.drawImage(patternImage, drawX, drawY, Math.ceil(repeatW), Math.ceil(repeatH));
             }
         }
