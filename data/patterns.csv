@@ -1,6 +1,6 @@
 pattern_name,sku,sale_type,repeat_width_inches,repeat_height_inches,material_width_inches,panel_sequence,available_lengths_feet,pattern_match,min_yard_order,repeat_url
 Agate in Malachite,AG08,panel,52,52,52,A,"9,12,15,18,21,24,27",straight,5,https://raw.githubusercontent.com/fayekaubell/calculator-base/main/data/patterns/AG08.jpg
-Discotheque in Aqua,DT04,yard,9,8,27,,,straight,5,https://raw.githubusercontent.com/fayekaubell/calculator-base/main/data/patterns/DT04.jpg
-Summer Flora,FLR01,panel,432,none,54,ABCDEF,"9,12",straight,5,https://raw.githubusercontent.com/fayekaubell/calculator-base/main/data/patterns/FLR01.jpg
+Discotheque in Aqua,DT04,yard,9,8,27,,"9,12,15,18,21,24,27",straight,5,https://raw.githubusercontent.com/fayekaubell/calculator-base/main/data/patterns/DT04.jpg
+Summer Flora,FLR01,panel,432,none,54,ABCDEFGH,"9,12",straight,5,https://raw.githubusercontent.com/fayekaubell/calculator-base/main/data/patterns/FLR01.jpg
 Twilight Sound,SD02.2,panel,108,151,54,AB,"9,12,15,18,21,24,27",straight,5,https://raw.githubusercontent.com/fayekaubell/calculator-base/main/data/patterns/SD02.2.png
-Bernini's Bees: Blazer Blue,W-BER-BLA,yard,13.5,18,27,,,half drop,5,https://raw.githubusercontent.com/fayekaubell/calculator-base/main/data/patterns/W-BER-BLA-repeat.jpg
+Bernini's Bees: Blazer Blue,W-BER-BLA,yard,13.5,18,27,,"9,12,15,18,21,24,27",half drop,5,https://raw.githubusercontent.com/fayekaubell/calculator-base/main/data/patterns/W-BER-BLA-repeat.jpg
