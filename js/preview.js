@@ -414,26 +414,36 @@ function drawPatternInArea(ctx, areaX, areaY, areaWidth, areaHeight, referenceCo
                     ctx.drawImage(patternImage, drawX, drawY, Math.ceil(repeatW), Math.ceil(repeatH));
                 }
             } else {
-                // FIXED: Patterns without height repeats - maintain consistent positioning between sections
-                console.log(`  Panel ${panelIndex}: WITHOUT repeat height - consistent bottom alignment (FIXED)`);
+                // FIXED: Patterns without height repeats - bottom edge of pattern aligns with bottom of panel
+                console.log(`  Panel ${panelIndex}: WITHOUT repeat height - bottom edge alignment (FIXED)`);
                 
-                // For Section 1: Position relative to the wall area within the panel coverage
-                // For Section 2: Position relative to the wall area directly
                 let drawY;
                 
                 if (isSection2) {
-                    // Section 2: Bottom-align to the wall area directly
+                    // Section 2: Bottom edge of pattern aligns with bottom of wall area
                     const wallBottom = drawPanelY + drawHeight;
                     drawY = Math.floor(wallBottom - repeatH);
                     console.log(`    Section 2: Wall bottom(${wallBottom.toFixed(1)}) - repeatH(${repeatH.toFixed(1)}) = ${drawY.toFixed(1)}`);
                 } else {
-                    // Section 1: Position relative to where the wall would be within the panel coverage
+                    // Section 1: Bottom edge of pattern aligns with bottom of wall within panel coverage
                     const { wallStartY, wallHeight } = getWallPositionInSection1(referenceCoords);
                     const wallBottomY = wallStartY + (wallHeight * referenceCoords.scale);
                     drawY = Math.floor(wallBottomY - repeatH);
                     console.log(`    Section 1: Wall bottom Y(${wallBottomY.toFixed(1)}) - repeatH(${repeatH.toFixed(1)}) = ${drawY.toFixed(1)}`);
                 }
                 
+                // However, if the pattern is larger than the area, position it so the bottom aligns
+                // This ensures the bottom-left corner rule is followed
+                if (isSection2) {
+                    const wallBottom = drawPanelY + drawHeight;
+                    drawY = Math.floor(wallBottom - repeatH);
+                } else {
+                    // For Section 1, align with the panel bottom, not wall bottom
+                    const panelBottom = drawPanelY + drawHeight;
+                    drawY = Math.floor(panelBottom - repeatH);
+                }
+                
+                console.log(`    CORRECTED: Bottom alignment drawY = ${drawY.toFixed(1)}`);
                 ctx.drawImage(patternImage, drawX, drawY, Math.ceil(repeatW), Math.ceil(repeatH));
             }
         }
