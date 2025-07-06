@@ -117,31 +117,19 @@ function createPatternFromCSV(row) {
         repeatHeight = parseFloat(repeatHeightValue) || 144;
     }
     
-    // Determine image URL - FIXED: Handle GitHub raw URLs properly
+    // Determine image URL - SIMPLE: Use CSV URL or construct from SKU
     let imageUrl = '';
     let thumbnailUrl = '';
     
     if (row.repeat_url && row.repeat_url.trim()) {
-        // Use the URL from CSV, but fix GitHub raw URLs to use GitHub Pages
-        let csvUrl = row.repeat_url.trim();
-        
-        // Convert GitHub raw URLs to GitHub Pages URLs
-        if (csvUrl.includes('raw.githubusercontent.com')) {
-            csvUrl = csvUrl
-                .replace('https://raw.githubusercontent.com/fayekaubell/calculator-base/refs/heads/main/', 'https://fayekaubell.github.io/calculator-base/')
-                .replace('https://raw.githubusercontent.com/fayekaubell/calculator-base/main/', 'https://fayekaubell.github.io/calculator-base/');
-            console.log(`🔧 Converted GitHub raw URL to Pages URL for ${row.sku}:`, csvUrl);
-        }
-        
-        imageUrl = csvUrl;
+        // Use the URL from CSV as-is
+        imageUrl = row.repeat_url.trim();
         thumbnailUrl = imageUrl;
-        console.log(`📸 Using CSV image URL for ${row.sku}:`, imageUrl);
     } else {
-        // Try to construct from filename - use original SKU format
-        const filename = row.sku + '.jpg'; // Keep original SKU format, try .jpg first
+        // Construct from SKU + .jpg
+        const filename = row.sku + '.jpg';
         imageUrl = CONFIG.data.imageBaseUrl + filename;
         thumbnailUrl = imageUrl;
-        console.log(`📸 Constructed image URL for ${row.sku}:`, imageUrl);
     }
     
     return {
@@ -170,7 +158,7 @@ function createPatternFromCSV(row) {
     };
 }
 
-// ENHANCED: Preload pattern images with better error handling and fallbacks
+// SIMPLE: Preload pattern images with basic error handling
 function preloadPatternImage(pattern) {
     return new Promise((resolve, reject) => {
         if (!pattern.imageUrl) {
@@ -182,8 +170,6 @@ function preloadPatternImage(pattern) {
         console.log('🖼️ Loading pattern image:', pattern.imageUrl);
         
         const img = new Image();
-        
-        // Enable CORS for cross-origin images
         img.crossOrigin = 'anonymous';
         
         img.onload = function() {
@@ -195,43 +181,12 @@ function preloadPatternImage(pattern) {
         
         img.onerror = function() {
             console.warn('⚠️ Failed to load pattern image:', pattern.imageUrl);
+            console.warn('Continuing without image - check URL and file exists');
             
-            // Try alternative image extensions if original fails
-            const originalUrl = pattern.imageUrl;
-            const extensions = ['.png', '.jpg', '.jpeg'];
-            const currentExt = originalUrl.substring(originalUrl.lastIndexOf('.'));
-            
-            // Find an alternative extension to try
-            const altExtensions = extensions.filter(ext => ext !== currentExt);
-            
-            if (altExtensions.length > 0) {
-                const altUrl = originalUrl.replace(currentExt, altExtensions[0]);
-                console.log('🔄 Trying alternative image URL:', altUrl);
-                
-                const altImg = new Image();
-                altImg.crossOrigin = 'anonymous';
-                
-                altImg.onload = function() {
-                    console.log('✅ Alternative pattern image loaded successfully');
-                    patternImage = altImg;
-                    imageLoaded = true;
-                    resolve(altImg);
-                };
-                
-                altImg.onerror = function() {
-                    console.warn('⚠️ Alternative image also failed. Continuing without image.');
-                    patternImage = null;
-                    imageLoaded = false;
-                    resolve(null);
-                };
-                
-                altImg.src = altUrl;
-            } else {
-                console.warn('⚠️ No alternative extensions to try. Continuing without image.');
-                patternImage = null;
-                imageLoaded = false;
-                resolve(null);
-            }
+            // Continue without image
+            patternImage = null;
+            imageLoaded = false;
+            resolve(null);
         };
         
         // Start loading the image
