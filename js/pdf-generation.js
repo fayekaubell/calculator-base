@@ -1,4 +1,4 @@
-// Enhanced PDF Generation Module - Improved layout and functionality
+// Enhanced PDF Generation Module - Clean version without logo
 // Requires jsPDF library to be loaded
 
 // PDF generation function with improved layout
@@ -22,8 +22,6 @@ async function generatePDF() {
         const pdfWidth = 24; // inches (landscape)
         const pdfHeight = 18; // inches
         const dpi = 300;
-        const pdfWidthPx = pdfWidth * dpi; // 7200px
-        const pdfHeightPx = pdfHeight * dpi; // 5400px
 
         // Create jsPDF instance
         const { jsPDF } = window.jspdf;
@@ -81,7 +79,7 @@ async function generatePDF() {
     }
 }
 
-// Generate high-resolution canvas for PDF (unchanged from original)
+// Generate high-resolution canvas for PDF
 async function generateHighResCanvas(targetWidth, targetHeight) {
     return new Promise((resolve) => {
         try {
@@ -134,7 +132,7 @@ async function generateHighResCanvas(targetWidth, targetHeight) {
     });
 }
 
-// Render high-quality preview specifically for PDF (unchanged from original)
+// Render high-quality preview specifically for PDF
 function renderHighQualityPreviewForPDF(ctx, canvasWidth, canvasHeight) {
     if (!currentPreview) return;
     
@@ -164,9 +162,9 @@ function renderHighQualityPreviewForPDF(ctx, canvasWidth, canvasHeight) {
 async function addEnhancedTextContentToPDF(pdf, startX, startY, maxWidth) {
     const { pattern, calculations, formattedWidth, formattedHeight } = currentPreview;
     let currentY = startY + 0.5;
-    const lineHeight = 0.15; // Tighter line height for better space usage
-    const sectionSpacing = 0.25; // Reduced section spacing
-    const centerX = startX + maxWidth / 2; // Declare centerX once for the entire function
+    const lineHeight = 0.15;
+    const sectionSpacing = 0.25;
+    const centerX = startX + maxWidth / 2;
     
     // Enhanced title with line breaks and center alignment
     pdf.setFontSize(14);
@@ -181,7 +179,7 @@ async function addEnhancedTextContentToPDF(pdf, startX, startY, maxWidth) {
     pdf.text(`${formattedWidth}w x ${formattedHeight}h Wall`, centerX, currentY, { align: 'center' });
     currentY += lineHeight + sectionSpacing;
     
-    // Product links (fixed functionality and consistent formatting)
+    // Product links
     const links = [
         { text: 'Product Tearsheet >', url: pattern.product_tearsheet_url },
         { text: 'Product Page >', url: pattern.product_page_url },
@@ -191,26 +189,21 @@ async function addEnhancedTextContentToPDF(pdf, startX, startY, maxWidth) {
     const hasAnyLinks = links.some(link => link.url && link.url.trim());
     
     if (hasAnyLinks) {
-        pdf.setFontSize(12); // Same size as section headers
+        pdf.setFontSize(12);
         pdf.setFont(undefined, 'bold');
         pdf.setTextColor(0, 0, 0);
         
-        // Center the section header
         pdf.text('Product Links', centerX, currentY, { align: 'center' });
         currentY += lineHeight + 0.05;
         
-        // Center the links
-        pdf.setFontSize(10); // Same size as other content
+        pdf.setFontSize(10);
         pdf.setFont(undefined, 'normal');
         
         links.forEach(link => {
             if (link.url && link.url.trim()) {
-                pdf.setTextColor(0, 100, 200); // Blue color for links
-                
-                // Create clickable link (centered)
+                pdf.setTextColor(0, 100, 200);
                 pdf.textWithLink(link.text, centerX, currentY, { url: link.url, align: 'center' });
-                
-                pdf.setTextColor(0, 0, 0); // Reset to black
+                pdf.setTextColor(0, 0, 0);
                 currentY += lineHeight;
             }
         });
@@ -219,15 +212,13 @@ async function addEnhancedTextContentToPDF(pdf, startX, startY, maxWidth) {
     }
     
     // Pattern Details
-    pdf.setFontSize(12); // Consistent with other sections
+    pdf.setFontSize(12);
     pdf.setFont(undefined, 'bold');
     pdf.setTextColor(0, 0, 0);
     
-    // Center section header
     pdf.text('Pattern Details', centerX, currentY, { align: 'center' });
     currentY += lineHeight + 0.05;
     
-    // Center content
     pdf.setFontSize(10);
     pdf.setFont(undefined, 'normal');
     
@@ -246,15 +237,13 @@ async function addEnhancedTextContentToPDF(pdf, startX, startY, maxWidth) {
     
     currentY += sectionSpacing;
     
-    // Order quantity as shown (renamed and reformatted)
+    // Order quantity as shown
     pdf.setFontSize(12);
     pdf.setFont(undefined, 'bold');
     
-    // Center section header
     pdf.text('Order quantity as shown', centerX, currentY, { align: 'center' });
     currentY += lineHeight + 0.05;
     
-    // Center content
     pdf.setFontSize(10);
     pdf.setFont(undefined, 'normal');
     
@@ -277,15 +266,13 @@ async function addEnhancedTextContentToPDF(pdf, startX, startY, maxWidth) {
     
     currentY += sectionSpacing;
     
-    // Order quantity with 20% overage added (renamed and reformatted)
+    // Order quantity with 20% overage added
     pdf.setFontSize(12);
     pdf.setFont(undefined, 'bold');
     
-    // Center section header
     pdf.text('Order quantity with 20% overage added', centerX, currentY, { align: 'center' });
     currentY += lineHeight + 0.05;
     
-    // Center content
     pdf.setFontSize(10);
     pdf.setFont(undefined, 'normal');
     
@@ -314,11 +301,9 @@ async function addEnhancedTextContentToPDF(pdf, startX, startY, maxWidth) {
     pdf.setFontSize(12);
     pdf.setFont(undefined, 'bold');
     
-    // Center section header
     pdf.text('Preview Number', centerX, currentY, { align: 'center' });
     currentY += lineHeight + 0.05;
     
-    // Center content
     pdf.setFontSize(10);
     pdf.setFont(undefined, 'normal');
     pdf.text('00000', centerX, currentY, { align: 'center' });
@@ -329,11 +314,9 @@ async function addEnhancedTextContentToPDF(pdf, startX, startY, maxWidth) {
     pdf.setFontSize(12);
     pdf.setFont(undefined, 'bold');
     
-    // Center section header
     pdf.text('Date Created', centerX, currentY, { align: 'center' });
     currentY += lineHeight + 0.05;
     
-    // Center content
     pdf.setFontSize(10);
     pdf.setFont(undefined, 'normal');
     const today = new Date().toLocaleDateString('en-US', { 
@@ -349,11 +332,9 @@ async function addEnhancedTextContentToPDF(pdf, startX, startY, maxWidth) {
     pdf.setFontSize(12);
     pdf.setFont(undefined, 'bold');
     
-    // Center section header
     pdf.text('Contact Information', centerX, currentY, { align: 'center' });
     currentY += lineHeight + 0.05;
     
-    // Center content
     pdf.setFontSize(10);
     pdf.setFont(undefined, 'normal');
     const business = CONFIG.business;
@@ -374,92 +355,16 @@ async function addEnhancedTextContentToPDF(pdf, startX, startY, maxWidth) {
     
     currentY += sectionSpacing;
     
-    // Disclaimer (same size as paragraph text)
-    pdf.setFontSize(10); // Changed from 8 to 10 to match paragraph text
+    // Disclaimer
+    pdf.setFontSize(10);
     pdf.setFont(undefined, 'italic');
     
-    // Center disclaimer
     const disclaimer = CONFIG.ui.text.disclaimers.results;
     const disclaimerLines = pdf.splitTextToSize(disclaimer, maxWidth);
     disclaimerLines.forEach(line => {
         pdf.text(line, centerX, currentY, { align: 'center' });
         currentY += lineHeight;
     });
-}
-}
-
-// Add smaller logo to PDF
-async function addSmallerLogoToPDF(pdf, x, y, maxWidth) {
-    return new Promise((resolve, reject) => {
-        const img = new Image();
-        img.crossOrigin = 'anonymous';
-        
-        img.onload = function() {
-            try {
-                // Calculate smaller logo dimensions
-                const maxLogoWidth = Math.min(maxWidth, 1.5); // Reduced from 2 to 1.5 inches wide
-                const maxLogoHeight = 0.75; // Reduced from 1 to 0.75 inch tall
-                
-                const aspectRatio = img.width / img.height;
-                let logoWidth = maxLogoWidth;
-                let logoHeight = logoWidth / aspectRatio;
-                
-                if (logoHeight > maxLogoHeight) {
-                    logoHeight = maxLogoHeight;
-                    logoWidth = logoHeight * aspectRatio;
-                }
-                
-                // Add logo to PDF
-                const canvas = document.createElement('canvas');
-                canvas.width = img.width;
-                canvas.height = img.height;
-                const ctx = canvas.getContext('2d');
-                ctx.drawImage(img, 0, 0);
-                const logoDataUrl = canvas.toDataURL('image/png');
-                
-                pdf.addImage(logoDataUrl, 'PNG', x, y, logoWidth, logoHeight);
-                resolve();
-            } catch (error) {
-                reject(error);
-            }
-        };
-        
-        img.onerror = function() {
-            reject(new Error('Failed to load logo'));
-        };
-        
-        img.src = CONFIG.business.logoUrl;
-    });
-}
-
-// Add download button to the UI (unchanged)
-function addDownloadButton() {
-    const previewInfo = document.querySelector('.preview-info');
-    if (!previewInfo || document.getElementById('downloadPdfBtn')) {
-        return; // Button already exists or preview section not found
-    }
-    
-    const downloadBtn = document.createElement('button');
-    downloadBtn.id = 'downloadPdfBtn';
-    downloadBtn.className = 'btn btn-primary';
-    downloadBtn.textContent = 'Download PDF';
-    downloadBtn.style.marginTop = '20px';
-    downloadBtn.onclick = generatePDF;
-    
-    previewInfo.appendChild(downloadBtn);
-}
-
-// Initialize PDF functionality (unchanged)
-function initializePDFGeneration() {
-    // Check if jsPDF is loaded
-    if (typeof window.jspdf === 'undefined') {
-        console.error('jsPDF library not loaded. Please include jsPDF in your HTML.');
-        return;
-    }
-    
-    console.log('✅ Enhanced PDF generation module initialized');
-}
-
 }
 
 // Add download button to the UI
