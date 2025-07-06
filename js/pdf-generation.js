@@ -1,7 +1,7 @@
-// PDF Generation Module - High-resolution 18"x24" PDF export at 300 DPI
+// Enhanced PDF Generation Module - Improved layout and functionality
 // Requires jsPDF library to be loaded
 
-// PDF generation function
+// PDF generation function with improved layout
 async function generatePDF() {
     if (!currentPreview) {
         alert('Please generate a preview first before downloading PDF');
@@ -9,7 +9,7 @@ async function generatePDF() {
     }
 
     try {
-        console.log('🎨 Starting PDF generation...');
+        console.log('🎨 Starting enhanced PDF generation...');
         
         // Show loading state
         const downloadBtn = document.getElementById('downloadPdfBtn');
@@ -33,11 +33,11 @@ async function generatePDF() {
             format: [pdfWidth, pdfHeight]
         });
 
-        // Canvas area dimensions (left side with 0.25" margins)
+        // Enhanced layout dimensions
         const canvasMargin = 0.25;
-        const textAreaWidth = 6; // inches for text on right side
-        const canvasAreaWidth = pdfWidth - textAreaWidth - (canvasMargin * 3); // 17.25"
-        const canvasAreaHeight = pdfHeight - (canvasMargin * 2); // 17.5"
+        const textAreaWidth = 3.5; // Reduced from 6 to 3.5 inches for text on right side
+        const canvasAreaWidth = pdfWidth - textAreaWidth - (canvasMargin * 3); // Now 20" wide
+        const canvasAreaHeight = pdfHeight - (canvasMargin * 2); // 17.5" tall
         
         // Generate high-resolution canvas
         const canvasDataUrl = await generateHighResCanvas(canvasAreaWidth * dpi, canvasAreaHeight * dpi);
@@ -56,17 +56,17 @@ async function generatePDF() {
             );
         }
 
-        // Add text content to right side
-        await addTextContentToPDF(pdf, canvasAreaWidth + canvasMargin * 2, canvasMargin, textAreaWidth - canvasMargin);
+        // Add enhanced text content to right side
+        await addEnhancedTextContentToPDF(pdf, canvasAreaWidth + canvasMargin * 2, canvasMargin, textAreaWidth - canvasMargin);
 
-        // Generate filename
+        // Generate filename with preview number
         const { pattern } = currentPreview;
         const filename = `Faye-Bell-Wallpaper-Preview-${pattern.sku}-00000.pdf`;
 
         // Save PDF
         pdf.save(filename);
         
-        console.log('✅ PDF generated successfully:', filename);
+        console.log('✅ Enhanced PDF generated successfully:', filename);
 
     } catch (error) {
         console.error('❌ Error generating PDF:', error);
@@ -81,7 +81,7 @@ async function generatePDF() {
     }
 }
 
-// Generate high-resolution canvas for PDF
+// Generate high-resolution canvas for PDF (unchanged from original)
 async function generateHighResCanvas(targetWidth, targetHeight) {
     return new Promise((resolve) => {
         try {
@@ -134,7 +134,7 @@ async function generateHighResCanvas(targetWidth, targetHeight) {
     });
 }
 
-// Render high-quality preview specifically for PDF
+// Render high-quality preview specifically for PDF (unchanged from original)
 function renderHighQualityPreviewForPDF(ctx, canvasWidth, canvasHeight) {
     if (!currentPreview) return;
     
@@ -160,49 +160,62 @@ function renderHighQualityPreviewForPDF(ctx, canvasWidth, canvasHeight) {
     }
 }
 
-// Add text content to PDF
-async function addTextContentToPDF(pdf, startX, startY, maxWidth) {
+// Enhanced text content layout with improved structure
+async function addEnhancedTextContentToPDF(pdf, startX, startY, maxWidth) {
     const { pattern, calculations, formattedWidth, formattedHeight } = currentPreview;
     let currentY = startY + 0.5;
-    const lineHeight = 0.2;
-    const sectionSpacing = 0.3;
+    const lineHeight = 0.15; // Tighter line height for better space usage
+    const sectionSpacing = 0.25; // Reduced section spacing
     
     // Title (same as preview)
-    pdf.setFontSize(16);
+    pdf.setFontSize(14); // Slightly smaller title
     pdf.setFont(undefined, 'bold');
     const title = `${pattern.name}: ${pattern.sku || 'N/A'}: ${formattedWidth}w x ${formattedHeight}h Wall`;
     const titleLines = pdf.splitTextToSize(title, maxWidth);
     pdf.text(titleLines, startX, currentY);
     currentY += titleLines.length * lineHeight + sectionSpacing;
     
-    // Product links (if available)
-    pdf.setFontSize(12);
-    pdf.setFont(undefined, 'normal');
-    
+    // Product links (fixed functionality and consistent formatting)
     const links = [
         { text: 'Product Tearsheet >', url: pattern.product_tearsheet_url },
         { text: 'Product Page >', url: pattern.product_page_url },
         { text: '360 View >', url: pattern.product_360_url }
     ];
     
-    links.forEach(link => {
-        if (link.url && link.url.trim()) {
-            pdf.setTextColor(0, 0, 0);
-            pdf.text(link.text, startX, currentY, { underline: true });
-            currentY += lineHeight + 0.1;
-        }
-    });
+    const hasAnyLinks = links.some(link => link.url && link.url.trim());
     
-    if (links.some(link => link.url && link.url.trim())) {
+    if (hasAnyLinks) {
+        pdf.setFontSize(12); // Same size as section headers
+        pdf.setFont(undefined, 'bold');
+        pdf.setTextColor(0, 0, 0);
+        pdf.text('Product Links', startX, currentY);
+        currentY += lineHeight + 0.05;
+        
+        pdf.setFontSize(10); // Same size as other content
+        pdf.setFont(undefined, 'normal');
+        
+        links.forEach(link => {
+            if (link.url && link.url.trim()) {
+                pdf.setTextColor(0, 100, 200); // Blue color for links
+                
+                // Create clickable link
+                const linkWidth = pdf.getStringUnitWidth(link.text) * 10 / 72; // Convert to inches
+                pdf.textWithLink(link.text, startX, currentY, { url: link.url });
+                
+                pdf.setTextColor(0, 0, 0); // Reset to black
+                currentY += lineHeight;
+            }
+        });
+        
         currentY += sectionSpacing;
     }
     
     // Pattern Details
-    pdf.setFontSize(14);
+    pdf.setFontSize(12); // Consistent with other sections
     pdf.setFont(undefined, 'bold');
     pdf.setTextColor(0, 0, 0);
     pdf.text('Pattern Details', startX, currentY);
-    currentY += lineHeight + 0.1;
+    currentY += lineHeight + 0.05;
     
     pdf.setFontSize(10);
     pdf.setFont(undefined, 'normal');
@@ -221,72 +234,96 @@ async function addTextContentToPDF(pdf, startX, startY, maxWidth) {
     });
     currentY += sectionSpacing;
     
-    // Wall Dimensions
-    pdf.setFontSize(14);
+    // Order quantity as shown (renamed and reformatted)
+    pdf.setFontSize(12);
     pdf.setFont(undefined, 'bold');
-    pdf.text('Wall Dimensions', startX, currentY);
-    currentY += lineHeight + 0.1;
-    
-    pdf.setFontSize(10);
-    pdf.setFont(undefined, 'normal');
-    pdf.text(`Width: ${formattedWidth}`, startX, currentY);
-    currentY += lineHeight;
-    pdf.text(`Height: ${formattedHeight}`, startX, currentY);
-    currentY += sectionSpacing + lineHeight;
-    
-    // Order Quantities
-    pdf.setFontSize(14);
-    pdf.setFont(undefined, 'bold');
-    pdf.text('Order Quantities', startX, currentY);
-    currentY += lineHeight + 0.1;
+    pdf.text('Order quantity as shown', startX, currentY);
+    currentY += lineHeight + 0.05;
     
     pdf.setFontSize(10);
     pdf.setFont(undefined, 'normal');
     
     if (calculations.saleType === 'yard') {
-        pdf.text('As Calculated:', startX, currentY);
+        pdf.text(`Total: ${calculations.totalYardage} yards`, startX, currentY);
         currentY += lineHeight;
-        pdf.text(`Total: ${calculations.totalYardage} yards`, startX + 0.2, currentY);
-        currentY += lineHeight + 0.1;
-        
-        pdf.text('With 20% Overage:', startX, currentY);
-        currentY += lineHeight;
-        const overageYards = Math.ceil(calculations.totalYardage * 1.2);
-        pdf.text(`Total: ${overageYards} yards`, startX + 0.2, currentY);
     } else {
         const actualPanelLength = calculations.exceedsAvailableLength ? 
             calculations.actualPanelLength : calculations.panelLength;
         const yardagePerPanel = Math.round(actualPanelLength / 3);
         const totalYardage = calculations.panelsNeeded * yardagePerPanel;
         
-        pdf.text('As Calculated:', startX, currentY);
+        pdf.text(`[x${calculations.panelsNeeded}] ${actualPanelLength}' Panels`, startX, currentY);
         currentY += lineHeight;
-        pdf.text(`[x${calculations.panelsNeeded}] ${actualPanelLength}' Panels`, startX + 0.2, currentY);
+        pdf.text(`${yardagePerPanel} yards per panel`, startX, currentY);
         currentY += lineHeight;
-        pdf.text(`${yardagePerPanel} yards per panel`, startX + 0.2, currentY);
+        pdf.text(`${totalYardage} total yards`, startX, currentY);
         currentY += lineHeight;
-        pdf.text(`${totalYardage} total yards`, startX + 0.2, currentY);
-        currentY += lineHeight + 0.1;
-        
+    }
+    
+    currentY += sectionSpacing;
+    
+    // Order quantity with 20% overage added (renamed and reformatted)
+    pdf.setFontSize(12);
+    pdf.setFont(undefined, 'bold');
+    pdf.text('Order quantity with 20% overage added', startX, currentY);
+    currentY += lineHeight + 0.05;
+    
+    pdf.setFontSize(10);
+    pdf.setFont(undefined, 'normal');
+    
+    if (calculations.saleType === 'yard') {
+        const overageYards = Math.ceil(calculations.totalYardage * 1.2);
+        pdf.text(`Total: ${overageYards} yards`, startX, currentY);
+        currentY += lineHeight;
+    } else {
+        const actualPanelLength = calculations.exceedsAvailableLength ? 
+            calculations.actualPanelLength : calculations.panelLength;
+        const yardagePerPanel = Math.round(actualPanelLength / 3);
         const overagePanels = Math.ceil(calculations.panelsNeeded * 1.2);
         const overageTotalYardage = overagePanels * yardagePerPanel;
         
-        pdf.text('With 20% Overage:', startX, currentY);
+        pdf.text(`[x${overagePanels}] ${actualPanelLength}' Panels`, startX, currentY);
         currentY += lineHeight;
-        pdf.text(`[x${overagePanels}] ${actualPanelLength}' Panels`, startX + 0.2, currentY);
+        pdf.text(`${yardagePerPanel} yards per panel`, startX, currentY);
         currentY += lineHeight;
-        pdf.text(`${yardagePerPanel} yards per panel`, startX + 0.2, currentY);
+        pdf.text(`${overageTotalYardage} total yards`, startX, currentY);
         currentY += lineHeight;
-        pdf.text(`${overageTotalYardage} total yards`, startX + 0.2, currentY);
     }
     
-    currentY += sectionSpacing + lineHeight;
+    currentY += sectionSpacing;
     
-    // Business Info
-    pdf.setFontSize(14);
+    // Preview Number
+    pdf.setFontSize(12);
+    pdf.setFont(undefined, 'bold');
+    pdf.text('Preview Number', startX, currentY);
+    currentY += lineHeight + 0.05;
+    
+    pdf.setFontSize(10);
+    pdf.setFont(undefined, 'normal');
+    pdf.text('00000', startX, currentY);
+    currentY += lineHeight + sectionSpacing;
+    
+    // Date Created
+    pdf.setFontSize(12);
+    pdf.setFont(undefined, 'bold');
+    pdf.text('Date Created', startX, currentY);
+    currentY += lineHeight + 0.05;
+    
+    pdf.setFontSize(10);
+    pdf.setFont(undefined, 'normal');
+    const today = new Date().toLocaleDateString('en-US', { 
+        year: 'numeric', 
+        month: 'long', 
+        day: 'numeric' 
+    });
+    pdf.text(today, startX, currentY);
+    currentY += lineHeight + sectionSpacing;
+    
+    // Contact Information
+    pdf.setFontSize(12);
     pdf.setFont(undefined, 'bold');
     pdf.text('Contact Information', startX, currentY);
-    currentY += lineHeight + 0.1;
+    currentY += lineHeight + 0.05;
     
     pdf.setFontSize(10);
     pdf.setFont(undefined, 'normal');
@@ -308,35 +345,35 @@ async function addTextContentToPDF(pdf, startX, startY, maxWidth) {
     
     currentY += sectionSpacing;
     
-    // Disclaimer
-    pdf.setFontSize(8);
+    // Disclaimer (same size as paragraph text)
+    pdf.setFontSize(10); // Changed from 8 to 10 to match paragraph text
     pdf.setFont(undefined, 'italic');
     const disclaimer = CONFIG.ui.text.disclaimers.results;
     const disclaimerLines = pdf.splitTextToSize(disclaimer, maxWidth);
     pdf.text(disclaimerLines, startX, currentY);
-    currentY += disclaimerLines.length * (lineHeight * 0.8) + sectionSpacing;
+    currentY += disclaimerLines.length * lineHeight + sectionSpacing;
     
-    // Logo at bottom
+    // Logo at bottom (smaller size)
     if (CONFIG.business.logoUrl) {
         try {
-            await addLogoToPDF(pdf, startX, currentY, maxWidth);
+            await addSmallerLogoToPDF(pdf, startX, currentY, maxWidth);
         } catch (error) {
             console.warn('Could not add logo to PDF:', error);
         }
     }
 }
 
-// Add logo to PDF
-async function addLogoToPDF(pdf, x, y, maxWidth) {
+// Add smaller logo to PDF
+async function addSmallerLogoToPDF(pdf, x, y, maxWidth) {
     return new Promise((resolve, reject) => {
         const img = new Image();
         img.crossOrigin = 'anonymous';
         
         img.onload = function() {
             try {
-                // Calculate logo dimensions
-                const maxLogoWidth = Math.min(maxWidth, 2); // Max 2 inches wide
-                const maxLogoHeight = 1; // Max 1 inch tall
+                // Calculate smaller logo dimensions
+                const maxLogoWidth = Math.min(maxWidth, 1.5); // Reduced from 2 to 1.5 inches wide
+                const maxLogoHeight = 0.75; // Reduced from 1 to 0.75 inch tall
                 
                 const aspectRatio = img.width / img.height;
                 let logoWidth = maxLogoWidth;
@@ -370,7 +407,7 @@ async function addLogoToPDF(pdf, x, y, maxWidth) {
     });
 }
 
-// Add download button to the UI
+// Add download button to the UI (unchanged)
 function addDownloadButton() {
     const previewInfo = document.querySelector('.preview-info');
     if (!previewInfo || document.getElementById('downloadPdfBtn')) {
@@ -387,7 +424,7 @@ function addDownloadButton() {
     previewInfo.appendChild(downloadBtn);
 }
 
-// Initialize PDF functionality
+// Initialize PDF functionality (unchanged)
 function initializePDFGeneration() {
     // Check if jsPDF is loaded
     if (typeof window.jspdf === 'undefined') {
@@ -395,7 +432,7 @@ function initializePDFGeneration() {
         return;
     }
     
-    console.log('✅ PDF generation module initialized');
+    console.log('✅ Enhanced PDF generation module initialized');
 }
 
 // Export functions to global scope
