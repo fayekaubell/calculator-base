@@ -10,9 +10,11 @@
     <!-- Preload critical resources -->
     <link rel="preload" href="css/styles.css" as="style">
     <link rel="preload" href="https://cdnjs.cloudflare.com/ajax/libs/PapaParse/5.4.1/papaparse.min.js" as="script">
+    <link rel="preload" href="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js" as="script">
     
     <link rel="stylesheet" href="css/styles.css">
     <script src="https://cdnjs.cloudflare.com/ajax/libs/PapaParse/5.4.1/papaparse.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
     <script src="config.js"></script>
     
     <!-- Performance and SEO optimizations -->
@@ -226,16 +228,17 @@
         }
     </style>
 
-    <!-- NEW 4-FILE SCRIPT ORDER: Data layer first, then UI, then rendering -->
+    <!-- JavaScript modules in correct order -->
     <script src="js/pattern-data.js"></script>
     <script src="js/calculator.js"></script>
     <script src="js/canvas-drawing.js"></script>
     <script src="js/preview.js"></script>
+    <script src="js/pdf-generation.js"></script>
     
     <script>
-        // Enhanced initialization with error handling and performance monitoring
+        // Enhanced initialization with PDF support
         document.addEventListener('DOMContentLoaded', function() {
-            console.log('🚀 Enhanced Wallpaper Calculator initializing...');
+            console.log('🚀 Enhanced Wallpaper Calculator with PDF support initializing...');
             
             // Performance monitoring
             const startTime = performance.now();
@@ -244,7 +247,10 @@
                 // Initialize calculator
                 initializeCalculator();
                 
-                // Add enhanced event listeners
+                // Initialize PDF generation
+                initializePDFGeneration();
+                
+                // Enhanced event listeners
                 const generateBtn = document.getElementById('generatePreviewBtn');
                 if (generateBtn) {
                     generateBtn.addEventListener('click', function() {
@@ -259,19 +265,24 @@
                             generatePreview().finally(() => {
                                 generateBtn.disabled = false;
                                 generateBtn.textContent = 'Generate Preview';
+                                
+                                // Add download button after preview is generated
+                                setTimeout(() => {
+                                    addDownloadButton();
+                                }, 500);
                             });
                         }, 100);
                     });
                 }
                 
-                // Add input validation and formatting
+                // Add enhanced input validation and formatting
                 addInputEnhancements();
                 
                 // Add keyboard shortcuts
                 addKeyboardShortcuts();
                 
                 const endTime = performance.now();
-                console.log(`✅ Calculator initialized in ${Math.round(endTime - startTime)}ms`);
+                console.log(`✅ Calculator with PDF support initialized in ${Math.round(endTime - startTime)}ms`);
                 
             } catch (error) {
                 console.error('❌ Failed to initialize calculator:', error);
