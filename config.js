@@ -7,7 +7,8 @@ const CONFIG = {
     name: "Faye Bell",
     website: "www.fayebell.com",
     email: "info@fayebell.com",
-    location: "Atlanta, GA"
+    location: "Atlanta, GA",
+    logoUrl: "https://cdn.shopify.com/s/files/1/0571/8700/8610/files/Logo_Final2_Black_826e9cd0-43d1-4791-b5ca-72895a34d743.png?v=1724601480"
   },
 
   // Data Sources
