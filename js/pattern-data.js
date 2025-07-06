@@ -1,4 +1,5 @@
 // Pattern Data Module - Data loading, CSV parsing, and calculations
+// Updated to handle product link columns for PDF generation
 
 // Global variables for data
 let patterns = {};
@@ -70,7 +71,10 @@ async function loadPatternsFromCSV() {
                 panelSequence: 'AB',
                 sequenceLength: 2,
                 imageUrl: '',
-                thumbnailUrl: ''
+                thumbnailUrl: '',
+                product_tearsheet_url: '',
+                product_page_url: '',
+                product_360_url: ''
             }
         };
         patternsLoaded = true;
@@ -79,7 +83,7 @@ async function loadPatternsFromCSV() {
     }
 }
 
-// Create pattern object from CSV row - FIXED FOR YARD PATTERNS
+// Create pattern object from CSV row - UPDATED FOR PRODUCT LINKS
 function createPatternFromCSV(row) {
     if (!row.pattern_name || !row.sku) {
         console.warn('⚠️ Skipping row with missing required fields:', row);
@@ -145,7 +149,11 @@ function createPatternFromCSV(row) {
         rollWidth: row.sale_type === 'yard' ? defaults.rollWidth : null,
         minYardOrder: row.sale_type === 'yard' ? (row.min_yard_order || defaults.minYardOrder) : null,
         patternMatch: row.pattern_match || 'straight',
-        handle: patternId
+        handle: patternId,
+        // NEW: Product links for PDF generation
+        product_tearsheet_url: row.product_tearsheet_url || '',
+        product_page_url: row.product_page_url || '',
+        product_360_url: row['360_view_url'] || '' // Note: CSV column is 360_view_url
     };
 }
 
