@@ -166,6 +166,7 @@ async function addEnhancedTextContentToPDF(pdf, startX, startY, maxWidth) {
     let currentY = startY + 0.5;
     const lineHeight = 0.15; // Tighter line height for better space usage
     const sectionSpacing = 0.25; // Reduced section spacing
+    const centerX = startX + maxWidth / 2; // Declare centerX once for the entire function
     
     // Enhanced title with line breaks and center alignment
     pdf.setFontSize(14);
@@ -174,7 +175,6 @@ async function addEnhancedTextContentToPDF(pdf, startX, startY, maxWidth) {
     
     // Center-align title
     pdf.setTextAlign('center');
-    const centerX = startX + maxWidth / 2;
     
     // Three-line title format
     pdf.text(pattern.name, centerX, currentY);
@@ -203,7 +203,6 @@ async function addEnhancedTextContentToPDF(pdf, startX, startY, maxWidth) {
         
         // Center the section header
         pdf.setTextAlign('center');
-        const centerX = startX + maxWidth / 2;
         pdf.text('Product Links', centerX, currentY);
         currentY += lineHeight + 0.05;
         
@@ -237,7 +236,6 @@ async function addEnhancedTextContentToPDF(pdf, startX, startY, maxWidth) {
     
     // Center section header
     pdf.setTextAlign('center');
-    const centerX = startX + maxWidth / 2;
     pdf.text('Pattern Details', centerX, currentY);
     currentY += lineHeight + 0.05;
     
@@ -268,7 +266,6 @@ async function addEnhancedTextContentToPDF(pdf, startX, startY, maxWidth) {
     
     // Center section header
     pdf.setTextAlign('center');
-    const centerX = startX + maxWidth / 2;
     pdf.text('Order quantity as shown', centerX, currentY);
     currentY += lineHeight + 0.05;
     
@@ -303,7 +300,6 @@ async function addEnhancedTextContentToPDF(pdf, startX, startY, maxWidth) {
     
     // Center section header
     pdf.setTextAlign('center');
-    const centerX = startX + maxWidth / 2;
     pdf.text('Order quantity with 20% overage added', centerX, currentY);
     currentY += lineHeight + 0.05;
     
@@ -340,7 +336,6 @@ async function addEnhancedTextContentToPDF(pdf, startX, startY, maxWidth) {
     
     // Center section header
     pdf.setTextAlign('center');
-    const centerX = startX + maxWidth / 2;
     pdf.text('Preview Number', centerX, currentY);
     currentY += lineHeight + 0.05;
     
@@ -359,7 +354,6 @@ async function addEnhancedTextContentToPDF(pdf, startX, startY, maxWidth) {
     
     // Center section header
     pdf.setTextAlign('center');
-    const centerX = startX + maxWidth / 2;
     pdf.text('Date Created', centerX, currentY);
     currentY += lineHeight + 0.05;
     
@@ -383,7 +377,6 @@ async function addEnhancedTextContentToPDF(pdf, startX, startY, maxWidth) {
     
     // Center section header
     pdf.setTextAlign('center');
-    const centerX = startX + maxWidth / 2;
     pdf.text('Contact Information', centerX, currentY);
     currentY += lineHeight + 0.05;
     
@@ -416,7 +409,6 @@ async function addEnhancedTextContentToPDF(pdf, startX, startY, maxWidth) {
     
     // Center disclaimer
     pdf.setTextAlign('center');
-    const centerX = startX + maxWidth / 2;
     const disclaimer = CONFIG.ui.text.disclaimers.results;
     const disclaimerLines = pdf.splitTextToSize(disclaimer, maxWidth);
     disclaimerLines.forEach(line => {
