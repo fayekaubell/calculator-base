@@ -460,6 +460,36 @@ function initializePDFGeneration() {
     console.log('✅ Enhanced PDF generation module initialized');
 }
 
+}
+
+// Add download button to the UI
+function addDownloadButton() {
+    const previewInfo = document.querySelector('.preview-info');
+    if (!previewInfo || document.getElementById('downloadPdfBtn')) {
+        return; // Button already exists or preview section not found
+    }
+    
+    const downloadBtn = document.createElement('button');
+    downloadBtn.id = 'downloadPdfBtn';
+    downloadBtn.className = 'btn btn-primary';
+    downloadBtn.textContent = 'Download PDF';
+    downloadBtn.style.marginTop = '20px';
+    downloadBtn.onclick = generatePDF;
+    
+    previewInfo.appendChild(downloadBtn);
+}
+
+// Initialize PDF functionality
+function initializePDFGeneration() {
+    // Check if jsPDF is loaded
+    if (typeof window.jspdf === 'undefined') {
+        console.error('jsPDF library not loaded. Please include jsPDF in your HTML.');
+        return;
+    }
+    
+    console.log('✅ Enhanced PDF generation module initialized');
+}
+
 // Export functions to global scope
 window.pdfAPI = {
     generatePDF,
