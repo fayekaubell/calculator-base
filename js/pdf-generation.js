@@ -397,20 +397,13 @@ async function addEnhancedTextContentToPDF(pdf, startX, startY, maxWidth) {
     
     currentY += sectionSpacing;
     
-    // Logo at bottom (smaller size)
+    // Logo at bottom (centered)
     if (CONFIG.business.logoUrl) {
-        console.log('Logo URL found:', CONFIG.business.logoUrl);
         try {
-            console.log('About to add logo...');
-            // Pass the full available width for proper centering
-            const logoResult = await addSmallerLogoToPDF(pdf, startX, currentY, maxWidth);
-            console.log('Logo function returned:', logoResult);
-            console.log('Logo added successfully');
+            await addSmallerLogoToPDF(pdf, startX, currentY, maxWidth);
         } catch (error) {
-            console.error('Error adding logo to PDF:', error);
+            console.warn('Could not add logo:', error);
         }
-    } else {
-        console.log('No logo URL configured');
     }
 }
 
