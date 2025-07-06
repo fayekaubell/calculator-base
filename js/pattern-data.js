@@ -125,11 +125,13 @@ function createPatternFromCSV(row) {
         // Use the URL from CSV as-is
         imageUrl = row.repeat_url.trim();
         thumbnailUrl = imageUrl;
+        console.log(`🔍 Using CSV URL for ${row.sku}: "${imageUrl}"`);
     } else {
         // Construct from SKU + .jpg
         const filename = row.sku + '.jpg';
         imageUrl = CONFIG.data.imageBaseUrl + filename;
         thumbnailUrl = imageUrl;
+        console.log(`🔧 Constructed URL for ${row.sku}: CONFIG.data.imageBaseUrl ("${CONFIG.data.imageBaseUrl}") + filename ("${filename}") = "${imageUrl}"`);
     }
     
     return {
@@ -158,7 +160,7 @@ function createPatternFromCSV(row) {
     };
 }
 
-// SIMPLE: Preload pattern images with basic error handling
+// SIMPLE: Preload pattern images with basic error handling and debugging
 function preloadPatternImage(pattern) {
     return new Promise((resolve, reject) => {
         if (!pattern.imageUrl) {
@@ -167,21 +169,25 @@ function preloadPatternImage(pattern) {
             return;
         }
         
-        console.log('🖼️ Loading pattern image:', pattern.imageUrl);
+        console.log('🖼️ About to load pattern image for:', pattern.name);
+        console.log('🖼️ Pattern object imageUrl:', pattern.imageUrl);
+        console.log('🖼️ typeof pattern.imageUrl:', typeof pattern.imageUrl);
         
         const img = new Image();
         img.crossOrigin = 'anonymous';
         
         img.onload = function() {
-            console.log('✅ Pattern image loaded successfully');
+            console.log('✅ Pattern image loaded successfully from:', this.src);
             patternImage = img;
             imageLoaded = true;
             resolve(img);
         };
         
         img.onerror = function() {
-            console.warn('⚠️ Failed to load pattern image:', pattern.imageUrl);
-            console.warn('Continuing without image - check URL and file exists');
+            console.error('⚠️ Failed to load pattern image');
+            console.error('⚠️ Attempted URL:', this.src);
+            console.error('⚠️ Original pattern.imageUrl was:', pattern.imageUrl);
+            console.error('⚠️ Pattern object:', pattern);
             
             // Continue without image
             patternImage = null;
@@ -189,8 +195,14 @@ function preloadPatternImage(pattern) {
             resolve(null);
         };
         
+        // Log the exact URL we're about to set
+        console.log('🔍 Setting img.src to:', pattern.imageUrl);
+        
         // Start loading the image
         img.src = pattern.imageUrl;
+        
+        // Log what the browser actually received
+        console.log('🔍 Browser received img.src as:', img.src);
     });
 }
 
