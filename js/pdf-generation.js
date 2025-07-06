@@ -173,19 +173,13 @@ async function addEnhancedTextContentToPDF(pdf, startX, startY, maxWidth) {
     pdf.setFont(undefined, 'bold');
     pdf.setTextColor(0, 0, 0);
     
-    // Center-align title
-    pdf.setTextAlign('center');
-    
-    // Three-line title format
-    pdf.text(pattern.name, centerX, currentY);
+    // Three-line title format (centered using coordinates)
+    pdf.text(pattern.name, centerX, currentY, { align: 'center' });
     currentY += lineHeight + 0.05;
-    pdf.text(pattern.sku || 'N/A', centerX, currentY);
+    pdf.text(pattern.sku || 'N/A', centerX, currentY, { align: 'center' });
     currentY += lineHeight + 0.05;
-    pdf.text(`${formattedWidth}w x ${formattedHeight}h Wall`, centerX, currentY);
+    pdf.text(`${formattedWidth}w x ${formattedHeight}h Wall`, centerX, currentY, { align: 'center' });
     currentY += lineHeight + sectionSpacing;
-    
-    // Reset to left alignment for rest of content
-    pdf.setTextAlign('left');
     
     // Product links (fixed functionality and consistent formatting)
     const links = [
@@ -202,8 +196,7 @@ async function addEnhancedTextContentToPDF(pdf, startX, startY, maxWidth) {
         pdf.setTextColor(0, 0, 0);
         
         // Center the section header
-        pdf.setTextAlign('center');
-        pdf.text('Product Links', centerX, currentY);
+        pdf.text('Product Links', centerX, currentY, { align: 'center' });
         currentY += lineHeight + 0.05;
         
         // Center the links
@@ -215,8 +208,6 @@ async function addEnhancedTextContentToPDF(pdf, startX, startY, maxWidth) {
                 pdf.setTextColor(0, 100, 200); // Blue color for links
                 
                 // Create clickable link (centered)
-                const linkWidth = pdf.getStringUnitWidth(link.text) * 10 / 72; // Convert to inches
-                const linkX = centerX - linkWidth / 2; // Center the link
                 pdf.textWithLink(link.text, centerX, currentY, { url: link.url, align: 'center' });
                 
                 pdf.setTextColor(0, 0, 0); // Reset to black
@@ -224,8 +215,6 @@ async function addEnhancedTextContentToPDF(pdf, startX, startY, maxWidth) {
             }
         });
         
-        // Reset to left alignment
-        pdf.setTextAlign('left');
         currentY += sectionSpacing;
     }
     
@@ -235,8 +224,7 @@ async function addEnhancedTextContentToPDF(pdf, startX, startY, maxWidth) {
     pdf.setTextColor(0, 0, 0);
     
     // Center section header
-    pdf.setTextAlign('center');
-    pdf.text('Pattern Details', centerX, currentY);
+    pdf.text('Pattern Details', centerX, currentY, { align: 'center' });
     currentY += lineHeight + 0.05;
     
     // Center content
@@ -252,12 +240,10 @@ async function addEnhancedTextContentToPDF(pdf, startX, startY, maxWidth) {
     ];
     
     patternDetails.forEach(detail => {
-        pdf.text(detail, centerX, currentY);
+        pdf.text(detail, centerX, currentY, { align: 'center' });
         currentY += lineHeight;
     });
     
-    // Reset alignment
-    pdf.setTextAlign('left');
     currentY += sectionSpacing;
     
     // Order quantity as shown (renamed and reformatted)
@@ -265,8 +251,7 @@ async function addEnhancedTextContentToPDF(pdf, startX, startY, maxWidth) {
     pdf.setFont(undefined, 'bold');
     
     // Center section header
-    pdf.setTextAlign('center');
-    pdf.text('Order quantity as shown', centerX, currentY);
+    pdf.text('Order quantity as shown', centerX, currentY, { align: 'center' });
     currentY += lineHeight + 0.05;
     
     // Center content
@@ -274,7 +259,7 @@ async function addEnhancedTextContentToPDF(pdf, startX, startY, maxWidth) {
     pdf.setFont(undefined, 'normal');
     
     if (calculations.saleType === 'yard') {
-        pdf.text(`Total: ${calculations.totalYardage} yards`, centerX, currentY);
+        pdf.text(`Total: ${calculations.totalYardage} yards`, centerX, currentY, { align: 'center' });
         currentY += lineHeight;
     } else {
         const actualPanelLength = calculations.exceedsAvailableLength ? 
@@ -282,16 +267,14 @@ async function addEnhancedTextContentToPDF(pdf, startX, startY, maxWidth) {
         const yardagePerPanel = Math.round(actualPanelLength / 3);
         const totalYardage = calculations.panelsNeeded * yardagePerPanel;
         
-        pdf.text(`[x${calculations.panelsNeeded}] ${actualPanelLength}' Panels`, centerX, currentY);
+        pdf.text(`[x${calculations.panelsNeeded}] ${actualPanelLength}' Panels`, centerX, currentY, { align: 'center' });
         currentY += lineHeight;
-        pdf.text(`${yardagePerPanel} yards per panel`, centerX, currentY);
+        pdf.text(`${yardagePerPanel} yards per panel`, centerX, currentY, { align: 'center' });
         currentY += lineHeight;
-        pdf.text(`${totalYardage} total yards`, centerX, currentY);
+        pdf.text(`${totalYardage} total yards`, centerX, currentY, { align: 'center' });
         currentY += lineHeight;
     }
     
-    // Reset alignment
-    pdf.setTextAlign('left');
     currentY += sectionSpacing;
     
     // Order quantity with 20% overage added (renamed and reformatted)
@@ -299,8 +282,7 @@ async function addEnhancedTextContentToPDF(pdf, startX, startY, maxWidth) {
     pdf.setFont(undefined, 'bold');
     
     // Center section header
-    pdf.setTextAlign('center');
-    pdf.text('Order quantity with 20% overage added', centerX, currentY);
+    pdf.text('Order quantity with 20% overage added', centerX, currentY, { align: 'center' });
     currentY += lineHeight + 0.05;
     
     // Center content
@@ -309,7 +291,7 @@ async function addEnhancedTextContentToPDF(pdf, startX, startY, maxWidth) {
     
     if (calculations.saleType === 'yard') {
         const overageYards = Math.ceil(calculations.totalYardage * 1.2);
-        pdf.text(`Total: ${overageYards} yards`, centerX, currentY);
+        pdf.text(`Total: ${overageYards} yards`, centerX, currentY, { align: 'center' });
         currentY += lineHeight;
     } else {
         const actualPanelLength = calculations.exceedsAvailableLength ? 
@@ -318,16 +300,14 @@ async function addEnhancedTextContentToPDF(pdf, startX, startY, maxWidth) {
         const overagePanels = Math.ceil(calculations.panelsNeeded * 1.2);
         const overageTotalYardage = overagePanels * yardagePerPanel;
         
-        pdf.text(`[x${overagePanels}] ${actualPanelLength}' Panels`, centerX, currentY);
+        pdf.text(`[x${overagePanels}] ${actualPanelLength}' Panels`, centerX, currentY, { align: 'center' });
         currentY += lineHeight;
-        pdf.text(`${yardagePerPanel} yards per panel`, centerX, currentY);
+        pdf.text(`${yardagePerPanel} yards per panel`, centerX, currentY, { align: 'center' });
         currentY += lineHeight;
-        pdf.text(`${overageTotalYardage} total yards`, centerX, currentY);
+        pdf.text(`${overageTotalYardage} total yards`, centerX, currentY, { align: 'center' });
         currentY += lineHeight;
     }
     
-    // Reset alignment
-    pdf.setTextAlign('left');
     currentY += sectionSpacing;
     
     // Preview Number
@@ -335,17 +315,14 @@ async function addEnhancedTextContentToPDF(pdf, startX, startY, maxWidth) {
     pdf.setFont(undefined, 'bold');
     
     // Center section header
-    pdf.setTextAlign('center');
-    pdf.text('Preview Number', centerX, currentY);
+    pdf.text('Preview Number', centerX, currentY, { align: 'center' });
     currentY += lineHeight + 0.05;
     
     // Center content
     pdf.setFontSize(10);
     pdf.setFont(undefined, 'normal');
-    pdf.text('00000', centerX, currentY);
+    pdf.text('00000', centerX, currentY, { align: 'center' });
     
-    // Reset alignment
-    pdf.setTextAlign('left');
     currentY += lineHeight + sectionSpacing;
     
     // Date Created
@@ -353,8 +330,7 @@ async function addEnhancedTextContentToPDF(pdf, startX, startY, maxWidth) {
     pdf.setFont(undefined, 'bold');
     
     // Center section header
-    pdf.setTextAlign('center');
-    pdf.text('Date Created', centerX, currentY);
+    pdf.text('Date Created', centerX, currentY, { align: 'center' });
     currentY += lineHeight + 0.05;
     
     // Center content
@@ -365,10 +341,8 @@ async function addEnhancedTextContentToPDF(pdf, startX, startY, maxWidth) {
         month: 'long', 
         day: 'numeric' 
     });
-    pdf.text(today, centerX, currentY);
+    pdf.text(today, centerX, currentY, { align: 'center' });
     
-    // Reset alignment
-    pdf.setTextAlign('left');
     currentY += lineHeight + sectionSpacing;
     
     // Contact Information
@@ -376,31 +350,28 @@ async function addEnhancedTextContentToPDF(pdf, startX, startY, maxWidth) {
     pdf.setFont(undefined, 'bold');
     
     // Center section header
-    pdf.setTextAlign('center');
-    pdf.text('Contact Information', centerX, currentY);
+    pdf.text('Contact Information', centerX, currentY, { align: 'center' });
     currentY += lineHeight + 0.05;
     
     // Center content
     pdf.setFontSize(10);
     pdf.setFont(undefined, 'normal');
     const business = CONFIG.business;
-    pdf.text(business.name, centerX, currentY);
+    pdf.text(business.name, centerX, currentY, { align: 'center' });
     currentY += lineHeight;
     if (business.website) {
-        pdf.text(business.website, centerX, currentY);
+        pdf.text(business.website, centerX, currentY, { align: 'center' });
         currentY += lineHeight;
     }
     if (business.email) {
-        pdf.text(business.email, centerX, currentY);
+        pdf.text(business.email, centerX, currentY, { align: 'center' });
         currentY += lineHeight;
     }
     if (business.location) {
-        pdf.text(business.location, centerX, currentY);
+        pdf.text(business.location, centerX, currentY, { align: 'center' });
         currentY += lineHeight;
     }
     
-    // Reset alignment
-    pdf.setTextAlign('left');
     currentY += sectionSpacing;
     
     // Disclaimer (same size as paragraph text)
@@ -408,16 +379,13 @@ async function addEnhancedTextContentToPDF(pdf, startX, startY, maxWidth) {
     pdf.setFont(undefined, 'italic');
     
     // Center disclaimer
-    pdf.setTextAlign('center');
     const disclaimer = CONFIG.ui.text.disclaimers.results;
     const disclaimerLines = pdf.splitTextToSize(disclaimer, maxWidth);
     disclaimerLines.forEach(line => {
-        pdf.text(line, centerX, currentY);
+        pdf.text(line, centerX, currentY, { align: 'center' });
         currentY += lineHeight;
     });
     
-    // Reset alignment
-    pdf.setTextAlign('left');
     currentY += sectionSpacing;
     
     // Logo at bottom (smaller size)
