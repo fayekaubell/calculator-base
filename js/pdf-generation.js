@@ -167,13 +167,25 @@ async function addEnhancedTextContentToPDF(pdf, startX, startY, maxWidth) {
     const lineHeight = 0.15; // Tighter line height for better space usage
     const sectionSpacing = 0.25; // Reduced section spacing
     
-    // Title (same as preview)
-    pdf.setFontSize(14); // Slightly smaller title
+    // Enhanced title with line breaks and center alignment
+    pdf.setFontSize(14);
     pdf.setFont(undefined, 'bold');
-    const title = `${pattern.name}: ${pattern.sku || 'N/A'}: ${formattedWidth}w x ${formattedHeight}h Wall`;
-    const titleLines = pdf.splitTextToSize(title, maxWidth);
-    pdf.text(titleLines, startX, currentY);
-    currentY += titleLines.length * lineHeight + sectionSpacing;
+    pdf.setTextColor(0, 0, 0);
+    
+    // Center-align title
+    pdf.setTextAlign('center');
+    const centerX = startX + maxWidth / 2;
+    
+    // Three-line title format
+    pdf.text(pattern.name, centerX, currentY);
+    currentY += lineHeight + 0.05;
+    pdf.text(pattern.sku || 'N/A', centerX, currentY);
+    currentY += lineHeight + 0.05;
+    pdf.text(`${formattedWidth}w x ${formattedHeight}h Wall`, centerX, currentY);
+    currentY += lineHeight + sectionSpacing;
+    
+    // Reset to left alignment for rest of content
+    pdf.setTextAlign('left');
     
     // Product links (fixed functionality and consistent formatting)
     const links = [
@@ -188,9 +200,14 @@ async function addEnhancedTextContentToPDF(pdf, startX, startY, maxWidth) {
         pdf.setFontSize(12); // Same size as section headers
         pdf.setFont(undefined, 'bold');
         pdf.setTextColor(0, 0, 0);
-        pdf.text('Product Links', startX, currentY);
+        
+        // Center the section header
+        pdf.setTextAlign('center');
+        const centerX = startX + maxWidth / 2;
+        pdf.text('Product Links', centerX, currentY);
         currentY += lineHeight + 0.05;
         
+        // Center the links
         pdf.setFontSize(10); // Same size as other content
         pdf.setFont(undefined, 'normal');
         
@@ -198,15 +215,18 @@ async function addEnhancedTextContentToPDF(pdf, startX, startY, maxWidth) {
             if (link.url && link.url.trim()) {
                 pdf.setTextColor(0, 100, 200); // Blue color for links
                 
-                // Create clickable link
+                // Create clickable link (centered)
                 const linkWidth = pdf.getStringUnitWidth(link.text) * 10 / 72; // Convert to inches
-                pdf.textWithLink(link.text, startX, currentY, { url: link.url });
+                const linkX = centerX - linkWidth / 2; // Center the link
+                pdf.textWithLink(link.text, centerX, currentY, { url: link.url, align: 'center' });
                 
                 pdf.setTextColor(0, 0, 0); // Reset to black
                 currentY += lineHeight;
             }
         });
         
+        // Reset to left alignment
+        pdf.setTextAlign('left');
         currentY += sectionSpacing;
     }
     
@@ -214,9 +234,14 @@ async function addEnhancedTextContentToPDF(pdf, startX, startY, maxWidth) {
     pdf.setFontSize(12); // Consistent with other sections
     pdf.setFont(undefined, 'bold');
     pdf.setTextColor(0, 0, 0);
-    pdf.text('Pattern Details', startX, currentY);
+    
+    // Center section header
+    pdf.setTextAlign('center');
+    const centerX = startX + maxWidth / 2;
+    pdf.text('Pattern Details', centerX, currentY);
     currentY += lineHeight + 0.05;
     
+    // Center content
     pdf.setFontSize(10);
     pdf.setFont(undefined, 'normal');
     
@@ -229,22 +254,30 @@ async function addEnhancedTextContentToPDF(pdf, startX, startY, maxWidth) {
     ];
     
     patternDetails.forEach(detail => {
-        pdf.text(detail, startX, currentY);
+        pdf.text(detail, centerX, currentY);
         currentY += lineHeight;
     });
+    
+    // Reset alignment
+    pdf.setTextAlign('left');
     currentY += sectionSpacing;
     
     // Order quantity as shown (renamed and reformatted)
     pdf.setFontSize(12);
     pdf.setFont(undefined, 'bold');
-    pdf.text('Order quantity as shown', startX, currentY);
+    
+    // Center section header
+    pdf.setTextAlign('center');
+    const centerX = startX + maxWidth / 2;
+    pdf.text('Order quantity as shown', centerX, currentY);
     currentY += lineHeight + 0.05;
     
+    // Center content
     pdf.setFontSize(10);
     pdf.setFont(undefined, 'normal');
     
     if (calculations.saleType === 'yard') {
-        pdf.text(`Total: ${calculations.totalYardage} yards`, startX, currentY);
+        pdf.text(`Total: ${calculations.totalYardage} yards`, centerX, currentY);
         currentY += lineHeight;
     } else {
         const actualPanelLength = calculations.exceedsAvailableLength ? 
@@ -252,28 +285,35 @@ async function addEnhancedTextContentToPDF(pdf, startX, startY, maxWidth) {
         const yardagePerPanel = Math.round(actualPanelLength / 3);
         const totalYardage = calculations.panelsNeeded * yardagePerPanel;
         
-        pdf.text(`[x${calculations.panelsNeeded}] ${actualPanelLength}' Panels`, startX, currentY);
+        pdf.text(`[x${calculations.panelsNeeded}] ${actualPanelLength}' Panels`, centerX, currentY);
         currentY += lineHeight;
-        pdf.text(`${yardagePerPanel} yards per panel`, startX, currentY);
+        pdf.text(`${yardagePerPanel} yards per panel`, centerX, currentY);
         currentY += lineHeight;
-        pdf.text(`${totalYardage} total yards`, startX, currentY);
+        pdf.text(`${totalYardage} total yards`, centerX, currentY);
         currentY += lineHeight;
     }
     
+    // Reset alignment
+    pdf.setTextAlign('left');
     currentY += sectionSpacing;
     
     // Order quantity with 20% overage added (renamed and reformatted)
     pdf.setFontSize(12);
     pdf.setFont(undefined, 'bold');
-    pdf.text('Order quantity with 20% overage added', startX, currentY);
+    
+    // Center section header
+    pdf.setTextAlign('center');
+    const centerX = startX + maxWidth / 2;
+    pdf.text('Order quantity with 20% overage added', centerX, currentY);
     currentY += lineHeight + 0.05;
     
+    // Center content
     pdf.setFontSize(10);
     pdf.setFont(undefined, 'normal');
     
     if (calculations.saleType === 'yard') {
         const overageYards = Math.ceil(calculations.totalYardage * 1.2);
-        pdf.text(`Total: ${overageYards} yards`, startX, currentY);
+        pdf.text(`Total: ${overageYards} yards`, centerX, currentY);
         currentY += lineHeight;
     } else {
         const actualPanelLength = calculations.exceedsAvailableLength ? 
@@ -282,33 +322,48 @@ async function addEnhancedTextContentToPDF(pdf, startX, startY, maxWidth) {
         const overagePanels = Math.ceil(calculations.panelsNeeded * 1.2);
         const overageTotalYardage = overagePanels * yardagePerPanel;
         
-        pdf.text(`[x${overagePanels}] ${actualPanelLength}' Panels`, startX, currentY);
+        pdf.text(`[x${overagePanels}] ${actualPanelLength}' Panels`, centerX, currentY);
         currentY += lineHeight;
-        pdf.text(`${yardagePerPanel} yards per panel`, startX, currentY);
+        pdf.text(`${yardagePerPanel} yards per panel`, centerX, currentY);
         currentY += lineHeight;
-        pdf.text(`${overageTotalYardage} total yards`, startX, currentY);
+        pdf.text(`${overageTotalYardage} total yards`, centerX, currentY);
         currentY += lineHeight;
     }
     
+    // Reset alignment
+    pdf.setTextAlign('left');
     currentY += sectionSpacing;
     
     // Preview Number
     pdf.setFontSize(12);
     pdf.setFont(undefined, 'bold');
-    pdf.text('Preview Number', startX, currentY);
+    
+    // Center section header
+    pdf.setTextAlign('center');
+    const centerX = startX + maxWidth / 2;
+    pdf.text('Preview Number', centerX, currentY);
     currentY += lineHeight + 0.05;
     
+    // Center content
     pdf.setFontSize(10);
     pdf.setFont(undefined, 'normal');
-    pdf.text('00000', startX, currentY);
+    pdf.text('00000', centerX, currentY);
+    
+    // Reset alignment
+    pdf.setTextAlign('left');
     currentY += lineHeight + sectionSpacing;
     
     // Date Created
     pdf.setFontSize(12);
     pdf.setFont(undefined, 'bold');
-    pdf.text('Date Created', startX, currentY);
+    
+    // Center section header
+    pdf.setTextAlign('center');
+    const centerX = startX + maxWidth / 2;
+    pdf.text('Date Created', centerX, currentY);
     currentY += lineHeight + 0.05;
     
+    // Center content
     pdf.setFontSize(10);
     pdf.setFont(undefined, 'normal');
     const today = new Date().toLocaleDateString('en-US', { 
@@ -316,42 +371,62 @@ async function addEnhancedTextContentToPDF(pdf, startX, startY, maxWidth) {
         month: 'long', 
         day: 'numeric' 
     });
-    pdf.text(today, startX, currentY);
+    pdf.text(today, centerX, currentY);
+    
+    // Reset alignment
+    pdf.setTextAlign('left');
     currentY += lineHeight + sectionSpacing;
     
     // Contact Information
     pdf.setFontSize(12);
     pdf.setFont(undefined, 'bold');
-    pdf.text('Contact Information', startX, currentY);
+    
+    // Center section header
+    pdf.setTextAlign('center');
+    const centerX = startX + maxWidth / 2;
+    pdf.text('Contact Information', centerX, currentY);
     currentY += lineHeight + 0.05;
     
+    // Center content
     pdf.setFontSize(10);
     pdf.setFont(undefined, 'normal');
     const business = CONFIG.business;
-    pdf.text(business.name, startX, currentY);
+    pdf.text(business.name, centerX, currentY);
     currentY += lineHeight;
     if (business.website) {
-        pdf.text(business.website, startX, currentY);
+        pdf.text(business.website, centerX, currentY);
         currentY += lineHeight;
     }
     if (business.email) {
-        pdf.text(business.email, startX, currentY);
+        pdf.text(business.email, centerX, currentY);
         currentY += lineHeight;
     }
     if (business.location) {
-        pdf.text(business.location, startX, currentY);
+        pdf.text(business.location, centerX, currentY);
         currentY += lineHeight;
     }
     
+    // Reset alignment
+    pdf.setTextAlign('left');
     currentY += sectionSpacing;
     
     // Disclaimer (same size as paragraph text)
     pdf.setFontSize(10); // Changed from 8 to 10 to match paragraph text
     pdf.setFont(undefined, 'italic');
+    
+    // Center disclaimer
+    pdf.setTextAlign('center');
+    const centerX = startX + maxWidth / 2;
     const disclaimer = CONFIG.ui.text.disclaimers.results;
     const disclaimerLines = pdf.splitTextToSize(disclaimer, maxWidth);
-    pdf.text(disclaimerLines, startX, currentY);
-    currentY += disclaimerLines.length * lineHeight + sectionSpacing;
+    disclaimerLines.forEach(line => {
+        pdf.text(line, centerX, currentY);
+        currentY += lineHeight;
+    });
+    
+    // Reset alignment
+    pdf.setTextAlign('left');
+    currentY += sectionSpacing;
     
     // Logo at bottom (smaller size)
     if (CONFIG.business.logoUrl) {
