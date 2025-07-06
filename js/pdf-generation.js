@@ -39,15 +39,6 @@ async function generatePDF() {
         const canvasAreaWidth = pdfWidth - textAreaWidth - (canvasMargin * 3); // Now 20" wide
         const canvasAreaHeight = pdfHeight - (canvasMargin * 2); // 17.5" tall
         
-        console.log('PDF layout dimensions:', { 
-            pdfWidth: pdfWidth, 
-            textAreaWidth: textAreaWidth, 
-            canvasAreaWidth: canvasAreaWidth, 
-            canvasMargin: canvasMargin,
-            textStartX: canvasAreaWidth + canvasMargin * 2,
-            availableTextWidth: textAreaWidth - canvasMargin
-        });
-        
         // Generate high-resolution canvas
         const canvasDataUrl = await generateHighResCanvas(canvasAreaWidth * dpi, canvasAreaHeight * dpi);
         
@@ -394,17 +385,7 @@ async function addEnhancedTextContentToPDF(pdf, startX, startY, maxWidth) {
         pdf.text(line, centerX, currentY, { align: 'center' });
         currentY += lineHeight;
     });
-    
-    currentY += sectionSpacing;
-    
-    // Logo at bottom (centered)
-    if (CONFIG.business.logoUrl) {
-        try {
-            await addSmallerLogoToPDF(pdf, startX, currentY, maxWidth);
-        } catch (error) {
-            console.warn('Could not add logo:', error);
-        }
-    }
+}
 }
 
 // Add smaller logo to PDF
