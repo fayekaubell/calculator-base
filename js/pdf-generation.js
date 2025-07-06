@@ -1,4 +1,4 @@
-\// Enhanced PDF Generation Module - Improved layout and functionality
+// Enhanced PDF Generation Module - Improved layout and functionality
 // Requires jsPDF library to be loaded
 
 // PDF generation function with improved layout
@@ -40,10 +40,10 @@ async function generatePDF() {
         const canvasAreaHeight = pdfHeight - (canvasMargin * 2); // 17.5" tall
         
         console.log('PDF layout dimensions:', { 
-            pdfWidth, 
-            textAreaWidth, 
-            canvasAreaWidth, 
-            canvasMargin,
+            pdfWidth: pdfWidth, 
+            textAreaWidth: textAreaWidth, 
+            canvasAreaWidth: canvasAreaWidth, 
+            canvasMargin: canvasMargin,
             textStartX: canvasAreaWidth + canvasMargin * 2,
             availableTextWidth: textAreaWidth - canvasMargin
         });
