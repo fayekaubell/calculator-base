@@ -1,4 +1,4 @@
-// Enhanced PDF Generation Module - Vertically centered layout with logo and download progress
+// Enhanced PDF Generation Module - Vertically centered layout with logo, download progress, and reset functionality
 // Requires jsPDF library to be loaded
 
 // PDF generation function with improved layout and button feedback
@@ -71,7 +71,7 @@ async function generatePDF() {
         
         console.log('✅ Enhanced PDF generated successfully:', filename);
 
-        // Show success state (permanently)
+        // Show success state with reset functionality
         updateDownloadButtonState(downloadBtn, 'success');
 
     } catch (error) {
@@ -81,6 +81,61 @@ async function generatePDF() {
         // Show error state
         updateDownloadButtonState(downloadBtn, 'error');
     }
+}
+
+// Reset the calculator to allow new previews
+function resetCalculator() {
+    console.log('🔄 Resetting calculator for new preview...');
+    
+    // Clear current preview data
+    currentPreview = null;
+    patternImage = null;
+    imageLoaded = false;
+    
+    // Hide preview section
+    const previewSection = document.getElementById('previewSection');
+    if (previewSection) {
+        previewSection.style.display = 'none';
+    }
+    
+    // Clear form inputs (optional - you might want to keep them)
+    // const patternSelect = document.getElementById('pattern');
+    // const widthFeet = document.getElementById('widthFeet');
+    // const widthInches = document.getElementById('widthInches');
+    // const heightFeet = document.getElementById('heightFeet');
+    // const heightInches = document.getElementById('heightInches');
+    // 
+    // if (patternSelect) patternSelect.value = '';
+    // if (widthFeet) widthFeet.value = '';
+    // if (widthInches) widthInches.value = '0';
+    // if (heightFeet) heightFeet.value = '';
+    // if (heightInches) heightInches.value = '0';
+    
+    // Re-enable the generate preview button
+    const generateBtn = document.getElementById('generatePreviewBtn');
+    if (generateBtn) {
+        generateBtn.disabled = false;
+        generateBtn.textContent = 'Generate Preview';
+    }
+    
+    // Remove the download button entirely (it will be re-added when new preview is generated)
+    const downloadBtn = document.getElementById('downloadPdfBtn');
+    if (downloadBtn) {
+        downloadBtn.remove();
+    }
+    
+    // Scroll back to the form for convenience
+    const calculatorSection = document.querySelector('.calculator-section');
+    if (calculatorSection) {
+        calculatorSection.scrollIntoView({ behavior: 'smooth' });
+    }
+    
+    // Trigger auto-resize update
+    setTimeout(() => {
+        if (window.autoResize) window.autoResize.updateHeight();
+    }, 300);
+    
+    console.log('✅ Calculator reset complete - ready for new preview');
 }
 
 // Update download button state with different messages and styles
@@ -95,20 +150,25 @@ function updateDownloadButtonState(button, state) {
             button.disabled = true;
             button.textContent = 'Processing download...';
             button.classList.add('btn-processing');
+            button.onclick = null; // Disable click during processing
             break;
             
         case 'success':
-            button.disabled = true;
-            button.textContent = 'Successfully downloaded';
+            button.disabled = false; // Enable the button for reset functionality
+            button.textContent = 'Successfully downloaded: Click here to reset';
             button.classList.add('btn-success');
             
-            // NO TIMEOUT - stays in success state permanently
+            // Change click handler to reset function
+            button.onclick = resetCalculator;
             break;
             
         case 'error':
             button.disabled = false;
             button.textContent = 'Download failed - Try again';
             button.classList.add('btn-error');
+            
+            // Restore original PDF generation function
+            button.onclick = generatePDF;
             
             // Reset to normal state after 5 seconds for errors
             setTimeout(() => {
@@ -120,6 +180,7 @@ function updateDownloadButtonState(button, state) {
         default:
             button.disabled = false;
             button.textContent = 'Download PDF';
+            button.onclick = generatePDF; // Restore original function
             break;
     }
 }
@@ -608,7 +669,7 @@ function initializePDFGeneration() {
         return;
     }
     
-    console.log('✅ Enhanced PDF generation module with download progress feedback initialized');
+    console.log('✅ Enhanced PDF generation module with download progress feedback and reset functionality initialized');
 }
 
 // Export functions to global scope
@@ -616,5 +677,6 @@ window.pdfAPI = {
     generatePDF,
     addDownloadButton,
     initializePDFGeneration,
-    updateDownloadButtonState
+    updateDownloadButtonState,
+    resetCalculator
 };
