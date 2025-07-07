@@ -1,6 +1,6 @@
-// Preview Module - Main orchestration only
-// Canvas drawing functions moved to canvas-drawing.js
-// Modal functions to be moved to preview-modal.js in next step
+// Preview Module - Main orchestration with new tab high-res view
+// Canvas drawing functions in canvas-drawing.js
+// High-res generation reuses existing PDF generation code
 
 // Generate preview function - main coordination logic
 async function generatePreview() {
@@ -131,17 +131,11 @@ async function generatePreview() {
             loadingOverlay.style.display = 'none';
         }
         
-        // Add click handler for canvas modal (non-mobile only)
+        // Add click handler for canvas high-res view in new tab
         const canvas = document.getElementById('previewCanvas');
-        const isMobile = /Android|iPhone|iPad|iPod|BlackBerry|IEMobile|Opera Mini/i.test(navigator.userAgent) || window.innerWidth <= 768;
-        
-        if (!isMobile) {
-            canvas.style.cursor = 'zoom-in';
-            canvas.onclick = openCanvasModal; // This function will be moved to preview-modal.js later
-        } else {
-            canvas.style.cursor = 'default';
-            canvas.onclick = null;
-        }
+        canvas.style.cursor = 'zoom-in';
+        canvas.onclick = openHighResInNewTab;
+        canvas.title = 'Click to open high-resolution view in new tab';
         
         console.log('✅ Preview generation complete');
         
@@ -233,77 +227,320 @@ function updatePreviewInfo() {
     }
 }
 
-// Canvas modal functionality - TEMPORARY (will be moved to preview-modal.js next)
-function openCanvasModal() {
-    const canvas = document.getElementById('previewCanvas');
-    
+// NEW: Open high-resolution preview in new tab using existing PDF generation code
+async function openHighResInNewTab() {
     if (!currentPreview) {
         console.error('No current preview data available for high-res rendering');
+        alert('Please generate a preview first');
         return;
     }
     
-    console.log('Creating high-res modal...');
-    
-    const modal = document.createElement('div');
-    modal.className = 'canvas-modal';
-    
-    const canvasContainer = document.createElement('div');
-    canvasContainer.style.width = '100%';
-    canvasContainer.style.maxWidth = '95vw';
-    canvasContainer.style.margin = '0 auto';
-    canvasContainer.style.overflowX = 'hidden';
-    canvasContainer.style.overflowY = 'visible';
-    
-    const largeCanvas = document.createElement('canvas');
-    
-    const hiResScale = 3;
-    const baseScale = 2;
-    largeCanvas.width = canvas.width * hiResScale * baseScale;
-    largeCanvas.height = canvas.height * hiResScale * baseScale;
-    
-    const displayWidth = window.innerWidth * 0.95;
-    const canvasAspectRatio = canvas.width / canvas.height;
-    const displayHeight = displayWidth / canvasAspectRatio;
-    
-    largeCanvas.style.width = displayWidth + 'px';
-    largeCanvas.style.height = displayHeight + 'px';
-    largeCanvas.style.maxWidth = 'none';
-    largeCanvas.style.display = 'block';
-    largeCanvas.style.margin = '0 auto';
-    
-    const largeCtx = largeCanvas.getContext('2d');
-    
-    largeCtx.imageSmoothingEnabled = true;
-    largeCtx.imageSmoothingQuality = 'high';
-    largeCtx.scale(hiResScale * baseScale, hiResScale * baseScale);
-    
-    largeCtx.fillStyle = '#ffffff';
-    largeCtx.fillRect(0, 0, canvas.width, canvas.height);
-    
-    renderHighQualityPreview(largeCtx, canvas.width, canvas.height);
-    
-    canvasContainer.appendChild(largeCanvas);
-    modal.appendChild(canvasContainer);
-    
-    modal.onclick = (e) => {
-        if (e.target === modal || e.target === canvasContainer) {
-            document.body.removeChild(modal);
+    try {
+        console.log('🔍 Generating high-resolution preview for new tab...');
+        
+        // Show loading cursor
+        const canvas = document.getElementById('previewCanvas');
+        const originalCursor = canvas.style.cursor;
+        canvas.style.cursor = 'wait';
+        canvas.title = 'Generating high-resolution view...';
+        
+        // Generate high-resolution canvas using existing PDF generation code
+        // Standard screen resolution: 1920x1080 for good balance of quality and performance
+        const targetWidth = 2400;  // 300 DPI equivalent for 8" width
+        const targetHeight = 1800; // 300 DPI equivalent for 6" height
+        
+        console.log('📐 Generating canvas at:', targetWidth, 'x', targetHeight);
+        
+        // Reuse the existing generateHighResCanvas function from PDF generation
+        const canvasDataUrl = await generateHighResCanvasForViewing(targetWidth, targetHeight);
+        
+        if (!canvasDataUrl) {
+            throw new Error('Failed to generate high-resolution canvas');
         }
-    };
+        
+        // Create the content for the new tab
+        const { pattern, formattedWidth, formattedHeight } = currentPreview;
+        const title = `${pattern.name} - ${pattern.sku} - ${formattedWidth}w x ${formattedHeight}h`;
+        
+        const htmlContent = `
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>${title}</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+        
+        body {
+            background: #1a1a1a;
+            color: #ffffff;
+            font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
+            min-height: 100vh;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: flex-start;
+            padding: 20px;
+            overflow-x: auto;
+        }
+        
+        .header {
+            text-align: center;
+            margin-bottom: 30px;
+            max-width: 90vw;
+        }
+        
+        .header h1 {
+            font-size: 24px;
+            font-weight: 600;
+            margin-bottom: 10px;
+            line-height: 1.3;
+            word-break: break-word;
+        }
+        
+        .header p {
+            font-size: 16px;
+            opacity: 0.8;
+            margin-bottom: 15px;
+        }
+        
+        .controls {
+            display: flex;
+            gap: 15px;
+            flex-wrap: wrap;
+            justify-content: center;
+            margin-bottom: 20px;
+        }
+        
+        .btn {
+            background: #333;
+            color: white;
+            border: 1px solid #555;
+            padding: 8px 16px;
+            border-radius: 6px;
+            cursor: pointer;
+            font-size: 14px;
+            transition: all 0.2s;
+            text-decoration: none;
+            display: inline-block;
+        }
+        
+        .btn:hover {
+            background: #444;
+            border-color: #666;
+        }
+        
+        .image-container {
+            max-width: 95vw;
+            max-height: 80vh;
+            overflow: auto;
+            border: 2px solid #333;
+            border-radius: 8px;
+            background: white;
+            padding: 10px;
+            box-shadow: 0 4px 20px rgba(0,0,0,0.5);
+        }
+        
+        .preview-image {
+            display: block;
+            max-width: 100%;
+            height: auto;
+            cursor: zoom-in;
+        }
+        
+        .preview-image.zoomed {
+            cursor: zoom-out;
+            max-width: none;
+            width: auto;
+            height: auto;
+        }
+        
+        .footer {
+            margin-top: 30px;
+            text-align: center;
+            opacity: 0.6;
+            font-size: 14px;
+        }
+        
+        @media (max-width: 768px) {
+            .header h1 {
+                font-size: 20px;
+            }
+            
+            .controls {
+                flex-direction: column;
+                align-items: center;
+            }
+            
+            .btn {
+                width: 200px;
+                text-align: center;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="header">
+        <h1>${pattern.name}</h1>
+        <p>${pattern.sku || 'N/A'} • ${formattedWidth}w x ${formattedHeight}h Wall</p>
+        <div class="controls">
+            <button class="btn" onclick="toggleZoom()">Toggle Zoom</button>
+            <button class="btn" onclick="downloadImage()">Download Image</button>
+            <button class="btn" onclick="window.print()">Print</button>
+            <button class="btn" onclick="window.close()">Close</button>
+        </div>
+    </div>
     
-    largeCanvas.onclick = () => {
-        document.body.removeChild(modal);
-    };
+    <div class="image-container">
+        <img id="previewImage" class="preview-image" src="${canvasDataUrl}" alt="High-resolution wallpaper preview">
+    </div>
     
-    document.body.appendChild(modal);
+    <div class="footer">
+        <p>Generated by ${CONFIG.business.name} Wallpaper Calculator</p>
+        <p>Click image to toggle zoom • Right-click to save image</p>
+    </div>
+    
+    <script>
+        let isZoomed = false;
+        
+        function toggleZoom() {
+            const img = document.getElementById('previewImage');
+            const container = img.parentElement;
+            
+            if (isZoomed) {
+                img.classList.remove('zoomed');
+                container.style.overflow = 'auto';
+                isZoomed = false;
+            } else {
+                img.classList.add('zoomed');
+                container.style.overflow = 'scroll';
+                isZoomed = true;
+            }
+        }
+        
+        function downloadImage() {
+            const link = document.createElement('a');
+            link.download = '${pattern.sku || 'wallpaper'}-preview-${Date.now()}.png';
+            link.href = '${canvasDataUrl}';
+            link.click();
+        }
+        
+        // Click image to zoom
+        document.getElementById('previewImage').onclick = toggleZoom;
+        
+        // Keyboard shortcuts
+        document.addEventListener('keydown', function(e) {
+            if (e.key === 'Escape') {
+                window.close();
+            } else if (e.key === 'z' || e.key === 'Z') {
+                toggleZoom();
+            } else if (e.key === 'd' || e.key === 'D') {
+                downloadImage();
+            }
+        });
+        
+        console.log('High-resolution wallpaper preview loaded');
+        console.log('Keyboard shortcuts: Z = zoom, D = download, Escape = close');
+    </script>
+</body>
+</html>`;
+        
+        // Open in new tab
+        const newTab = window.open('', '_blank');
+        if (!newTab) {
+            // Popup blocked - fallback to download
+            console.warn('Popup blocked, offering download instead');
+            const link = document.createElement('a');
+            link.download = `${pattern.sku || 'wallpaper'}-preview-${Date.now()}.png`;
+            link.href = canvasDataUrl;
+            link.click();
+            
+            alert('Popup blocked. High-resolution image has been downloaded instead.');
+        } else {
+            newTab.document.write(htmlContent);
+            newTab.document.close();
+            console.log('✅ High-resolution preview opened in new tab');
+        }
+        
+        // Restore canvas cursor and title
+        canvas.style.cursor = originalCursor;
+        canvas.title = 'Click to open high-resolution view in new tab';
+        
+    } catch (error) {
+        console.error('❌ Error generating high-res preview:', error);
+        
+        // Restore canvas cursor
+        const canvas = document.getElementById('previewCanvas');
+        canvas.style.cursor = 'zoom-in';
+        canvas.title = 'Click to open high-resolution view in new tab';
+        
+        alert('Error generating high-resolution preview: ' + error.message);
+    }
 }
 
-function renderHighQualityPreview(ctx, canvasWidth, canvasHeight) {
-    // For high-quality rendering, we need to recalculate coordinates for the given canvas size
-    const originalCanvas = document.getElementById('previewCanvas');
-    const originalCurrentPreview = currentPreview;
+// Generate high-resolution canvas specifically for viewing (adapted from PDF generation)
+async function generateHighResCanvasForViewing(targetWidth, targetHeight) {
+    return new Promise((resolve) => {
+        try {
+            // Create high-resolution canvas
+            const hiResCanvas = document.createElement('canvas');
+            hiResCanvas.width = targetWidth;
+            hiResCanvas.height = targetHeight;
+            const hiResCtx = hiResCanvas.getContext('2d');
+            
+            // Enable high-quality rendering
+            hiResCtx.imageSmoothingEnabled = true;
+            hiResCtx.imageSmoothingQuality = 'high';
+            
+            // Calculate scale factor
+            const originalCanvas = document.getElementById('previewCanvas');
+            const scaleX = targetWidth / originalCanvas.width;
+            const scaleY = targetHeight / originalCanvas.height;
+            
+            // Use the smaller scale to maintain aspect ratio
+            const scale = Math.min(scaleX, scaleY);
+            
+            // Calculate centered position
+            const scaledWidth = originalCanvas.width * scale;
+            const scaledHeight = originalCanvas.height * scale;
+            const offsetX = (targetWidth - scaledWidth) / 2;
+            const offsetY = (targetHeight - scaledHeight) / 2;
+            
+            // Fill background
+            hiResCtx.fillStyle = '#ffffff';
+            hiResCtx.fillRect(0, 0, targetWidth, targetHeight);
+            
+            // Scale and render
+            hiResCtx.save();
+            hiResCtx.translate(offsetX, offsetY);
+            hiResCtx.scale(scale, scale);
+            
+            // Render the preview using existing high-quality rendering from PDF module
+            renderHighQualityPreviewForViewing(hiResCtx, originalCanvas.width, originalCanvas.height);
+            
+            hiResCtx.restore();
+            
+            // Convert to data URL with high quality
+            const dataUrl = hiResCanvas.toDataURL('image/png', 1.0);
+            resolve(dataUrl);
+            
+        } catch (error) {
+            console.error('Error generating high-res canvas for viewing:', error);
+            resolve(null);
+        }
+    });
+}
+
+// Render high-quality preview for viewing (reuses PDF rendering logic)
+function renderHighQualityPreviewForViewing(ctx, canvasWidth, canvasHeight) {
+    if (!currentPreview) return;
     
-    // Temporarily adjust the canvas reference for coordinate calculations
+    // Temporarily override canvas reference for coordinate calculations
     const tempCanvas = { width: canvasWidth, height: canvasHeight };
     const originalGetElementById = document.getElementById;
     document.getElementById = function(id) {
@@ -312,17 +549,15 @@ function renderHighQualityPreview(ctx, canvasWidth, canvasHeight) {
     };
     
     try {
-        // Calculate reference coordinates for the high-res canvas
+        // Calculate reference coordinates
         const referenceCoords = calculateReferenceCoordinates();
         
-        // Draw Section 1: Complete view
+        // Draw both sections using existing canvas drawing functions
         drawCompleteViewWithOverlay(ctx, referenceCoords);
-        
-        // Draw Section 2: Wall only view  
         drawWallOnlyView(ctx, referenceCoords);
         
     } finally {
-        // Restore original getElementById function
+        // Restore original function
         document.getElementById = originalGetElementById;
     }
 }
