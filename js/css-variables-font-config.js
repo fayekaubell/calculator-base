@@ -4,6 +4,7 @@
 class CSSVariablesFontConfig {
     constructor() {
         this.defaultVariables = {
+            // Font variables
             '--font-body-family': '-apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif',
             '--font-body-style': 'normal',
             '--font-body-weight': '400',
@@ -12,13 +13,24 @@ class CSSVariablesFontConfig {
             '--font-heading-style': 'normal',
             '--font-heading-weight': '600',
             '--font-body-scale': '1.0',
-            '--font-heading-scale': '1.0'
+            '--font-heading-scale': '1.0',
+            
+            // Color variables
+            '--color-background': '#FFFFFF',
+            '--color-text': '#4B4B4B',
+            '--color-button-background': '#F9F9F9',
+            '--color-button-text': '#4B4B4B',
+            '--color-button-outline': '#000000',
+            '--color-shadow': '#414141',
+            '--color-border': '#E9ECEF',
+            '--color-accent': '#6C757D'
         };
         
         // Preset configurations matching common website patterns
         this.presets = {
             'default': this.defaultVariables,
             'clarendon-helvetica': {
+                // Font variables
                 '--font-body-family': 'Helvetica, "Helvetica Neue", Arial, sans-serif',
                 '--font-body-style': 'normal',
                 '--font-body-weight': '400',
@@ -27,7 +39,17 @@ class CSSVariablesFontConfig {
                 '--font-heading-style': 'normal',
                 '--font-heading-weight': '700',
                 '--font-body-scale': '1.0',
-                '--font-heading-scale': '1.2'
+                '--font-heading-scale': '1.2',
+                
+                // Color variables matching your site
+                '--color-background': '#FFFFFF',
+                '--color-text': '#4B4B4B',
+                '--color-button-background': '#F9F9F9',
+                '--color-button-text': '#4B4B4B',
+                '--color-button-outline': '#000000',
+                '--color-shadow': '#414141',
+                '--color-border': '#E9ECEF',
+                '--color-accent': '#6C757D'
             },
             'modern': {
                 '--font-body-family': 'Inter, -apple-system, BlinkMacSystemFont, sans-serif',
@@ -98,6 +120,7 @@ class CSSVariablesFontConfig {
         
         // Check for individual CSS variable parameters
         const paramMapping = {
+            // Font parameters
             'fontBodyFamily': '--font-body-family',
             'fontBodyStyle': '--font-body-style',
             'fontBodyWeight': '--font-body-weight',
@@ -108,11 +131,24 @@ class CSSVariablesFontConfig {
             'fontBodyScale': '--font-body-scale',
             'fontHeadingScale': '--font-heading-scale',
             
+            // Color parameters
+            'colorBackground': '--color-background',
+            'colorText': '--color-text',
+            'colorButtonBackground': '--color-button-background',
+            'colorButtonText': '--color-button-text',
+            'colorButtonOutline': '--color-button-outline',
+            'colorShadow': '--color-shadow',
+            'colorBorder': '--color-border',
+            'colorAccent': '--color-accent',
+            
             // Alternative parameter names
             'bodyFamily': '--font-body-family',
             'headingFamily': '--font-heading-family',
             'bodyWeight': '--font-body-weight',
-            'headingWeight': '--font-heading-weight'
+            'headingWeight': '--font-heading-weight',
+            'backgroundColor': '--color-background',
+            'textColor': '--color-text',
+            'buttonColor': '--color-button-background'
         };
         
         for (const [param, cssVar] of Object.entries(paramMapping)) {
@@ -161,6 +197,18 @@ class CSSVariablesFontConfig {
         return variables;
     }
     
+    // Helper function to convert hex colors to RGB for CSS variables
+    hexToRgb(hex) {
+        const result = /^#?([a-f\d]{2})([a-f\d]{2})([a-f\d]{2})$/i.exec(hex);
+        if (result) {
+            const r = parseInt(result[1], 16);
+            const g = parseInt(result[2], 16);
+            const b = parseInt(result[3], 16);
+            return `${r}, ${g}, ${b}`;
+        }
+        return '75, 75, 75'; // Default gray
+    }
+    
     applyCSSVariables(variables) {
         // Set CSS variables on the root element
         const root = document.documentElement;
@@ -179,10 +227,11 @@ class CSSVariablesFontConfig {
         
         // Generate CSS that uses the CSS variables matching your site's exact implementation
         const css = `
-            /* CSS Variables Font Configuration - Matching Your Site's Implementation */
+            /* CSS Variables Font & Color Configuration - Matching Your Site's Implementation */
             
             /* Set up the CSS variables if not already set */
             :root {
+                /* Font variables */
                 --font-body-family: ${variables['--font-body-family'] || this.defaultVariables['--font-body-family']};
                 --font-body-style: ${variables['--font-body-style'] || this.defaultVariables['--font-body-style']};
                 --font-body-weight: ${variables['--font-body-weight'] || this.defaultVariables['--font-body-weight']};
@@ -192,7 +241,19 @@ class CSSVariablesFontConfig {
                 --font-heading-weight: ${variables['--font-heading-weight'] || this.defaultVariables['--font-heading-weight']};
                 --font-body-scale: ${variables['--font-body-scale'] || this.defaultVariables['--font-body-scale']};
                 --font-heading-scale: ${variables['--font-heading-scale'] || this.defaultVariables['--font-heading-scale']};
-                --color-foreground: 51, 51, 51; /* Default dark gray for text */
+                
+                /* Color variables */
+                --color-background: ${variables['--color-background'] || this.defaultVariables['--color-background']};
+                --color-text: ${variables['--color-text'] || this.defaultVariables['--color-text']};
+                --color-button-background: ${variables['--color-button-background'] || this.defaultVariables['--color-button-background']};
+                --color-button-text: ${variables['--color-button-text'] || this.defaultVariables['--color-button-text']};
+                --color-button-outline: ${variables['--color-button-outline'] || this.defaultVariables['--color-button-outline']};
+                --color-shadow: ${variables['--color-shadow'] || this.defaultVariables['--color-shadow']};
+                --color-border: ${variables['--color-border'] || this.defaultVariables['--color-border']};
+                --color-accent: ${variables['--color-accent'] || this.defaultVariables['--color-accent']};
+                
+                /* Computed color values for compatibility */
+                --color-foreground: ${this.hexToRgb(variables['--color-text'] || this.defaultVariables['--color-text'])};
             }
             
             /* Apply fonts using CSS variables - EXACTLY like your site */
@@ -208,7 +269,7 @@ class CSSVariablesFontConfig {
                 font-style: var(--font-heading-style) !important;
                 font-weight: var(--font-heading-weight) !important;
                 letter-spacing: calc(var(--font-heading-scale) * 0.06rem) !important;
-                color: rgb(var(--color-foreground)) !important;
+                color: var(--color-text) !important;
                 line-height: calc(1 + 0.3 / max(1, var(--font-heading-scale))) !important;
                 word-break: break-word !important;
             }
@@ -219,35 +280,78 @@ class CSSVariablesFontConfig {
             .guide-content p,
             .order-line,
             .disclaimer p,
-            .loading-message,
-            .error-message {
+            .loading-message {
                 font-family: var(--font-body-family) !important;
                 font-style: var(--font-body-style) !important;
                 font-weight: var(--font-body-weight) !important;
                 font-size: calc(1rem * var(--font-body-scale)) !important;
+                color: var(--color-text) !important;
             }
             
-            /* UI elements - use body font */
-            .btn,
-            input,
-            select,
+            /* Background colors */
+            body {
+                background: var(--color-background) !important;
+            }
+            
+            .calculator-section,
+            .preview-section,
+            .measuring-guide {
+                background: var(--color-background) !important;
+                border: 1px solid var(--color-border) !important;
+            }
+            
+            /* Form inputs */
             .form-group select,
-            .form-group input,
-            .dimension-input span {
+            .form-group input {
                 font-family: var(--font-body-family) !important;
                 font-style: var(--font-body-style) !important;
                 font-weight: var(--font-body-weight) !important;
+                background: var(--color-background) !important;
+                color: var(--color-text) !important;
+                border: 2px solid var(--color-border) !important;
+            }
+            
+            .form-group select:focus,
+            .form-group input:focus {
+                border-color: var(--color-accent) !important;
+            }
+            
+            /* Buttons */
+            .btn {
+                font-family: var(--font-body-family) !important;
+                font-weight: var(--font-body-weight-bold) !important;
+                background: var(--color-button-background) !important;
+                color: var(--color-button-text) !important;
+                border: 2px solid var(--color-button-outline) !important;
+                letter-spacing: 0.05em;
+            }
+            
+            .btn:hover:not(:disabled) {
+                background: var(--color-accent) !important;
+                color: var(--color-background) !important;
+                border-color: var(--color-accent) !important;
+                box-shadow: 0 4px 12px var(--color-shadow) !important;
+            }
+            
+            /* UI elements */
+            .dimension-input span {
+                font-family: var(--font-body-family) !important;
+                font-weight: var(--font-body-weight-bold) !important;
+                color: var(--color-text) !important;
             }
             
             /* Bold elements */
             strong,
             .order-line strong {
                 font-weight: var(--font-body-weight-bold) !important;
+                color: var(--color-text) !important;
             }
             
-            .btn {
-                font-weight: var(--font-body-weight-bold) !important;
-                letter-spacing: 0.05em;
+            /* Error messages */
+            .error-message {
+                background: #f8d7da !important;
+                color: #721c24 !important;
+                border: 1px solid #f5c6cb !important;
             }
             
             /* Specific size adjustments for calculator - much smaller sizes */
@@ -285,6 +389,17 @@ class CSSVariablesFontConfig {
             .page-title p {
                 font-size: calc(1rem * var(--font-body-scale)) !important;
                 font-family: var(--font-body-family) !important;
+                color: var(--color-text) !important;
+            }
+            
+            /* Canvas and preview styling */
+            #previewCanvas {
+                border: 2px solid var(--color-border) !important;
+            }
+            
+            #previewCanvas:hover {
+                border-color: var(--color-accent) !important;
+                box-shadow: 0 4px 8px var(--color-shadow) !important;
             }
         `;
         
