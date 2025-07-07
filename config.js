@@ -40,8 +40,8 @@ const CONFIG = {
   ui: {
     // Text customization
     text: {
-      pageTitle: "Wallpaper Preview Calculator",
-      pageSubtitle: "Enter wall dimensions to see how much wallpaper you'll need.",
+      pageTitle: "",  // Empty - website's page title will be used
+      pageSubtitle: "Enter wall dimensions to estimate how much you'll need to purchase. Submit results if you'd like to receive a quote. We'll be in touch within one business day. (probably sooner)",
       
       // Measuring guide
       measuringGuide: {
