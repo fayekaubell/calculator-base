@@ -1,4 +1,4 @@
-/* Wallpaper Calculator Styles - Font Configuration Ready */
+/* Wallpaper Calculator Styles - Auto-sizing Layout */
 
 * {
     margin: 0;
@@ -9,6 +9,7 @@
 body {
     background: #f8f9fa;
     line-height: 1.6;
+    min-height: auto; /* Changed from 100vh to auto */
     /* Font will be set by font-config.js */
 }
 
@@ -16,6 +17,7 @@ body {
     max-width: min(95vw, 1800px);
     margin: 0 auto;
     padding: 20px;
+    min-height: auto; /* Allow natural height */
 }
 
 .page-title {
@@ -298,6 +300,7 @@ body {
     cursor: zoom-in;
     display: block;
     margin: 0 auto;
+    /* Removed fixed height constraints */
 }
 
 #previewCanvas:hover {
@@ -545,4 +548,25 @@ body {
     .container {
         max-width: min(90vw, 2000px);
     }
+}
+
+/* Auto-sizing optimizations */
+html, body {
+    height: auto !important;
+    min-height: auto !important;
+}
+
+.container {
+    padding-bottom: 40px; /* Add bottom padding for spacing */
+}
+
+/* Ensure preview section expands naturally */
+.preview-section {
+    min-height: auto;
+    height: auto;
+}
+
+.canvas-container {
+    min-height: auto;
+    height: auto;
 }
