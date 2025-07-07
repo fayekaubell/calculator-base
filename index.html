@@ -16,8 +16,8 @@
     <script src="https://cdnjs.cloudflare.com/ajax/libs/PapaParse/5.4.1/papaparse.min.js"></script>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
     
-    <!-- IMPORTANT: Load font configuration first, before config.js -->
-    <script src="js/font-config.js"></script>
+    <!-- IMPORTANT: Load CSS Variables font configuration first -->
+    <script src="js/css-variables-font-config.js"></script>
     <script src="config.js"></script>
     
     <!-- Performance and SEO optimizations -->
@@ -28,31 +28,6 @@
     <meta property="og:title" content="Wallpaper Calculator">
     <meta property="og:description" content="Professional wallpaper calculator with visual preview">
     <meta property="og:type" content="website">
-    
-    <style>
-        /* Critical CSS for initial load */
-        body {
-            margin: 0;
-            background: linear-gradient(135deg, #f5f7fa 0%, #c3cfe2 100%);
-        }
-        
-        .container {
-            max-width: min(95vw, 1800px);
-            margin: 0 auto;
-            padding: 20px;
-        }
-        
-        /* Loading animation */
-        .loading-pulse {
-            animation: pulse 2s infinite;
-        }
-        
-        @keyframes pulse {
-            0% { opacity: 0.6; }
-            50% { opacity: 1; }
-            100% { opacity: 0.6; }
-        }
-    </style>
 </head>
 <body>
     <div class="container">
@@ -238,9 +213,9 @@
     <script src="js/pdf-generation.js"></script>
     
     <script>
-        // Enhanced initialization with PDF support
+        // Enhanced initialization with CSS Variables font support
         document.addEventListener('DOMContentLoaded', function() {
-            console.log('🚀 Enhanced Wallpaper Calculator with font configuration initializing...');
+            console.log('🚀 Enhanced Wallpaper Calculator with CSS Variables font system initializing...');
             
             // Performance monitoring
             const startTime = performance.now();
@@ -284,7 +259,7 @@
                 addKeyboardShortcuts();
                 
                 const endTime = performance.now();
-                console.log(`✅ Calculator with font configuration initialized in ${Math.round(endTime - startTime)}ms`);
+                console.log(`✅ Calculator with CSS Variables font system initialized in ${Math.round(endTime - startTime)}ms`);
                 
             } catch (error) {
                 console.error('❌ Failed to initialize calculator:', error);
@@ -368,16 +343,6 @@
             console.error('Global error:', e);
             showErrorMessage('An unexpected error occurred. Please refresh the page.');
         });
-        
-        // Service worker registration for offline functionality (optional)
-        if ('serviceWorker' in navigator) {
-            window.addEventListener('load', function() {
-                // Uncomment to enable service worker
-                // navigator.serviceWorker.register('/sw.js')
-                //     .then(registration => console.log('SW registered:', registration))
-                //     .catch(error => console.log('SW registration failed:', error));
-            });
-        }
     </script>
     
     <!-- Schema.org structured data for SEO -->
