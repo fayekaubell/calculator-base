@@ -20,6 +20,9 @@
     <script src="js/css-variables-font-config.js"></script>
     <script src="config.js"></script>
     
+    <!-- AUTO-RESIZE SYSTEM -->
+    <script src="js/auto-resize.js"></script>
+    
     <!-- Performance and SEO optimizations -->
     <link rel="dns-prefetch" href="//cdnjs.cloudflare.com">
     <meta name="theme-color" content="#3498db">
@@ -213,9 +216,9 @@
     <script src="js/pdf-generation.js"></script>
     
     <script>
-        // Enhanced initialization with CSS Variables font support
+        // Enhanced initialization with auto-resize integration
         document.addEventListener('DOMContentLoaded', function() {
-            console.log('🚀 Enhanced Wallpaper Calculator with CSS Variables font system initializing...');
+            console.log('🚀 Enhanced Wallpaper Calculator with auto-resize initializing...');
             
             // Performance monitoring
             const startTime = performance.now();
@@ -227,7 +230,7 @@
                 // Initialize PDF generation
                 initializePDFGeneration();
                 
-                // Enhanced event listeners
+                // Enhanced event listeners with auto-resize triggers
                 const generateBtn = document.getElementById('generatePreviewBtn');
                 if (generateBtn) {
                     generateBtn.addEventListener('click', function() {
@@ -238,14 +241,32 @@
                         // Announce to screen readers
                         announceToScreenReader('Generating wallpaper preview...');
                         
+                        // Trigger resize after state change
+                        setTimeout(() => {
+                            if (window.autoResize) window.autoResize.updateHeight();
+                        }, 100);
+                        
                         setTimeout(() => {
                             generatePreview().finally(() => {
                                 generateBtn.disabled = false;
                                 generateBtn.textContent = 'Generate Preview';
                                 
+                                // Trigger resize after preview generation
+                                setTimeout(() => {
+                                    if (window.autoResize) window.autoResize.updateHeight();
+                                    
+                                    // Dispatch custom event for auto-resize system
+                                    window.dispatchEvent(new CustomEvent('previewComplete'));
+                                }, 200);
+                                
                                 // Add download button after preview is generated
                                 setTimeout(() => {
                                     addDownloadButton();
+                                    
+                                    // Final resize after download button added
+                                    setTimeout(() => {
+                                        if (window.autoResize) window.autoResize.updateHeight();
+                                    }, 100);
                                 }, 500);
                             });
                         }, 100);
@@ -258,8 +279,13 @@
                 // Add keyboard shortcuts
                 addKeyboardShortcuts();
                 
+                // Trigger initial resize after everything loads
+                setTimeout(() => {
+                    if (window.autoResize) window.autoResize.updateHeight();
+                }, 1000);
+                
                 const endTime = performance.now();
-                console.log(`✅ Calculator with CSS Variables font system initialized in ${Math.round(endTime - startTime)}ms`);
+                console.log(`✅ Calculator with auto-resize initialized in ${Math.round(endTime - startTime)}ms`);
                 
             } catch (error) {
                 console.error('❌ Failed to initialize calculator:', error);
@@ -342,6 +368,16 @@
         window.addEventListener('error', function(e) {
             console.error('Global error:', e);
             showErrorMessage('An unexpected error occurred. Please refresh the page.');
+        });
+        
+        // Auto-resize integration for form changes
+        document.addEventListener('change', function(e) {
+            if (e.target.tagName === 'SELECT' || e.target.tagName === 'INPUT') {
+                // Small delay to allow for any layout changes
+                setTimeout(() => {
+                    if (window.autoResize) window.autoResize.updateHeight();
+                }, 100);
+            }
         });
     </script>
     
