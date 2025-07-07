@@ -1,22 +1,20 @@
-// Enhanced PDF Generation Module - Vertically centered layout with logo
+// Enhanced PDF Generation Module - Vertically centered layout with logo and download progress
 // Requires jsPDF library to be loaded
 
-// PDF generation function with improved layout
+// PDF generation function with improved layout and button feedback
 async function generatePDF() {
     if (!currentPreview) {
         alert('Please generate a preview first before downloading PDF');
         return;
     }
 
+    const downloadBtn = document.getElementById('downloadPdfBtn');
+    
     try {
         console.log('🎨 Starting enhanced PDF generation...');
         
-        // Show loading state
-        const downloadBtn = document.getElementById('downloadPdfBtn');
-        if (downloadBtn) {
-            downloadBtn.disabled = true;
-            downloadBtn.textContent = 'Generating PDF...';
-        }
+        // Show processing state
+        updateDownloadButtonState(downloadBtn, 'processing');
 
         // PDF dimensions at 300 DPI
         const pdfWidth = 24; // inches (landscape)
@@ -66,16 +64,59 @@ async function generatePDF() {
         
         console.log('✅ Enhanced PDF generated successfully:', filename);
 
+        // Show success state
+        updateDownloadButtonState(downloadBtn, 'success');
+
     } catch (error) {
         console.error('❌ Error generating PDF:', error);
         alert('Error generating PDF: ' + error.message);
-    } finally {
-        // Restore button state
-        const downloadBtn = document.getElementById('downloadPdfBtn');
-        if (downloadBtn) {
-            downloadBtn.disabled = false;
-            downloadBtn.textContent = 'Download PDF';
-        }
+        
+        // Show error state
+        updateDownloadButtonState(downloadBtn, 'error');
+    }
+}
+
+// Update download button state with different messages and styles
+function updateDownloadButtonState(button, state) {
+    if (!button) return;
+    
+    // Remove any existing state classes
+    button.classList.remove('btn-processing', 'btn-success', 'btn-error');
+    
+    switch (state) {
+        case 'processing':
+            button.disabled = true;
+            button.textContent = 'Processing download...';
+            button.classList.add('btn-processing');
+            break;
+            
+        case 'success':
+            button.disabled = true;
+            button.textContent = 'Successfully downloaded';
+            button.classList.add('btn-success');
+            
+            // Reset to normal state after 3 seconds
+            setTimeout(() => {
+                updateDownloadButtonState(button, 'ready');
+            }, 3000);
+            break;
+            
+        case 'error':
+            button.disabled = false;
+            button.textContent = 'Download failed - Try again';
+            button.classList.add('btn-error');
+            
+            // Reset to normal state after 3 seconds
+            setTimeout(() => {
+                updateDownloadButtonState(button, 'ready');
+            }, 3000);
+            break;
+            
+        case 'ready':
+        default:
+            button.disabled = false;
+            button.textContent = 'Download PDF';
+            break;
     }
 }
 
@@ -538,7 +579,7 @@ async function addEnhancedTextContentToPDF(pdf, startX, startY, maxWidth, availa
     }
 }
 
-// Add download button to the UI
+// Add download button to the UI with enhanced state management
 function addDownloadButton() {
     const previewInfo = document.querySelector('.preview-info');
     if (!previewInfo || document.getElementById('downloadPdfBtn')) {
@@ -563,12 +604,13 @@ function initializePDFGeneration() {
         return;
     }
     
-    console.log('✅ Enhanced PDF generation module with vertical centering and logo support initialized');
+    console.log('✅ Enhanced PDF generation module with download progress feedback initialized');
 }
 
 // Export functions to global scope
 window.pdfAPI = {
     generatePDF,
     addDownloadButton,
-    initializePDFGeneration
+    initializePDFGeneration,
+    updateDownloadButtonState
 };
