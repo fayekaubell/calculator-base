@@ -245,9 +245,9 @@ async function openHighResInNewTab() {
         canvas.title = 'Generating high-resolution view...';
         
         // Generate high-resolution canvas using existing PDF generation code
-        // Standard screen resolution: 1920x1080 for good balance of quality and performance
-        const targetWidth = 2400;  // 300 DPI equivalent for 8" width
-        const targetHeight = 1800; // 300 DPI equivalent for 6" height
+        // Ultra high resolution: 4K+ for maximum sharpness and detail
+        const targetWidth = 4800;  // 600 DPI equivalent for 8" width - much sharper
+        const targetHeight = 3600; // 600 DPI equivalent for 6" height - much sharper
         
         console.log('📐 Generating canvas at:', targetWidth, 'x', targetHeight);
         
