@@ -1,4 +1,4 @@
-/* Wallpaper Calculator Styles - Enhanced with Download Button States */
+/* Wallpaper Calculator Styles - Font Configuration Ready */
 
 * {
     margin: 0;
@@ -9,7 +9,7 @@
 body {
     background: #f8f9fa;
     line-height: 1.6;
-    font-family: Arial, sans-serif;
+    /* Font will be set by font-config.js */
 }
 
 .container {
@@ -26,12 +26,16 @@ body {
 .page-title h1 {
     color: #333;
     margin-bottom: 15px;
+    font-weight: 600;
+    /* Font will be set by font-config.js */
 }
 
 .page-title p {
     margin: 0;
     opacity: 0.7;
     font-size: 16px;
+    font-weight: 400;
+    /* Font will be set by font-config.js */
 }
 
 .measuring-guide {
@@ -61,6 +65,8 @@ body {
     text-align: left;
     color: #333;
     margin: 0;
+    font-weight: 600;
+    /* Font will be set by font-config.js */
 }
 
 .measuring-guide summary:hover {
@@ -92,6 +98,8 @@ body {
     margin-bottom: 12px;
     line-height: 1.5;
     color: #333;
+    font-weight: 400;
+    /* Font will be set by font-config.js */
 }
 
 .guide-content p:last-child {
@@ -116,6 +124,8 @@ body {
 .form-group h3 {
     margin-bottom: 15px;
     color: #333;
+    font-weight: 600;
+    /* Font will be set by font-config.js */
 }
 
 .form-group select,
@@ -127,6 +137,8 @@ body {
     transition: border-color 0.3s ease;
     background: white;
     font-size: 16px;
+    font-weight: 400;
+    /* Font will be set by font-config.js */
 }
 
 #pattern {
@@ -152,6 +164,7 @@ body {
 .dimension-input span {
     font-weight: 600;
     opacity: 0.7;
+    /* Font will be set by font-config.js */
 }
 
 .btn {
@@ -168,6 +181,7 @@ body {
     font-weight: 600;
     position: relative;
     overflow: hidden;
+    /* Font will be set by font-config.js */
 }
 
 .btn:hover {
@@ -255,6 +269,8 @@ body {
     display: block;
     width: 100%;
     color: #333;
+    font-weight: 600;
+    /* Font will be set by font-config.js */
 }
 
 .content-container {
@@ -341,6 +357,8 @@ body {
     margin-bottom: 15px;
     text-align: center;
     color: #333;
+    font-weight: 600;
+    /* Font will be set by font-config.js */
 }
 
 .order-section {
@@ -351,6 +369,8 @@ body {
     margin-bottom: 8px;
     line-height: 1.4;
     text-align: center;
+    font-weight: 400;
+    /* Font will be set by font-config.js */
 }
 
 .divider {
@@ -368,6 +388,8 @@ body {
     margin: 0;
     font-style: italic;
     opacity: 0.8;
+    font-weight: 400;
+    /* Font will be set by font-config.js */
 }
 
 .loading-message {
@@ -375,6 +397,8 @@ body {
     padding: 20px;
     color: #666;
     font-style: italic;
+    font-weight: 400;
+    /* Font will be set by font-config.js */
 }
 
 .error-message {
@@ -385,6 +409,8 @@ body {
     border: 1px solid #f5c6cb;
     border-radius: 8px;
     margin-bottom: 20px;
+    font-weight: 400;
+    /* Font will be set by font-config.js */
 }
 
 /* Download Button Enhanced Styles - Consistent Gray Theme */
@@ -426,6 +452,55 @@ body {
     background: #6c757d !important;
     border-color: #6c757d !important;
     color: white !important;
+}
+
+/* Input validation styles */
+.form-group input.invalid {
+    border-color: #dc3545;
+    background-color: #f8d7da;
+}
+
+.form-group input.valid {
+    border-color: #28a745;
+    background-color: #d4edda;
+}
+
+/* Focus states for accessibility */
+.btn:focus,
+.form-group select:focus,
+.form-group input:focus {
+    outline: 2px solid #0066cc;
+    outline-offset: 2px;
+}
+
+/* High contrast mode support */
+@media (prefers-contrast: high) {
+    .btn-primary {
+        background: #000;
+        color: #fff;
+        border: 2px solid #fff;
+    }
+    
+    .form-group select,
+    .form-group input {
+        border: 2px solid #000;
+    }
+}
+
+/* Reduced motion support */
+@media (prefers-reduced-motion: reduce) {
+    .btn,
+    .measuring-guide summary,
+    .form-group select,
+    .form-group input {
+        transition: none;
+    }
+    
+    .btn-processing,
+    .btn-success,
+    .btn-error {
+        animation: none;
+    }
 }
 
 @media (max-width: 768px) {
