@@ -1,4 +1,4 @@
-/* Wallpaper Calculator Styles - Auto-sizing Layout */
+/* Wallpaper Calculator Styles - Auto-sizing Layout with 165% Width */
 
 * {
     margin: 0;
@@ -14,7 +14,7 @@ body {
 }
 
 .container {
-    max-width: min(95vw, 1800px);
+    max-width: min(95vw, 2970px); /* 165% of original 1800px = 2970px */
     margin: 0 auto;
     padding: 20px;
     min-height: auto; /* Allow natural height */
@@ -37,6 +37,8 @@ body {
     opacity: 0.7;
     font-size: 16px;
     font-weight: 400;
+    max-width: 800px; /* Limit subtitle width for better readability */
+    margin: 0 auto;
     /* Font will be set by font-config.js */
 }
 
@@ -117,6 +119,10 @@ body {
     padding: 40px;
     margin-bottom: 30px;
     box-shadow: 0 2px 10px rgba(0,0,0,0.1);
+    max-width: 1200px; /* Limit form width for better UX */
+    margin-left: auto;
+    margin-right: auto;
+    margin-bottom: 30px;
 }
 
 .form-group {
@@ -354,6 +360,10 @@ body {
 .preview-info {
     margin-top: 30px;
     text-align: center;
+    max-width: 800px; /* Limit width for better readability */
+    margin-left: auto;
+    margin-right: auto;
+    margin-top: 30px;
 }
 
 .preview-info h3 {
@@ -506,6 +516,7 @@ body {
     }
 }
 
+/* Mobile responsive styles */
 @media (max-width: 768px) {
     .container {
         padding: 15px;
@@ -515,6 +526,9 @@ body {
     .calculator-section,
     .preview-section {
         padding: 25px;
+        margin-left: 0;
+        margin-right: 0;
+        max-width: none;
     }
 
     .canvas-container {
@@ -542,11 +556,30 @@ body {
         font-size: 14px;
         padding: 12px 24px;
     }
+
+    .page-title p {
+        max-width: none;
+        padding: 0 10px;
+    }
+
+    .preview-info {
+        max-width: none;
+        margin-left: 0;
+        margin-right: 0;
+    }
 }
 
+/* Large screen optimizations */
 @media (min-width: 1200px) {
     .container {
-        max-width: min(90vw, 2000px);
+        max-width: min(90vw, 3300px); /* Even wider on very large screens (90% of 3300px) */
+    }
+}
+
+/* Extra large screens */
+@media (min-width: 1800px) {
+    .container {
+        max-width: 2970px; /* 165% of original 1800px */
     }
 }
 
