@@ -13,8 +13,11 @@ async function generatePDF() {
     try {
         console.log('🎨 Starting enhanced PDF generation...');
         
-        // Show processing state
+        // Show processing state immediately
         updateDownloadButtonState(downloadBtn, 'processing');
+        
+        // Force a small delay to ensure the processing state is visible
+        await new Promise(resolve => setTimeout(resolve, 100));
 
         // PDF dimensions at 300 DPI
         const pdfWidth = 24; // inches (landscape)
@@ -35,10 +38,12 @@ async function generatePDF() {
         const canvasAreaWidth = pdfWidth - textAreaWidth - (canvasMargin * 3); // 20" wide
         const canvasAreaHeight = pdfHeight - (canvasMargin * 2); // 17.5" tall
         
-        // Generate high-resolution canvas
+        // Generate high-resolution canvas with processing feedback
+        console.log('🖼️ Generating high-resolution canvas...');
         const canvasDataUrl = await generateHighResCanvas(canvasAreaWidth * dpi, canvasAreaHeight * dpi);
         
         if (canvasDataUrl) {
+            console.log('📄 Adding canvas to PDF...');
             // Add canvas to PDF
             pdf.addImage(
                 canvasDataUrl, 
@@ -52,6 +57,7 @@ async function generatePDF() {
             );
         }
 
+        console.log('📝 Adding text content to PDF...');
         // Add enhanced text content to right side with vertical centering
         await addEnhancedTextContentToPDF(pdf, canvasAreaWidth + canvasMargin * 2, canvasMargin, textAreaWidth - canvasMargin, canvasAreaHeight);
 
@@ -59,12 +65,13 @@ async function generatePDF() {
         const { pattern } = currentPreview;
         const filename = `Faye-Bell-Wallpaper-Preview-${pattern.sku}-00000.pdf`;
 
+        console.log('💾 Saving PDF...');
         // Save PDF
         pdf.save(filename);
         
         console.log('✅ Enhanced PDF generated successfully:', filename);
 
-        // Show success state
+        // Show success state (permanently)
         updateDownloadButtonState(downloadBtn, 'success');
 
     } catch (error) {
@@ -95,10 +102,7 @@ function updateDownloadButtonState(button, state) {
             button.textContent = 'Successfully downloaded';
             button.classList.add('btn-success');
             
-            // Reset to normal state after 3 seconds
-            setTimeout(() => {
-                updateDownloadButtonState(button, 'ready');
-            }, 3000);
+            // NO TIMEOUT - stays in success state permanently
             break;
             
         case 'error':
@@ -106,10 +110,10 @@ function updateDownloadButtonState(button, state) {
             button.textContent = 'Download failed - Try again';
             button.classList.add('btn-error');
             
-            // Reset to normal state after 3 seconds
+            // Reset to normal state after 5 seconds for errors
             setTimeout(() => {
                 updateDownloadButtonState(button, 'ready');
-            }, 3000);
+            }, 5000);
             break;
             
         case 'ready':
