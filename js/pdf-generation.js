@@ -343,12 +343,19 @@ async function addEnhancedTextContentToPDF(pdf, startX, startY, maxWidth, availa
     pdf.setFontSize(10);
     pdf.setFont(undefined, 'normal');
     
+    // Helper function to format inches as feet and inches
+    const formatDimension = (inches) => {
+        const feet = Math.floor(inches / 12);
+        const remainingInches = inches % 12;
+        return remainingInches > 0 ? `${feet}'${remainingInches}"` : `${feet}'0"`;
+    };
+    
     const patternDetails = [
         `Name: ${pattern.name}`,
         `SKU: ${pattern.sku || 'N/A'}`,
         `Type: ${pattern.saleType === 'yard' ? 'Yard Pattern' : 'Panel Pattern'}`,
-        `Repeat: ${pattern.repeatWidth}" x ${pattern.hasRepeatHeight ? pattern.repeatHeight + '"' : 'No Repeat'}`,
-        `Panel Width: ${pattern.panelWidth}"`
+        `Repeat: ${formatDimension(pattern.repeatWidth)}w ${pattern.hasRepeatHeight ? 'x ' + formatDimension(pattern.repeatHeight) + 'h' : '/ No vertical repeat'}`,
+        `Panel Width: ${formatDimension(pattern.panelWidth)}`
     ];
     
     patternDetails.forEach(detail => {
