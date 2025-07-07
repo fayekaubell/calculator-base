@@ -190,25 +190,25 @@ body {
     background: #5a6268;
 }
 
-/* Enhanced Button States for Download Progress */
+/* Enhanced Button States for Download Progress - Consistent Gray Styling */
 .btn-processing {
-    background: #ffc107 !important;
-    color: #212529 !important;
+    background: #6c757d !important;
+    color: white !important;
     animation: pulse-processing 2s infinite;
 }
 
 .btn-processing:hover {
-    background: #e0a800 !important;
+    background: #5a6268 !important;
 }
 
 .btn-success {
-    background: #28a745 !important;
+    background: #6c757d !important;
     color: white !important;
     animation: success-flash 0.5s ease-in-out;
 }
 
 .btn-error {
-    background: #dc3545 !important;
+    background: #6c757d !important;
     color: white !important;
     animation: error-shake 0.5s ease-in-out;
 }
@@ -387,20 +387,20 @@ body {
     margin-bottom: 20px;
 }
 
-/* Download Button Enhanced Styles */
+/* Download Button Enhanced Styles - Consistent Gray Theme */
 #downloadPdfBtn {
-    background: #17a2b8;
-    border-color: #17a2b8;
+    background: #6c757d;
+    border-color: #6c757d;
     font-weight: 600;
     position: relative;
     transition: all 0.3s ease;
 }
 
 #downloadPdfBtn:hover:not(:disabled) {
-    background: #138496;
-    border-color: #117a8b;
+    background: #5a6268;
+    border-color: #545b62;
     transform: translateY(-2px);
-    box-shadow: 0 4px 12px rgba(23, 162, 184, 0.3);
+    box-shadow: 0 4px 12px rgba(108, 117, 125, 0.3);
 }
 
 #downloadPdfBtn:disabled {
@@ -409,22 +409,22 @@ body {
     box-shadow: none;
 }
 
-/* Button state specific overrides for download button */
+/* Button state specific overrides for download button - All Gray */
 #downloadPdfBtn.btn-processing {
-    background: #ffc107 !important;
-    border-color: #ffc107 !important;
-    color: #212529 !important;
+    background: #6c757d !important;
+    border-color: #6c757d !important;
+    color: white !important;
 }
 
 #downloadPdfBtn.btn-success {
-    background: #28a745 !important;
-    border-color: #28a745 !important;
+    background: #6c757d !important;
+    border-color: #6c757d !important;
     color: white !important;
 }
 
 #downloadPdfBtn.btn-error {
-    background: #dc3545 !important;
-    border-color: #dc3545 !important;
+    background: #6c757d !important;
+    border-color: #6c757d !important;
     color: white !important;
 }
 
