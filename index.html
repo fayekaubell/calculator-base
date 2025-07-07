@@ -15,6 +15,9 @@
     <link rel="stylesheet" href="css/styles.css">
     <script src="https://cdnjs.cloudflare.com/ajax/libs/PapaParse/5.4.1/papaparse.min.js"></script>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
+    
+    <!-- IMPORTANT: Load font configuration first, before config.js -->
+    <script src="js/font-config.js"></script>
     <script src="config.js"></script>
     
     <!-- Performance and SEO optimizations -->
@@ -29,7 +32,6 @@
     <style>
         /* Critical CSS for initial load */
         body {
-            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Oxygen, Ubuntu, Cantarell, sans-serif;
             margin: 0;
             background: linear-gradient(135deg, #f5f7fa 0%, #c3cfe2 100%);
         }
@@ -238,7 +240,7 @@
     <script>
         // Enhanced initialization with PDF support
         document.addEventListener('DOMContentLoaded', function() {
-            console.log('🚀 Enhanced Wallpaper Calculator with PDF support initializing...');
+            console.log('🚀 Enhanced Wallpaper Calculator with font configuration initializing...');
             
             // Performance monitoring
             const startTime = performance.now();
@@ -282,7 +284,7 @@
                 addKeyboardShortcuts();
                 
                 const endTime = performance.now();
-                console.log(`✅ Calculator with PDF support initialized in ${Math.round(endTime - startTime)}ms`);
+                console.log(`✅ Calculator with font configuration initialized in ${Math.round(endTime - startTime)}ms`);
                 
             } catch (error) {
                 console.error('❌ Failed to initialize calculator:', error);
