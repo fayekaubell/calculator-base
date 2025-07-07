@@ -177,9 +177,9 @@ class CSSVariablesFontConfig {
             document.head.appendChild(fontStyleElement);
         }
         
-        // Generate CSS that uses the CSS variables
+        // Generate CSS that uses the CSS variables matching your site's exact implementation
         const css = `
-            /* CSS Variables Font Configuration */
+            /* CSS Variables Font Configuration - Matching Your Site's Implementation */
             
             /* Set up the CSS variables if not already set */
             :root {
@@ -192,11 +192,12 @@ class CSSVariablesFontConfig {
                 --font-heading-weight: ${variables['--font-heading-weight'] || this.defaultVariables['--font-heading-weight']};
                 --font-body-scale: ${variables['--font-body-scale'] || this.defaultVariables['--font-body-scale']};
                 --font-heading-scale: ${variables['--font-heading-scale'] || this.defaultVariables['--font-heading-scale']};
+                --color-foreground: 51, 51, 51; /* Default dark gray for text */
             }
             
-            /* Apply fonts using CSS variables */
+            /* Apply fonts using CSS variables - EXACTLY like your site */
             
-            /* Headings */
+            /* Headings - matching your site's exact implementation */
             h1, h2, h3, h4, h5, h6,
             .page-title h1,
             .title-container h2,
@@ -206,6 +207,10 @@ class CSSVariablesFontConfig {
                 font-family: var(--font-heading-family) !important;
                 font-style: var(--font-heading-style) !important;
                 font-weight: var(--font-heading-weight) !important;
+                letter-spacing: calc(var(--font-heading-scale) * 0.06rem) !important;
+                color: rgb(var(--color-foreground)) !important;
+                line-height: calc(1 + 0.3 / max(1, var(--font-heading-scale))) !important;
+                word-break: break-word !important;
             }
             
             /* Body text */
@@ -219,6 +224,7 @@ class CSSVariablesFontConfig {
                 font-family: var(--font-body-family) !important;
                 font-style: var(--font-body-style) !important;
                 font-weight: var(--font-body-weight) !important;
+                font-size: calc(1rem * var(--font-body-scale)) !important;
             }
             
             /* UI elements - use body font */
@@ -235,39 +241,36 @@ class CSSVariablesFontConfig {
             
             /* Bold elements */
             strong,
-            .order-line strong,
-            .btn {
+            .order-line strong {
                 font-weight: var(--font-body-weight-bold) !important;
             }
             
-            /* Apply scaling if specified */
-            body {
-                font-size: calc(1rem * var(--font-body-scale));
+            .btn {
+                font-weight: var(--font-body-weight-bold) !important;
+                letter-spacing: 0.05em;
             }
             
-            h1, h2, h3, h4, h5, h6 {
-                font-size: calc(1em * var(--font-heading-scale));
-            }
-            
-            /* Specific size adjustments for calculator */
+            /* Specific size adjustments for calculator - much smaller sizes */
             .page-title h1 {
-                font-size: calc(2rem * var(--font-heading-scale));
-                letter-spacing: -0.025em;
-                line-height: 1.2;
+                font-size: calc(1.75rem * var(--font-heading-scale)) !important;
+                margin-bottom: 0.5rem;
             }
             
             .form-group h3 {
-                font-size: calc(1.1rem * var(--font-heading-scale));
+                font-size: calc(1rem * var(--font-heading-scale)) !important;
                 margin-bottom: 15px;
             }
             
             .title-container h2 {
-                font-size: calc(1.5rem * var(--font-heading-scale));
-                line-height: 1.3;
+                font-size: calc(1.25rem * var(--font-heading-scale)) !important;
             }
             
             .preview-info h3 {
-                font-size: calc(1.2rem * var(--font-heading-scale));
+                font-size: calc(1.1rem * var(--font-heading-scale)) !important;
+            }
+            
+            .measuring-guide summary h3 {
+                font-size: calc(1rem * var(--font-heading-scale)) !important;
             }
             
             /* Ensure readability */
@@ -275,12 +278,13 @@ class CSSVariablesFontConfig {
                 -webkit-font-smoothing: antialiased;
                 -moz-osx-font-smoothing: grayscale;
                 line-height: 1.6;
+                font-size: calc(1rem * var(--font-body-scale));
             }
             
-            /* Button specific styling */
-            .btn {
-                font-weight: var(--font-body-weight-bold);
-                letter-spacing: 0.05em;
+            /* Override any existing large font sizes */
+            .page-title p {
+                font-size: calc(1rem * var(--font-body-scale)) !important;
+                font-family: var(--font-body-family) !important;
             }
         `;
         
