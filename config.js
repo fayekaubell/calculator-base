@@ -59,6 +59,149 @@ const CONFIG = {
         noRepeatHeight: "This pattern does not go to the height your wall dimensions require and will need to be scaled up. Contact us directly at info@fayebell.com to see if we can come up with a solution."
       }
     }
+  },
+
+  // Font & Color Styling Configuration
+  // These can be overridden via URL parameters or parent window CSS variables
+  styling: {
+    // Default styling preset
+    defaultPreset: "faye-bell-brand",
+
+    // Available presets for different websites/brands
+    presets: {
+      "faye-bell-brand": {
+        name: "Faye Bell Brand Colors",
+        description: "Official Faye Bell website styling with Clarendon headings and Helvetica body",
+        
+        // Font variables
+        fonts: {
+          headingFamily: '"Monotype New Clarendon", "Clarendon LT STD", Georgia, serif',
+          headingWeight: '700',
+          headingStyle: 'normal',
+          headingScale: '1.2',
+          
+          bodyFamily: 'Helvetica, "Helvetica Neue", Arial, sans-serif',
+          bodyWeight: '400',
+          bodyWeightBold: '700',
+          bodyStyle: 'normal',
+          bodyScale: '1.0'
+        },
+
+        // Color variables
+        colors: {
+          background: '#FFFFFF',
+          text: '#4B4B4B',
+          buttonBackground: '#F9F9F9',
+          buttonText: '#4B4B4B',
+          buttonOutline: '#000000',
+          shadow: '#414141',
+          border: '#E9ECEF',
+          accent: '#6C757D'
+        }
+      },
+
+      "default": {
+        name: "Clean Default",
+        description: "Clean, modern default styling",
+        
+        fonts: {
+          headingFamily: '-apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif',
+          headingWeight: '600',
+          headingStyle: 'normal',
+          headingScale: '1.0',
+          
+          bodyFamily: '-apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif',
+          bodyWeight: '400',
+          bodyWeightBold: '700',
+          bodyStyle: 'normal',
+          bodyScale: '1.0'
+        },
+
+        colors: {
+          background: '#FFFFFF',
+          text: '#333333',
+          buttonBackground: '#F8F9FA',
+          buttonText: '#333333',
+          buttonOutline: '#DEE2E6',
+          shadow: '#6C757D',
+          border: '#E9ECEF',
+          accent: '#007BFF'
+        }
+      },
+
+      "modern-dark": {
+        name: "Modern Dark",
+        description: "Dark theme with modern fonts",
+        
+        fonts: {
+          headingFamily: 'Inter, -apple-system, BlinkMacSystemFont, sans-serif',
+          headingWeight: '600',
+          headingStyle: 'normal',
+          headingScale: '1.1',
+          
+          bodyFamily: 'Inter, -apple-system, BlinkMacSystemFont, sans-serif',
+          bodyWeight: '400',
+          bodyWeightBold: '600',
+          bodyStyle: 'normal',
+          bodyScale: '1.0'
+        },
+
+        colors: {
+          background: '#1A1A1A',
+          text: '#E5E5E5',
+          buttonBackground: '#333333',
+          buttonText: '#FFFFFF',
+          buttonOutline: '#555555',
+          shadow: '#000000',
+          border: '#404040',
+          accent: '#3B82F6'
+        }
+      },
+
+      "corporate": {
+        name: "Corporate",
+        description: "Professional corporate styling",
+        
+        fonts: {
+          headingFamily: 'Montserrat, "Helvetica Neue", Arial, sans-serif',
+          headingWeight: '600',
+          headingStyle: 'normal',
+          headingScale: '1.15',
+          
+          bodyFamily: '"Open Sans", Arial, sans-serif',
+          bodyWeight: '400',
+          bodyWeightBold: '700',
+          bodyStyle: 'normal',
+          bodyScale: '1.0'
+        },
+
+        colors: {
+          background: '#FFFFFF',
+          text: '#2C3E50',
+          buttonBackground: '#34495E',
+          buttonText: '#FFFFFF',
+          buttonOutline: '#2C3E50',
+          shadow: '#7F8C8D',
+          border: '#BDC3C7',
+          accent: '#3498DB'
+        }
+      }
+    },
+
+    // Advanced styling options
+    advanced: {
+      // Enable/disable specific features
+      enableFontScaling: true,
+      enableColorInheritance: true,
+      enableURLParameters: true,
+      enableParentWindowInheritance: true,
+      
+      // Performance options
+      useFontDisplay: 'swap', // For web fonts
+      
+      // Custom CSS injection point
+      customCSS: ""
+    }
   }
 };
 
