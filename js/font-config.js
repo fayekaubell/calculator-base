@@ -17,7 +17,7 @@ class FontConfig {
                 ui: this.defaultFonts.ui
             },
             'clarendon-helvetica': {
-                heading: 'Clarendon, "Clarendon LT STD", "Bookman Old Style", Georgia, serif',
+                heading: '"Monotype New Clarendon", Clarendon, "Clarendon LT STD", "Bookman Old Style", Georgia, serif',
                 body: 'Helvetica, "Helvetica Neue", Arial, sans-serif',
                 ui: 'Helvetica, "Helvetica Neue", Arial, sans-serif'
             },
@@ -150,7 +150,7 @@ class FontConfig {
             
             /* Ensure proper font weights are maintained */
             h1, h2, h3, h4, h5, h6 {
-                font-weight: 600;
+                font-weight: 700 !important; /* Bold weight for Monotype New Clarendon */
             }
             
             .btn {
@@ -163,7 +163,7 @@ class FontConfig {
             
             /* Page title specific styling */
             .page-title h1 {
-                font-weight: 600;
+                font-weight: 700 !important; /* Bold for Monotype New Clarendon */
                 letter-spacing: -0.025em;
             }
             
@@ -173,19 +173,24 @@ class FontConfig {
             
             /* Form labels */
             .form-group h3 {
-                font-weight: 600;
+                font-weight: 700 !important; /* Bold for Monotype New Clarendon */
                 font-size: 1.1em;
             }
             
             /* Preview section titles */
             .title-container h2 {
-                font-weight: 600;
+                font-weight: 700 !important; /* Bold for Monotype New Clarendon */
                 font-size: 1.5em;
             }
             
             .preview-info h3 {
-                font-weight: 600;
+                font-weight: 700 !important; /* Bold for Monotype New Clarendon */
                 font-size: 1.2em;
+            }
+            
+            /* Measuring guide headers */
+            .measuring-guide summary h3 {
+                font-weight: 700 !important; /* Bold for Monotype New Clarendon */
             }
             
             /* Ensure readability */
