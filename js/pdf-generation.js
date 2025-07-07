@@ -1,4 +1,4 @@
-// Enhanced PDF Generation Module - Clean version without logo
+// Enhanced PDF Generation Module - Clean version with centered logo
 // Requires jsPDF library to be loaded
 
 // PDF generation function with improved layout
@@ -158,7 +158,35 @@ function renderHighQualityPreviewForPDF(ctx, canvasWidth, canvasHeight) {
     }
 }
 
-// Enhanced text content layout with improved structure
+// Load logo image for PDF
+async function loadLogoForPDF() {
+    return new Promise((resolve) => {
+        const logoUrl = CONFIG.business.logoUrl;
+        
+        if (!logoUrl || !logoUrl.trim()) {
+            console.log('No logo URL configured, skipping logo');
+            resolve(null);
+            return;
+        }
+        
+        const img = new Image();
+        img.crossOrigin = 'anonymous';
+        
+        img.onload = function() {
+            console.log('✅ Logo loaded successfully for PDF');
+            resolve(img);
+        };
+        
+        img.onerror = function() {
+            console.warn('⚠️ Failed to load logo for PDF, continuing without logo');
+            resolve(null);
+        };
+        
+        img.src = logoUrl;
+    });
+}
+
+// Enhanced text content layout with improved structure and centered logo
 async function addEnhancedTextContentToPDF(pdf, startX, startY, maxWidth) {
     const { pattern, calculations, formattedWidth, formattedHeight } = currentPreview;
     let currentY = startY + 0.5;
@@ -365,6 +393,49 @@ async function addEnhancedTextContentToPDF(pdf, startX, startY, maxWidth) {
         pdf.text(line, centerX, currentY, { align: 'center' });
         currentY += lineHeight;
     });
+    
+    // Add logo below disclaimer
+    try {
+        const logoImg = await loadLogoForPDF();
+        if (logoImg) {
+            currentY += sectionSpacing; // Add space before logo
+            
+            // Logo sizing constraints
+            const maxLogoWidth = 1.5; // inches
+            const maxLogoHeight = 0.75; // inches
+            
+            // Calculate actual logo dimensions while maintaining aspect ratio
+            const logoAspectRatio = logoImg.width / logoImg.height;
+            let logoWidth = maxLogoWidth;
+            let logoHeight = logoWidth / logoAspectRatio;
+            
+            // If height exceeds max, constrain by height instead
+            if (logoHeight > maxLogoHeight) {
+                logoHeight = maxLogoHeight;
+                logoWidth = logoHeight * logoAspectRatio;
+            }
+            
+            // Center the logo horizontally
+            const logoX = centerX - (logoWidth / 2);
+            
+            // Add the logo
+            pdf.addImage(
+                logoImg,
+                'PNG', // jsPDF will auto-detect format
+                logoX,
+                currentY,
+                logoWidth,
+                logoHeight,
+                undefined,
+                'FAST'
+            );
+            
+            console.log(`✅ Logo added to PDF: ${logoWidth}" x ${logoHeight}" at position (${logoX}", ${currentY}")`);
+        }
+    } catch (error) {
+        console.warn('⚠️ Could not add logo to PDF:', error);
+        // Continue without logo - don't break PDF generation
+    }
 }
 
 // Add download button to the UI
@@ -392,7 +463,7 @@ function initializePDFGeneration() {
         return;
     }
     
-    console.log('✅ Enhanced PDF generation module initialized');
+    console.log('✅ Enhanced PDF generation module with logo support initialized');
 }
 
 // Export functions to global scope
