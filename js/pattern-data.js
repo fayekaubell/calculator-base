@@ -1,5 +1,5 @@
 // Pattern Data Module - Data loading, CSV parsing, and calculations
-// Updated to handle product link columns for PDF generation
+// Updated to handle product link columns for PDF generation and HALF-DROP patterns
 
 // Global variables for data
 let patterns = {};
@@ -74,7 +74,8 @@ async function loadPatternsFromCSV() {
                 thumbnailUrl: '',
                 product_tearsheet_url: '',
                 product_page_url: '',
-                product_360_url: ''
+                product_360_url: '',
+                patternMatch: 'straight'
             }
         };
         patternsLoaded = true;
@@ -285,14 +286,18 @@ function calculatePanelRequirements(pattern, wallWidth, wallHeight) {
         uncoveredHeight,
         totalWidth: panelsNeeded * pattern.panelWidth,
         totalHeight: actualPanelLength * 12,
-        saleType: 'panel'
+        saleType: 'panel',
+        patternMatch: pattern.patternMatch || 'straight'
     };
 }
 
-// Calculate yard requirements
+// Calculate yard requirements - UPDATED FOR HALF-DROP
 function calculateYardRequirements(pattern, wallWidth, wallHeight) {
     const totalWidth = wallWidth + pattern.minOverage;
     const totalHeight = wallHeight + pattern.minOverage;
+    
+    // Check if this is a half-drop pattern
+    const isHalfDrop = pattern.patternMatch && pattern.patternMatch.toLowerCase() === 'half drop';
     
     console.log('🧮 Yard calculation debug:', {
         wallWidth,
@@ -301,7 +306,9 @@ function calculateYardRequirements(pattern, wallWidth, wallHeight) {
         totalWidth,
         totalHeight,
         repeatHeight: pattern.repeatHeight,
-        panelWidth: pattern.panelWidth
+        panelWidth: pattern.panelWidth,
+        patternMatch: pattern.patternMatch,
+        isHalfDrop: isHalfDrop
     });
     
     // Safety checks
@@ -314,7 +321,8 @@ function calculateYardRequirements(pattern, wallWidth, wallHeight) {
             totalWidth: pattern.panelWidth || 54,
             totalHeight: 120,
             saleType: 'yard',
-            stripLengthInches: 120
+            stripLengthInches: 120,
+            patternMatch: pattern.patternMatch || 'straight'
         };
     }
     
@@ -327,40 +335,77 @@ function calculateYardRequirements(pattern, wallWidth, wallHeight) {
             totalWidth: 54,
             totalHeight: 120,
             saleType: 'yard',
-            stripLengthInches: 120
+            stripLengthInches: 120,
+            patternMatch: pattern.patternMatch || 'straight'
         };
     }
-    
-    // Calculate strip length
-    const repeatsNeeded = Math.ceil(totalHeight / pattern.repeatHeight);
-    const stripLengthInches = repeatsNeeded * pattern.repeatHeight;
     
     // Calculate number of strips needed
     const stripsNeeded = Math.ceil(totalWidth / pattern.panelWidth);
     
+    // Calculate strip lengths - UPDATED FOR HALF-DROP
+    let stripLengths = [];
+    let maxStripLength = 0;
+    
+    if (isHalfDrop) {
+        // For half-drop patterns, even strips need extra height
+        for (let i = 0; i < stripsNeeded; i++) {
+            let stripHeight = totalHeight;
+            
+            // Even strips (2nd, 4th, 6th, etc.) need an extra half repeat
+            if (i % 2 === 1) { // Index 1, 3, 5 = strips 2, 4, 6
+                stripHeight += pattern.repeatHeight / 2;
+            }
+            
+            // Calculate repeats needed for this strip
+            const repeatsNeeded = Math.ceil(stripHeight / pattern.repeatHeight);
+            const stripLengthInches = repeatsNeeded * pattern.repeatHeight;
+            
+            stripLengths.push(stripLengthInches);
+            maxStripLength = Math.max(maxStripLength, stripLengthInches);
+            
+            console.log(`🎯 Strip ${i + 1}: ${stripHeight}" height needs ${repeatsNeeded} repeats = ${stripLengthInches}" material`);
+        }
+    } else {
+        // Straight match - all strips are the same
+        const repeatsNeeded = Math.ceil(totalHeight / pattern.repeatHeight);
+        const stripLengthInches = repeatsNeeded * pattern.repeatHeight;
+        
+        for (let i = 0; i < stripsNeeded; i++) {
+            stripLengths.push(stripLengthInches);
+        }
+        maxStripLength = stripLengthInches;
+    }
+    
     // Calculate total yardage
-    const totalYardageRaw = (stripLengthInches * stripsNeeded) / 36;
+    const totalInches = stripLengths.reduce((sum, length) => sum + length, 0);
+    const totalYardageRaw = totalInches / 36;
     const totalYardage = Math.max(Math.ceil(totalYardageRaw), pattern.minYardOrder || 5);
     
     console.log('📏 Yard calculation result:', {
-        repeatsNeeded,
-        stripLengthInches,
         stripsNeeded,
+        stripLengths,
+        maxStripLength,
+        totalInches,
         totalYardageRaw,
         totalYardage,
         totalWidth: stripsNeeded * pattern.panelWidth,
-        totalHeight: stripLengthInches
+        totalHeight: maxStripLength,
+        isHalfDrop
     });
     
     return {
         panelsNeeded: stripsNeeded,
-        panelLength: Math.floor(stripLengthInches / 12),
-        panelLengthInches: stripLengthInches % 12,
+        panelLength: Math.floor(maxStripLength / 12),
+        panelLengthInches: maxStripLength % 12,
         totalYardage: totalYardage,
         totalWidth: stripsNeeded * pattern.panelWidth,
-        totalHeight: stripLengthInches,
+        totalHeight: maxStripLength,
         saleType: 'yard',
-        stripLengthInches: stripLengthInches
+        stripLengthInches: maxStripLength,
+        stripLengths: stripLengths, // Array of individual strip lengths for half-drop
+        patternMatch: pattern.patternMatch || 'straight',
+        isHalfDrop: isHalfDrop
     };
 }
 
