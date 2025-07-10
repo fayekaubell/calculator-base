@@ -179,7 +179,7 @@ function drawPatternInArea(ctx, areaX, areaY, areaWidth, areaHeight, referenceCo
                 // Start from the bottom and tile upward
                 for (let y = 0; y >= -offsetAreaHeight - repeatH; y -= repeatH) {
                     const drawY = Math.floor(bottomY + y - repeatH);
-                    ctx.drawImage(patternImage, drawX, drawY, Math.ceil(repeatW), Math.ceil(repeatH));
+                    ctx.drawImage(patternImage, drawX, drawY, Math.ceil(repeatW), Math.ceil(repeatH)).ceil(repeatW), Math.ceil(repeatH));
                 }
             }
         }
