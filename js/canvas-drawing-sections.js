@@ -233,6 +233,13 @@ function drawCompleteDimensionLabels(ctx, offsetX, offsetY, scaledTotalWidth, sc
     ctx.restore();
 }
 
+// Export functions to global scope for use in other modules
+window.drawCompleteViewWithOverlay = drawCompleteViewWithOverlay;
+window.drawCompleteViewOutlines = drawCompleteViewOutlines;
+window.drawCompleteDimensionLabels = drawCompleteDimensionLabels;
+window.drawPanelLabels = drawPanelLabels;
+window.drawWallOnlyView = drawWallOnlyView;
+
 // Draw panel labels (A/B/C sequence)
 function drawPanelLabels(ctx, offsetX, offsetY, scaledTotalWidth, scaledTotalHeight, scale) {
     const { pattern, calculations } = currentPreview;
