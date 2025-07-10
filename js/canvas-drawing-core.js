@@ -109,25 +109,6 @@ function drawOverageOverlay(ctx, panelStartX, panelStartY, panelTotalWidth, pane
     }
 }
 
-// Main canvas drawing function
-function drawPreview() {
-    const canvas = document.getElementById('previewCanvas');
-    const ctx = canvas.getContext('2d');
-    
-    // Clear canvas
-    ctx.fillStyle = '#ffffff';
-    ctx.fillRect(0, 0, canvas.width, canvas.height);
-    
-    // Calculate reference coordinates
-    const referenceCoords = calculateReferenceCoordinates();
-    
-    // Section 1: Complete view with half-drop support
-    drawCompleteViewWithOverlay(ctx, referenceCoords);
-    
-    // Section 2: Wall only view
-    drawWallOnlyView(ctx, referenceCoords);
-}
-
 // Helper function to get wall position within Section 1 for consistent non-repeating pattern alignment
 function getWallPositionInSection1(referenceCoords) {
     const { wallHeight } = currentPreview;
@@ -136,3 +117,8 @@ function getWallPositionInSection1(referenceCoords) {
         wallHeight: wallHeight
     };
 }
+
+// Export functions to global scope for use in other modules
+window.calculateReferenceCoordinates = calculateReferenceCoordinates;
+window.drawOverageOverlay = drawOverageOverlay;
+window.getWallPositionInSection1 = getWallPositionInSection1;
