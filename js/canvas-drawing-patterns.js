@@ -113,7 +113,8 @@ function drawPatternInArea(ctx, areaX, areaY, areaWidth, areaHeight, referenceCo
                     // Start from bottom of panel area
                     const bottomY = offsetAreaY + offsetAreaHeight;
                     // First repeat starts at bottom, offset columns start higher
-                    for (let y = -columnOffset; y >= -offsetAreaHeight - repeatH - columnOffset; y -= repeatH) {
+                    // Start from below bottom to ensure coverage
+                    for (let y = repeatH - columnOffset; y >= -offsetAreaHeight - repeatH - columnOffset; y -= repeatH) {
                         const drawY = Math.floor(bottomY + y - repeatH);
                         ctx.drawImage(patternImage, drawX, drawY, Math.ceil(repeatW), Math.ceil(repeatH));
                     }
@@ -135,8 +136,8 @@ function drawPatternInArea(ctx, areaX, areaY, areaWidth, areaHeight, referenceCo
                 if (pattern.hasRepeatHeight) {
                     // Start from bottom of panel area
                     const bottomY = offsetAreaY + offsetAreaHeight;
-                    // Tile upward from bottom
-                    for (let y = 0; y >= -offsetAreaHeight - repeatH; y -= repeatH) {
+                    // Tile upward from bottom, but start from below to ensure full coverage
+                    for (let y = repeatH; y >= -offsetAreaHeight - repeatH; y -= repeatH) {
                         const drawY = Math.floor(bottomY + y - repeatH);
                         ctx.drawImage(patternImage, drawX, drawY, Math.ceil(repeatW), Math.ceil(repeatH));
                     }
@@ -211,8 +212,8 @@ function drawPatternInArea(ctx, areaX, areaY, areaWidth, areaHeight, referenceCo
                         if (pattern.hasRepeatHeight) {
                             // Calculate panel bottom position
                             const panelBottom = drawPanelY + drawHeight;
-                            // Tile upward from bottom with column offset
-                            for (let y = -columnOffset; y >= -drawHeight - repeatH - columnOffset; y -= repeatH) {
+                            // Tile upward from bottom with column offset, start below to ensure coverage
+                            for (let y = repeatH - columnOffset; y >= -drawHeight - repeatH - columnOffset; y -= repeatH) {
                                 const drawY = Math.floor(panelBottom + y - repeatH);
                                 ctx.drawImage(patternImage, drawX, drawY, Math.ceil(repeatW), Math.ceil(repeatH));
                             }
@@ -228,8 +229,8 @@ function drawPatternInArea(ctx, areaX, areaY, areaWidth, areaHeight, referenceCo
                     if (pattern.hasRepeatHeight) {
                         // Calculate panel bottom position
                         const panelBottom = drawPanelY + drawHeight;
-                        // Tile upward from bottom
-                        for (let y = 0; y >= -drawHeight - repeatH; y -= repeatH) {
+                        // Tile upward from bottom, start below to ensure coverage
+                        for (let y = repeatH; y >= -drawHeight - repeatH; y -= repeatH) {
                             const drawY = Math.floor(panelBottom + y - repeatH);
                             ctx.drawImage(patternImage, drawX, drawY, Math.ceil(repeatW), Math.ceil(repeatH));
                         }
