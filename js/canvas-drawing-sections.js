@@ -26,11 +26,11 @@ function drawCompleteViewWithOverlay(ctx, referenceCoords) {
             const panelX = offsetX + (i * pattern.panelWidth * scale);
             const panelWidth = pattern.panelWidth * scale;
             
-            // For half-drop patterns, all strips should use the same height when pattern repeats within strip
-            let panelHeight = scaledTotalHeight;
+            // Calculate visual offset for this panel
+            const halfDropOffset = isHalfDrop ? calculateHalfDropVisualOffset(pattern, i) * scale : 0;
             
-            // The offset is handled within the pattern drawing, not by moving strips
-            const halfDropOffset = 0;
+            // For all patterns, maintain consistent height
+            let panelHeight = scaledTotalHeight;
             
             // Draw pattern for this specific panel
             // For patterns that repeat within the strip width, don't offset the strip position
@@ -88,10 +88,16 @@ function drawCompleteViewOutlines(ctx, offsetX, offsetY, scaledTotalWidth, scale
         // Calculate visual offset for this panel
         const halfDropOffset = isHalfDrop ? calculateHalfDropVisualOffset(pattern, i) * scale : 0;
         
-        // Adjust panel height for half-drop patterns
+        // Calculate visual offset for this panel
+        const halfDropOffset = isHalfDrop ? calculateHalfDropVisualOffset(pattern, i) * scale : 0;
+        
+        // Use the actual calculated strip height for each panel
         let panelHeight = scaledTotalHeight;
-        // For patterns that repeat within strips, height should be consistent
-        // The strip lengths array should already have the correct values
+        if (isHalfDrop && calculations.stripLengths && calculations.stripLengths[i]) {
+            const stripLengthInches = calculations.stripLengths[i];
+            // Scale it based on the current scale factor
+            panelHeight = stripLengthInches * scale;
+        }
         
         ctx.strokeRect(x, offsetY + halfDropOffset, width, panelHeight);
     }
