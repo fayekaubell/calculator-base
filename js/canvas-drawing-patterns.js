@@ -1,152 +1,338 @@
-// Canvas Drawing Patterns Module - Pattern-specific drawing logic
-// Part 2 of modularized canvas drawing system
-// FIXED: Half-drop patterns with proper alignment and tiling
+// Canvas Drawing Sections Module - Section 1 and Section 2 drawing
+// Part 3 of modularized canvas drawing system
 
-// Calculate visual offset for half-drop patterns based on repeat width
-function calculateHalfDropVisualOffset(pattern, panelIndex) {
-    if (!pattern.patternMatch || pattern.patternMatch.toLowerCase() !== 'half drop') {
-        return 0;
-    }
-    
-    // Only offset strips when pattern is full width
-    const repeatsPerStrip = pattern.panelWidth / pattern.repeatWidth;
-    if (repeatsPerStrip > 1) {
-        return 0; // Pattern repeats within strip - no strip offset
-    }
-    
-    // Even strips (2nd, 4th, 6th) get offset for full-width patterns
-    if (panelIndex % 2 === 0) {
-        return 0; // Odd strips (1, 3, 5) - no offset
-    }
-    
-    // Full-width patterns get the full visual offset
-    const visualOffset = pattern.repeatHeight / 2;
-    
-    console.log(`🎨 Half-drop visual offset for strip ${panelIndex + 1}:`, {
-        repeatWidth: pattern.repeatWidth,
-        panelWidth: pattern.panelWidth,
-        ratio: pattern.repeatWidth / pattern.panelWidth,
-        fullOffset: pattern.repeatHeight / 2,
-        visualOffset: visualOffset
-    });
-    
-    return visualOffset;
-}
-
-// Draw pattern with half-drop support
-function drawPatternInArea(ctx, areaX, areaY, areaWidth, areaHeight, referenceCoords, isSection2 = false, panelIndex = null) {
+// Draw Complete View - pattern + overlay + annotations - UPDATED FOR HALF-DROP
+function drawCompleteViewWithOverlay(ctx, referenceCoords) {
     const { pattern, calculations } = currentPreview;
+    const { scale, section1, dimensions } = referenceCoords;
     
-    if (!imageLoaded || !patternImage) {
-        console.warn('Pattern image not loaded, skipping pattern drawing');
-        return;
-    }
-    
-    const { scale } = referenceCoords;
-    
-    // Calculate pattern dimensions
-    const repeatW = pattern.repeatWidth * scale;
-    const repeatH = pattern.repeatHeight * scale;
+    const offsetX = section1.patternStartX;
+    const offsetY = section1.patternStartY;
+    const scaledTotalWidth = dimensions.scaledTotalWidth;
+    const scaledTotalHeight = dimensions.scaledTotalHeight;
+    const scaledWallWidth = dimensions.scaledWallWidth;
+    const scaledWallHeight = dimensions.scaledWallHeight;
+    const wallOffsetX = section1.wallStartX;
+    const wallOffsetY = section1.wallStartY;
     
     // Check if this is a half-drop pattern
     const isHalfDrop = pattern.patternMatch && pattern.patternMatch.toLowerCase() === 'half drop';
-    const repeatsPerStrip = pattern.panelWidth / pattern.repeatWidth;
     
-    // Set clip area to prevent drawing outside boundaries
-    ctx.save();
-    ctx.beginPath();
-    ctx.rect(Math.floor(areaX), Math.floor(areaY), Math.ceil(areaWidth), Math.ceil(areaHeight));
-    ctx.clip();
-    
-    // For half-drop patterns that repeat within strips
-    if (isHalfDrop && repeatsPerStrip > 1) {
-        // Draw pattern with half-drop offset within the strip
-        let x = 0;
-        let columnIndex = 0;
+    // Step 1: Draw pattern for each panel/strip individually with half-drop offset
+    if (imageLoaded && patternImage) {
+        ctx.globalAlpha = 1.0;
         
-        while (x < areaWidth) {
-            // Calculate offset for this column
-            const yOffset = (columnIndex % 2) * (repeatH / 2);
+        for (let i = 0; i < calculations.panelsNeeded; i++) {
+            const panelX = offsetX + (i * pattern.panelWidth * scale);
+            const panelWidth = pattern.panelWidth * scale;
             
-            // Draw vertical repeats for this column
-            let y = -yOffset;
-            while (y < areaHeight + repeatH) {
-                const drawX = Math.floor(areaX + x);
-                const drawY = Math.floor(areaY + y);
-                ctx.drawImage(patternImage, drawX, drawY, Math.ceil(repeatW), Math.ceil(repeatH));
-                y += repeatH;
-            }
+            // Calculate visual offset for this panel
+            const halfDropOffset = isHalfDrop ? calculateHalfDropVisualOffset(pattern, i) * scale : 0;
             
-            x += repeatW;
-            columnIndex++;
-        }
-    } else if (isHalfDrop && panelIndex !== null) {
-        // Full-width half-drop pattern - handle strip offset
-        const stripOffset = calculateHalfDropVisualOffset(pattern, panelIndex) * scale;
-        
-        // Draw pattern with potential strip offset
-        let y = -stripOffset;
-        while (y < areaHeight + repeatH) {
-            let x = 0;
-            while (x < areaWidth) {
-                const drawX = Math.floor(areaX + x);
-                const drawY = Math.floor(areaY + y);
-                ctx.drawImage(patternImage, drawX, drawY, Math.ceil(repeatW), Math.ceil(repeatH));
-                x += repeatW;
-            }
-            y += repeatH;
-        }
-    } else {
-        // Straight match or Section 2 view
-        if (isSection2) {
-            // For Section 2, we need to maintain exact pattern alignment with Section 1
-            // Calculate pattern offset based on wall position relative to full panel coverage
-            const { wallHeight } = currentPreview;
-            const wallOffsetY = referenceCoords.section1.wallStartY;
-            const patternStartY = referenceCoords.section1.patternStartY;
-            const relativeOffset = wallOffsetY - patternStartY;
+            // For all patterns, maintain consistent height
+            let panelHeight = scaledTotalHeight;
             
-            // Tile pattern maintaining alignment
-            let y = -(relativeOffset % repeatH);
-            while (y < areaHeight + repeatH) {
-                let x = 0;
-                while (x < areaWidth) {
-                    // For half-drop in Section 2, calculate which strip we're in
-                    if (isHalfDrop && repeatsPerStrip > 1) {
-                        const stripX = (areaX + x - referenceCoords.section2.wallStartX) / scale;
-                        const stripIndex = Math.floor(stripX / pattern.panelWidth);
-                        const positionInStrip = (stripX % pattern.panelWidth) / pattern.repeatWidth;
-                        const columnIndex = Math.floor(positionInStrip);
-                        
-                        const yOffset = (columnIndex % 2) * (repeatH / 2);
-                        const drawY = Math.floor(areaY + y + yOffset);
-                        const drawX = Math.floor(areaX + x);
-                        
-                        ctx.drawImage(patternImage, drawX, drawY, Math.ceil(repeatW), Math.ceil(repeatH));
-                    } else {
-                        const drawX = Math.floor(areaX + x);
-                        const drawY = Math.floor(areaY + y);
-                        ctx.drawImage(patternImage, drawX, drawY, Math.ceil(repeatW), Math.ceil(repeatH));
-                    }
-                    x += repeatW;
-                }
-                y += repeatH;
-            }
-        } else {
-            // Standard tiling for non-half-drop patterns
-            let y = 0;
-            while (y < areaHeight + repeatH) {
-                let x = 0;
-                while (x < areaWidth) {
-                    const drawX = Math.floor(areaX + x);
-                    const drawY = Math.floor(areaY + y);
-                    ctx.drawImage(patternImage, drawX, drawY, Math.ceil(repeatW), Math.ceil(repeatH));
-                    x += repeatW;
-                }
-                y += repeatH;
-            }
+            // Draw pattern for this specific panel
+            // For patterns that repeat within the strip width, don't offset the strip position
+            drawPatternInArea(ctx, panelX, offsetY, panelWidth, panelHeight, referenceCoords, false, i);
         }
     }
     
+    // Step 2: Draw semi-transparent overlay on overage areas (dims them to 50%)
+    drawOverageOverlay(ctx, offsetX, offsetY, scaledTotalWidth, scaledTotalHeight,
+                      wallOffsetX, wallOffsetY, scaledWallWidth, scaledWallHeight);
+    
+    // Step 3: Handle limitations (uncovered areas)
+    const hasLimitation = calculations.exceedsLimit || calculations.exceedsAvailableLength;
+    if (hasLimitation) {
+        const actualPanelLengthToUse = calculations.exceedsAvailableLength ? 
+            calculations.actualPanelLength : calculations.panelLength;
+        const panelCoverageHeight = actualPanelLengthToUse * 12 * scale;
+        const uncoveredAreaHeight = scaledWallHeight - panelCoverageHeight;
+        
+        if (uncoveredAreaHeight > 0) {
+            ctx.fillStyle = 'rgba(255, 0, 0, 0.5)';
+            ctx.fillRect(wallOffsetX, wallOffsetY, scaledWallWidth, uncoveredAreaHeight);
+        }
+    }
+    
+    // Step 4: Draw outlines and annotations with half-drop adjustments
+    drawCompleteViewOutlines(ctx, offsetX, offsetY, scaledTotalWidth, scaledTotalHeight, 
+                           scaledWallWidth, scaledWallHeight, wallOffsetX, wallOffsetY, scale, isHalfDrop);
+    
+    drawCompleteDimensionLabels(ctx, offsetX, offsetY, scaledTotalWidth, scaledTotalHeight, 
+                              scaledWallWidth, scaledWallHeight, wallOffsetX, wallOffsetY, scale);
+    
+    drawPanelLabels(ctx, offsetX, offsetY, scaledTotalWidth, scaledTotalHeight, scale);
+}
+
+// Draw outlines for complete view - UPDATED FOR HALF-DROP
+function drawCompleteViewOutlines(ctx, offsetX, offsetY, scaledTotalWidth, scaledTotalHeight, 
+                                scaledWallWidth, scaledWallHeight, wallOffsetX, wallOffsetY, scale, isHalfDrop) {
+    const { pattern, calculations } = currentPreview;
+    
+    // Wall outline (thick, prominent)
+    ctx.strokeStyle = '#2c3e50';
+    ctx.lineWidth = 2;
+    ctx.strokeRect(wallOffsetX, wallOffsetY, scaledWallWidth, scaledWallHeight);
+    
+    // Panel outlines with half-drop offset
+    ctx.strokeStyle = '#666666';
+    ctx.lineWidth = 1;
+    ctx.setLineDash([]);
+    
+    for (let i = 0; i < calculations.panelsNeeded; i++) {
+        const x = offsetX + (i * pattern.panelWidth * scale);
+        const width = pattern.panelWidth * scale;
+        
+        // Calculate visual offset for this panel
+        const halfDropOffset = isHalfDrop ? calculateHalfDropVisualOffset(pattern, i) * scale : 0;
+        
+        // Adjust panel height for half-drop patterns
+        let panelHeight = scaledTotalHeight;
+        // For patterns that repeat within strips, height should be consistent
+        // The strip lengths array should already have the correct values
+        
+        ctx.strokeRect(x, offsetY + halfDropOffset, width, panelHeight);
+    }
+    
+    // Dashed lines between panels (subtle)
+    ctx.strokeStyle = '#999999';
+    ctx.lineWidth = 1;
+    ctx.setLineDash([6, 6]);
+    for (let i = 1; i < calculations.panelsNeeded; i++) {
+        const x = offsetX + (i * pattern.panelWidth * scale);
+        
+        // For half-drop, draw a stepped line
+        if (isHalfDrop) {
+            const prevOffset = calculateHalfDropVisualOffset(pattern, i - 1) * scale;
+            const currOffset = calculateHalfDropVisualOffset(pattern, i) * scale;
+            
+            ctx.beginPath();
+            ctx.moveTo(x, offsetY + prevOffset);
+            ctx.lineTo(x, offsetY + scaledTotalHeight + prevOffset);
+            
+            // If offsets differ, draw the step
+            if (prevOffset !== currOffset) {
+                ctx.moveTo(x, offsetY + currOffset);
+                ctx.lineTo(x, offsetY + scaledTotalHeight + currOffset);
+            }
+            ctx.stroke();
+        } else {
+            ctx.beginPath();
+            ctx.moveTo(x, offsetY);
+            ctx.lineTo(x, offsetY + scaledTotalHeight);
+            ctx.stroke();
+        }
+    }
+    ctx.setLineDash([]);
+}
+
+// Draw all dimension labels for complete view
+function drawCompleteDimensionLabels(ctx, offsetX, offsetY, scaledTotalWidth, scaledTotalHeight, 
+                                   scaledWallWidth, scaledWallHeight, wallOffsetX, wallOffsetY, scale) {
+    const { pattern, calculations } = currentPreview;
+    
+    ctx.fillStyle = '#333';
+    ctx.font = '14px Arial, sans-serif';
+    ctx.textAlign = 'center';
+    ctx.strokeStyle = '#333';
+    ctx.lineWidth = 1;
+    
+    // Panel dimensions formatting
+    const panelWidthFeet = Math.floor(pattern.panelWidth / 12);
+    const panelWidthInches = Math.round(pattern.panelWidth % 12);
+    const panelWidthDisplay = panelWidthInches > 0 ? 
+        `${panelWidthFeet}'-${panelWidthInches}"` : `${panelWidthFeet}'`;
+    
+    // Individual panel width annotation
+    if (calculations.panelsNeeded > 0) {
+        const panelStartX = offsetX;
+        const panelEndX = offsetX + (pattern.panelWidth * scale);
+        const labelY = offsetY - 50;
+        
+        ctx.beginPath();
+        ctx.moveTo(panelStartX, labelY);
+        ctx.lineTo(panelEndX, labelY);
+        ctx.stroke();
+        
+        ctx.beginPath();
+        ctx.moveTo(panelStartX, labelY - 5);
+        ctx.lineTo(panelStartX, labelY + 5);
+        ctx.moveTo(panelEndX, labelY - 5);
+        ctx.lineTo(panelEndX, labelY + 5);
+        ctx.stroke();
+        
+        const labelText = pattern.saleType === 'yard' ? 
+            `Strip Width: ${panelWidthDisplay}` : 
+            `Panel Width: ${panelWidthDisplay}`;
+        ctx.fillText(labelText, (panelStartX + panelEndX) / 2, labelY - 8);
+    }
+    
+    // Total panels width annotation
+    const totalWidthFeet = Math.floor(calculations.totalWidth / 12);
+    const totalWidthInches = Math.round(calculations.totalWidth % 12);
+    const totalWidthDisplay = totalWidthInches > 0 ? 
+        `${totalWidthFeet}'-${totalWidthInches}"` : `${totalWidthFeet}'`;
+    
+    const totalLabelY = offsetY - 80;
+    
+    ctx.beginPath();
+    ctx.moveTo(offsetX, totalLabelY);
+    ctx.lineTo(offsetX + scaledTotalWidth, totalLabelY);
+    ctx.stroke();
+    
+    ctx.beginPath();
+    ctx.moveTo(offsetX, totalLabelY - 5);
+    ctx.lineTo(offsetX, totalLabelY + 5);
+    ctx.moveTo(offsetX + scaledTotalWidth, totalLabelY - 5);
+    ctx.lineTo(offsetX + scaledTotalWidth, totalLabelY + 5);
+    ctx.stroke();
+    
+    const totalLabelText = pattern.saleType === 'yard' ? 
+        `All Strips: ${totalWidthDisplay}` : 
+        `All Panels: ${totalWidthDisplay}`;
+    ctx.fillText(totalLabelText, offsetX + scaledTotalWidth / 2, totalLabelY - 8);
+    
+    // Panel height annotation
+    const panelHeightLineX = offsetX - 30;
+    const panelHeightTextX = panelHeightLineX - 15;
+    
+    ctx.beginPath();
+    ctx.moveTo(panelHeightLineX, offsetY);
+    ctx.lineTo(panelHeightLineX, offsetY + scaledTotalHeight);
+    ctx.stroke();
+    
+    ctx.beginPath();
+    ctx.moveTo(panelHeightLineX - 5, offsetY);
+    ctx.lineTo(panelHeightLineX + 5, offsetY);
+    ctx.moveTo(panelHeightLineX - 5, offsetY + scaledTotalHeight);
+    ctx.lineTo(panelHeightLineX + 5, offsetY + scaledTotalHeight);
+    ctx.stroke();
+    
+    ctx.save();
+    ctx.translate(panelHeightTextX, offsetY + scaledTotalHeight / 2);
+    ctx.rotate(-Math.PI/2);
+    
+    let heightDisplay;
+    if (pattern.saleType === 'yard' && calculations.panelLengthInches !== undefined && calculations.panelLengthInches > 0) {
+        heightDisplay = `Strip Height: ${calculations.panelLength}'-${calculations.panelLengthInches}"`;
+    } else if (pattern.saleType === 'yard') {
+        heightDisplay = `Strip Height: ${calculations.panelLength}'`;
+    } else {
+        heightDisplay = `Panel Height: ${calculations.panelLength}'`;
+    }
+    
+    ctx.fillText(heightDisplay, 0, 0);
+    ctx.restore();
+}
+
+// Draw panel labels (A/B/C sequence)
+function drawPanelLabels(ctx, offsetX, offsetY, scaledTotalWidth, scaledTotalHeight, scale) {
+    const { pattern, calculations } = currentPreview;
+    
+    if (pattern.saleType === 'panel' && pattern.sequenceLength > 1) {
+        ctx.fillStyle = '#333';
+        ctx.font = '14px Arial, sans-serif';
+        ctx.textAlign = 'center';
+        
+        for (let i = 0; i < calculations.panelsNeeded; i++) {
+            const centerX = offsetX + (i * pattern.panelWidth + pattern.panelWidth / 2) * scale;
+            const sequencePosition = i % pattern.sequenceLength;
+            const labelText = pattern.panelSequence[sequencePosition];
+            const textY = offsetY - 25;
+            
+            ctx.fillText(labelText, centerX, textY);
+        }
+    }
+}
+
+// Draw Wall Only View with perfect pattern alignment
+function drawWallOnlyView(ctx, referenceCoords) {
+    const { pattern, wallWidth, wallHeight, calculations, wallWidthFeet, wallWidthInches, wallHeightFeet, wallHeightInches } = currentPreview;
+    const { section2, dimensions } = referenceCoords;
+    
+    const wallOffsetX = section2.wallStartX;
+    const wallOffsetY = section2.wallStartY;
+    const scaledWallWidth = dimensions.scaledWallWidth;
+    const scaledWallHeight = dimensions.scaledWallHeight;
+    
+    // Draw pattern using the same coordinate system as Section 1
+    if (imageLoaded && patternImage) {
+        drawPatternInArea(ctx, wallOffsetX, wallOffsetY, scaledWallWidth, scaledWallHeight, referenceCoords, true);
+    }
+    
+    // Draw uncovered area if needed
+    const hasLimitation = calculations.exceedsLimit || calculations.exceedsAvailableLength;
+    if (hasLimitation) {
+        const actualPanelLengthToUse = calculations.exceedsAvailableLength ? 
+            calculations.actualPanelLength : calculations.panelLength;
+        const coveredHeight = actualPanelLengthToUse * 12 * referenceCoords.scale;
+        const uncoveredAreaHeight = scaledWallHeight - coveredHeight;
+        
+        if (uncoveredAreaHeight > 0) {
+            ctx.fillStyle = 'rgba(255, 0, 0, 0.5)';
+            ctx.fillRect(wallOffsetX, wallOffsetY, scaledWallWidth, uncoveredAreaHeight);
+        }
+    }
+    
+    // Draw wall outline
+    ctx.strokeStyle = '#2c3e50';
+    ctx.lineWidth = 2;
+    ctx.strokeRect(wallOffsetX, wallOffsetY, scaledWallWidth, scaledWallHeight);
+    
+    // Draw wall dimensions
+    ctx.fillStyle = '#333';
+    ctx.font = '14px Arial, sans-serif';
+    ctx.strokeStyle = '#333';
+    ctx.lineWidth = 1;
+    
+    // Format the dimension text - using the correct variable names
+    const wallWidthText = wallWidthInches > 0 ? 
+        `Wall Width: ${wallWidthFeet}'-${wallWidthInches}"` : `Wall Width: ${wallWidthFeet}'`;
+    const wallHeightText = wallHeightInches > 0 ? 
+        `Wall Height: ${wallHeightFeet}'-${wallHeightInches}"` : `Wall Height: ${wallHeightFeet}'`;
+    
+    // Wall width annotation (bottom of wall)
+    const widthLineY = wallOffsetY + scaledWallHeight + 30;
+    const widthTextY = widthLineY + 15;
+    
+    ctx.beginPath();
+    ctx.moveTo(wallOffsetX, widthLineY);
+    ctx.lineTo(wallOffsetX + scaledWallWidth, widthLineY);
+    ctx.stroke();
+    
+    ctx.beginPath();
+    ctx.moveTo(wallOffsetX, widthLineY - 5);
+    ctx.lineTo(wallOffsetX, widthLineY + 5);
+    ctx.moveTo(wallOffsetX + scaledWallWidth, widthLineY - 5);
+    ctx.lineTo(wallOffsetX + scaledWallWidth, widthLineY + 5);
+    ctx.stroke();
+    
+    ctx.textAlign = 'center';
+    ctx.fillText(wallWidthText, wallOffsetX + scaledWallWidth / 2, widthTextY);
+    
+    // Wall height annotation (left side of wall)
+    const wallHeightOffset = 30;
+    const heightLineX = wallOffsetX - wallHeightOffset;
+    const heightTextX = heightLineX - 15;
+    
+    ctx.beginPath();
+    ctx.moveTo(heightLineX, wallOffsetY);
+    ctx.lineTo(heightLineX, wallOffsetY + scaledWallHeight);
+    ctx.stroke();
+    
+    ctx.beginPath();
+    ctx.moveTo(heightLineX - 5, wallOffsetY);
+    ctx.lineTo(heightLineX + 5, wallOffsetY);
+    ctx.moveTo(heightLineX - 5, wallOffsetY + scaledWallHeight);
+    ctx.lineTo(heightLineX + 5, wallOffsetY + scaledWallHeight);
+    ctx.stroke();
+    
+    ctx.save();
+    ctx.translate(heightTextX, wallOffsetY + scaledWallHeight / 2);
+    ctx.rotate(-Math.PI/2);
+    ctx.textAlign = 'center';
+    ctx.fillText(wallHeightText, 0, 0);
     ctx.restore();
 }
