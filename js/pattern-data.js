@@ -367,7 +367,8 @@ function calculateYardRequirements(pattern, wallWidth, wallHeight) {
             for (let i = 0; i < stripsNeeded; i++) {
                 let stripHeight = totalHeight;
                 
-                // Even strips (2nd, 4th, 6th, etc.) need an extra half repeat
+                // Even strips (2nd, 4th, 6th, etc.) need ONLY the extra half repeat
+                // No additional overage needed beyond what's already in totalHeight
                 if (i % 2 === 1) { // Index 1, 3, 5 = strips 2, 4, 6
                     stripHeight += pattern.repeatHeight / 2;
                 }
