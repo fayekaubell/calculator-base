@@ -29,15 +29,17 @@ function drawCompleteViewWithOverlay(ctx, referenceCoords) {
             // Calculate visual offset for this panel
             const halfDropOffset = isHalfDrop ? calculateHalfDropVisualOffset(pattern, i) * scale : 0;
             
-            // Adjust panel height for half-drop patterns
+            // For half-drop patterns, use the correct strip height from calculations
             let panelHeight = scaledTotalHeight;
             if (isHalfDrop && calculations.stripLengths && calculations.stripLengths[i]) {
-                // Use the actual calculated strip length for this panel
-                panelHeight = (calculations.stripLengths[i] / calculations.stripLengthInches) * scaledTotalHeight;
+                // Use the actual calculated strip length for this specific strip
+                const stripLengthInches = calculations.stripLengths[i];
+                panelHeight = (stripLengthInches / calculations.totalHeight) * scaledTotalHeight;
             }
             
-            // Draw pattern for this specific panel with offset
-            drawPatternInArea(ctx, panelX, offsetY + halfDropOffset, panelWidth, panelHeight, referenceCoords, false, i);
+            // Draw pattern for this specific panel
+            // For patterns that repeat within the strip width, don't offset the strip position
+            drawPatternInArea(ctx, panelX, offsetY, panelWidth, panelHeight, referenceCoords, false, i);
         }
     }
     
@@ -91,11 +93,12 @@ function drawCompleteViewOutlines(ctx, offsetX, offsetY, scaledTotalWidth, scale
         // Calculate visual offset for this panel
         const halfDropOffset = isHalfDrop ? calculateHalfDropVisualOffset(pattern, i) * scale : 0;
         
-        // Adjust panel height for half-drop patterns
+        // For half-drop patterns, use the correct strip height from calculations
         let panelHeight = scaledTotalHeight;
         if (isHalfDrop && calculations.stripLengths && calculations.stripLengths[i]) {
-            // Use the actual calculated strip length for this panel
-            panelHeight = (calculations.stripLengths[i] / calculations.stripLengthInches) * scaledTotalHeight;
+            // Use the actual calculated strip length for this specific strip
+            const stripLengthInches = calculations.stripLengths[i];
+            panelHeight = (stripLengthInches / calculations.totalHeight) * scaledTotalHeight;
         }
         
         ctx.strokeRect(x, offsetY + halfDropOffset, width, panelHeight);
