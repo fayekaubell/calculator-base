@@ -1,5 +1,6 @@
 // Enhanced PDF Generation Module - Vertically centered layout with logo, download progress, and reset functionality
 // Requires jsPDF library to be loaded
+// UPDATED: Shows "Match:" instead of "Type:" in Pattern Details
 
 // PDF generation function with improved layout and button feedback
 async function generatePDF() {
@@ -456,10 +457,19 @@ async function addEnhancedTextContentToPDF(pdf, startX, startY, maxWidth, availa
         return remainingInches > 0 ? `${feet}'${remainingInches}"` : `${feet}'0"`;
     };
     
+    // Format pattern match for display
+    const formatPatternMatch = (match) => {
+        if (!match) return 'Straight';
+        // Capitalize first letter of each word
+        return match.split(' ').map(word => 
+            word.charAt(0).toUpperCase() + word.slice(1).toLowerCase()
+        ).join(' ');
+    };
+    
     const patternDetails = [
         `Name: ${pattern.name}`,
         `SKU: ${pattern.sku || 'N/A'}`,
-        `Type: ${pattern.saleType === 'yard' ? 'Yard Pattern' : 'Panel Pattern'}`,
+        `Match: ${formatPatternMatch(pattern.patternMatch)}`,
         `Repeat: ${formatDimension(pattern.repeatWidth)}w ${pattern.hasRepeatHeight ? 'x ' + formatDimension(pattern.repeatHeight) + 'h' : '/ No vertical repeat'}`,
         `Panel Width: ${formatDimension(pattern.panelWidth)}`
     ];
