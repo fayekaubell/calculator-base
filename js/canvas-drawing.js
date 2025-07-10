@@ -8,3 +8,46 @@
 
 // All functions are loaded into the global scope from the individual modules
 console.log('📐 Canvas drawing module loaded - functions available globally');
+
+// Main canvas drawing function - defined here after all modules are loaded
+function drawPreview() {
+    const canvas = document.getElementById('previewCanvas');
+    const ctx = canvas.getContext('2d');
+    
+    // Clear canvas
+    ctx.fillStyle = '#ffffff';
+    ctx.fillRect(0, 0, canvas.width, canvas.height);
+    
+    // Calculate reference coordinates
+    const referenceCoords = calculateReferenceCoordinates();
+    
+    // Section 1: Complete view with half-drop support
+    drawCompleteViewWithOverlay(ctx, referenceCoords);
+    
+    // Section 2: Wall only view
+    drawWallOnlyView(ctx, referenceCoords);
+}
+
+// Export to global scope
+window.drawPreview = drawPreview;
+
+// Verify that all required functions are available
+window.addEventListener('DOMContentLoaded', function() {
+    const requiredFunctions = [
+        'calculateReferenceCoordinates',
+        'drawOverageOverlay', 
+        'drawPreview',
+        'calculateHalfDropVisualOffset',
+        'drawPatternInArea',
+        'drawCompleteViewWithOverlay',
+        'drawWallOnlyView'
+    ];
+    
+    const missingFunctions = requiredFunctions.filter(fn => typeof window[fn] !== 'function');
+    
+    if (missingFunctions.length > 0) {
+        console.error('❌ Missing canvas drawing functions:', missingFunctions);
+    } else {
+        console.log('✅ All canvas drawing functions loaded successfully');
+    }
+});
