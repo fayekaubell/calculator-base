@@ -348,23 +348,39 @@ function calculateYardRequirements(pattern, wallWidth, wallHeight) {
     let maxStripLength = 0;
     
     if (isHalfDrop) {
-        // For half-drop patterns, even strips need extra height
-        for (let i = 0; i < stripsNeeded; i++) {
-            let stripHeight = totalHeight;
-            
-            // Even strips (2nd, 4th, 6th, etc.) need an extra half repeat
-            if (i % 2 === 1) { // Index 1, 3, 5 = strips 2, 4, 6
-                stripHeight += pattern.repeatHeight / 2;
-            }
-            
-            // Calculate repeats needed for this strip
-            const repeatsNeeded = Math.ceil(stripHeight / pattern.repeatHeight);
+        // Check if pattern repeats within strip width
+        const repeatsPerStrip = pattern.panelWidth / pattern.repeatWidth;
+        
+        if (repeatsPerStrip > 1) {
+            // Pattern repeats within strip - all strips same height (like straight match)
+            const repeatsNeeded = Math.ceil(totalHeight / pattern.repeatHeight);
             const stripLengthInches = repeatsNeeded * pattern.repeatHeight;
             
-            stripLengths.push(stripLengthInches);
-            maxStripLength = Math.max(maxStripLength, stripLengthInches);
+            for (let i = 0; i < stripsNeeded; i++) {
+                stripLengths.push(stripLengthInches);
+            }
+            maxStripLength = stripLengthInches;
             
-            console.log(`🎯 Strip ${i + 1}: ${stripHeight}" height needs ${repeatsNeeded} repeats = ${stripLengthInches}" material`);
+            console.log(`🎯 Half-drop with ${repeatsPerStrip} repeats per strip - all strips: ${stripLengthInches}" material`);
+        } else {
+            // Full-width pattern - even strips need extra height
+            for (let i = 0; i < stripsNeeded; i++) {
+                let stripHeight = totalHeight;
+                
+                // Even strips (2nd, 4th, 6th, etc.) need an extra half repeat
+                if (i % 2 === 1) { // Index 1, 3, 5 = strips 2, 4, 6
+                    stripHeight += pattern.repeatHeight / 2;
+                }
+                
+                // Calculate repeats needed for this strip
+                const repeatsNeeded = Math.ceil(stripHeight / pattern.repeatHeight);
+                const stripLengthInches = repeatsNeeded * pattern.repeatHeight;
+                
+                stripLengths.push(stripLengthInches);
+                maxStripLength = Math.max(maxStripLength, stripLengthInches);
+                
+                console.log(`🎯 Strip ${i + 1}: ${stripHeight}" height needs ${repeatsNeeded} repeats = ${stripLengthInches}" material`);
+            }
         }
     } else {
         // Straight match - all strips are the same
