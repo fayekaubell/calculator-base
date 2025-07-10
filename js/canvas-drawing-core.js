@@ -16,9 +16,16 @@ function calculateReferenceCoordinates() {
     const maxWidth = canvas.width - leftMargin - rightMargin;
     const maxHeight = canvas.height - topMargin - bottomMargin;
     
-    // Calculate dimensions for both sections
+    // Calculate dimensions for both sections - ensuring pattern alignment
     const wallOnlyHeight = wallHeight;
-    const completeViewHeight = Math.max(calculations.totalHeight, wallHeight);
+    // For Section 1, use the maximum strip height for full-width half-drop patterns
+    let completeViewHeight = calculations.totalHeight;
+    if (calculations.stripLengths && calculations.stripLengths.length > 0) {
+        // Use the maximum strip length for layout calculation
+        const maxStripLength = Math.max(...calculations.stripLengths);
+        completeViewHeight = maxStripLength;
+    }
+    completeViewHeight = Math.max(completeViewHeight, wallHeight);
     const totalContentHeight = completeViewHeight + wallOnlyHeight + sectionGap;
     
     const effectiveWidth = Math.max(calculations.totalWidth, wallWidth);
