@@ -29,8 +29,14 @@ function drawCompleteViewWithOverlay(ctx, referenceCoords) {
             // Calculate visual offset for this panel
             const halfDropOffset = isHalfDrop ? calculateHalfDropVisualOffset(pattern, i) * scale : 0;
             
-            // For all patterns, maintain consistent height
+            // For half-drop patterns, use the actual calculated strip height
             let panelHeight = scaledTotalHeight;
+            if (isHalfDrop && calculations.stripLengths && calculations.stripLengths[i]) {
+                // Get the actual strip length in inches
+                const stripLengthInches = calculations.stripLengths[i];
+                // Scale it based on the current scale factor
+                panelHeight = stripLengthInches * scale;
+            }
             
             // Draw pattern for this specific panel
             // For patterns that repeat within the strip width, don't offset the strip position
@@ -84,9 +90,6 @@ function drawCompleteViewOutlines(ctx, offsetX, offsetY, scaledTotalWidth, scale
     for (let i = 0; i < calculations.panelsNeeded; i++) {
         const x = offsetX + (i * pattern.panelWidth * scale);
         const width = pattern.panelWidth * scale;
-        
-        // Calculate visual offset for this panel
-        const halfDropOffset = isHalfDrop ? calculateHalfDropVisualOffset(pattern, i) * scale : 0;
         
         // Calculate visual offset for this panel
         const halfDropOffset = isHalfDrop ? calculateHalfDropVisualOffset(pattern, i) * scale : 0;
@@ -233,13 +236,6 @@ function drawCompleteDimensionLabels(ctx, offsetX, offsetY, scaledTotalWidth, sc
     ctx.restore();
 }
 
-// Export functions to global scope for use in other modules
-window.drawCompleteViewWithOverlay = drawCompleteViewWithOverlay;
-window.drawCompleteViewOutlines = drawCompleteViewOutlines;
-window.drawCompleteDimensionLabels = drawCompleteDimensionLabels;
-window.drawPanelLabels = drawPanelLabels;
-window.drawWallOnlyView = drawWallOnlyView;
-
 // Draw panel labels (A/B/C sequence)
 function drawPanelLabels(ctx, offsetX, offsetY, scaledTotalWidth, scaledTotalHeight, scale) {
     const { pattern, calculations } = currentPreview;
@@ -349,3 +345,10 @@ function drawWallOnlyView(ctx, referenceCoords) {
     ctx.fillText(wallHeightText, 0, 0);
     ctx.restore();
 }
+
+// Export functions to global scope for use in other modules
+window.drawCompleteViewWithOverlay = drawCompleteViewWithOverlay;
+window.drawCompleteViewOutlines = drawCompleteViewOutlines;
+window.drawCompleteDimensionLabels = drawCompleteDimensionLabels;
+window.drawPanelLabels = drawPanelLabels;
+window.drawWallOnlyView = drawWallOnlyView;
