@@ -26,16 +26,11 @@ function drawCompleteViewWithOverlay(ctx, referenceCoords) {
             const panelX = offsetX + (i * pattern.panelWidth * scale);
             const panelWidth = pattern.panelWidth * scale;
             
-            // Calculate visual offset for this panel
-            const halfDropOffset = isHalfDrop ? calculateHalfDropVisualOffset(pattern, i) * scale : 0;
-            
-            // For half-drop patterns, use the correct strip height from calculations
+            // For half-drop patterns, all strips should use the same height when pattern repeats within strip
             let panelHeight = scaledTotalHeight;
-            if (isHalfDrop && calculations.stripLengths && calculations.stripLengths[i]) {
-                // Use the actual calculated strip length for this specific strip
-                const stripLengthInches = calculations.stripLengths[i];
-                panelHeight = (stripLengthInches / calculations.totalHeight) * scaledTotalHeight;
-            }
+            
+            // The offset is handled within the pattern drawing, not by moving strips
+            const halfDropOffset = 0;
             
             // Draw pattern for this specific panel
             // For patterns that repeat within the strip width, don't offset the strip position
@@ -93,13 +88,10 @@ function drawCompleteViewOutlines(ctx, offsetX, offsetY, scaledTotalWidth, scale
         // Calculate visual offset for this panel
         const halfDropOffset = isHalfDrop ? calculateHalfDropVisualOffset(pattern, i) * scale : 0;
         
-        // For half-drop patterns, use the correct strip height from calculations
+        // Adjust panel height for half-drop patterns
         let panelHeight = scaledTotalHeight;
-        if (isHalfDrop && calculations.stripLengths && calculations.stripLengths[i]) {
-            // Use the actual calculated strip length for this specific strip
-            const stripLengthInches = calculations.stripLengths[i];
-            panelHeight = (stripLengthInches / calculations.totalHeight) * scaledTotalHeight;
-        }
+        // For patterns that repeat within strips, height should be consistent
+        // The strip lengths array should already have the correct values
         
         ctx.strokeRect(x, offsetY + halfDropOffset, width, panelHeight);
     }
