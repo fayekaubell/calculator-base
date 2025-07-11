@@ -123,8 +123,9 @@ function drawPatternInArea(ctx, areaX, areaY, areaWidth, areaHeight, referenceCo
                     // Start from bottom of panel area
                     const bottomY = offsetAreaY + offsetAreaHeight;
                     // First repeat bottom-left corner aligns with panel bottom-left
-                    // Start from 0 to align bottom of first repeat with bottom of panel
-                    for (let y = 0 + patternOffsetY; y >= -offsetAreaHeight - repeatH + patternOffsetY; y -= repeatH) {
+                    // For offset patterns, we need to start lower to ensure coverage
+                    const startY = patternOffsetY < 0 ? repeatH + patternOffsetY : 0 + patternOffsetY;
+                    for (let y = startY; y >= -offsetAreaHeight - repeatH + patternOffsetY; y -= repeatH) {
                         const drawY = Math.floor(bottomY + y - repeatH);
                         ctx.drawImage(patternImage, drawX, drawY, Math.ceil(repeatW), Math.ceil(repeatH));
                     }
@@ -226,8 +227,9 @@ function drawPatternInArea(ctx, areaX, areaY, areaWidth, areaHeight, referenceCo
                         // Calculate panel bottom position
                         const panelBottom = drawPanelY + drawHeight;
                         // Tile upward from bottom with pattern offset
-                        // Start from 0 to maintain bottom-left alignment
-                        for (let y = 0 + patternOffsetY; y >= -drawHeight - repeatH + patternOffsetY; y -= repeatH) {
+                        // For offset patterns, start lower to ensure coverage
+                        const startY = patternOffsetY < 0 ? repeatH + patternOffsetY : 0 + patternOffsetY;
+                        for (let y = startY; y >= -drawHeight - repeatH + patternOffsetY; y -= repeatH) {
                             const drawY = Math.floor(panelBottom + y - repeatH);
                             ctx.drawImage(patternImage, drawX, drawY, Math.ceil(repeatW), Math.ceil(repeatH));
                         }
