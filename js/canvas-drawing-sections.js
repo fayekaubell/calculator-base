@@ -29,14 +29,8 @@ function drawCompleteViewWithOverlay(ctx, referenceCoords) {
             // Calculate visual offset for this panel
             const halfDropOffset = isHalfDrop ? calculateHalfDropVisualOffset(pattern, i) * scale : 0;
             
-            // For half-drop patterns, use the actual calculated strip height
+            // For all patterns, maintain consistent height
             let panelHeight = scaledTotalHeight;
-            if (isHalfDrop && calculations.stripLengths && calculations.stripLengths[i]) {
-                // Get the actual strip length in inches
-                const stripLengthInches = calculations.stripLengths[i];
-                // Scale it based on the current scale factor
-                panelHeight = stripLengthInches * scale;
-            }
             
             // Draw pattern for this specific panel
             // For patterns that repeat within the strip width, don't offset the strip position
@@ -91,18 +85,8 @@ function drawCompleteViewOutlines(ctx, offsetX, offsetY, scaledTotalWidth, scale
         const x = offsetX + (i * pattern.panelWidth * scale);
         const width = pattern.panelWidth * scale;
         
-        // Calculate visual offset for this panel
-        const halfDropOffset = isHalfDrop ? calculateHalfDropVisualOffset(pattern, i) * scale : 0;
-        
-        // Use the actual calculated strip height for each panel
-        let panelHeight = scaledTotalHeight;
-        if (isHalfDrop && calculations.stripLengths && calculations.stripLengths[i]) {
-            const stripLengthInches = calculations.stripLengths[i];
-            // Scale it based on the current scale factor
-            panelHeight = stripLengthInches * scale;
-        }
-        
-        ctx.strokeRect(x, offsetY + halfDropOffset, width, panelHeight);
+        // All strips have the same height and position
+        ctx.strokeRect(x, offsetY, width, scaledTotalHeight);
     }
     
     // Dashed lines between panels (subtle)
@@ -112,27 +96,11 @@ function drawCompleteViewOutlines(ctx, offsetX, offsetY, scaledTotalWidth, scale
     for (let i = 1; i < calculations.panelsNeeded; i++) {
         const x = offsetX + (i * pattern.panelWidth * scale);
         
-        // For half-drop, draw a stepped line
-        if (isHalfDrop) {
-            const prevOffset = calculateHalfDropVisualOffset(pattern, i - 1) * scale;
-            const currOffset = calculateHalfDropVisualOffset(pattern, i) * scale;
-            
-            ctx.beginPath();
-            ctx.moveTo(x, offsetY + prevOffset);
-            ctx.lineTo(x, offsetY + scaledTotalHeight + prevOffset);
-            
-            // If offsets differ, draw the step
-            if (prevOffset !== currOffset) {
-                ctx.moveTo(x, offsetY + currOffset);
-                ctx.lineTo(x, offsetY + scaledTotalHeight + currOffset);
-            }
-            ctx.stroke();
-        } else {
-            ctx.beginPath();
-            ctx.moveTo(x, offsetY);
-            ctx.lineTo(x, offsetY + scaledTotalHeight);
-            ctx.stroke();
-        }
+        // Simple straight lines between panels
+        ctx.beginPath();
+        ctx.moveTo(x, offsetY);
+        ctx.lineTo(x, offsetY + scaledTotalHeight);
+        ctx.stroke();
     }
     ctx.setLineDash([]);
 }
@@ -345,10 +313,3 @@ function drawWallOnlyView(ctx, referenceCoords) {
     ctx.fillText(wallHeightText, 0, 0);
     ctx.restore();
 }
-
-// Export functions to global scope for use in other modules
-window.drawCompleteViewWithOverlay = drawCompleteViewWithOverlay;
-window.drawCompleteViewOutlines = drawCompleteViewOutlines;
-window.drawCompleteDimensionLabels = drawCompleteDimensionLabels;
-window.drawPanelLabels = drawPanelLabels;
-window.drawWallOnlyView = drawWallOnlyView;
