@@ -161,15 +161,6 @@ function drawPatternInArea(ctx, areaX, areaY, areaWidth, areaHeight, referenceCo
                 // Apply same offset in Section 2
                 const section2WallTop = areaY;
                 drawPanelY = section2WallTop + panelToWallOffsetTop;
-                
-                console.log(`🔍 Section 2 Y-axis debug for panel ${i}:`, {
-                    section1PanelTop,
-                    section1WallTop,
-                    panelToWallOffsetTop,
-                    section2WallTop,
-                    drawPanelY,
-                    scaledTotalHeight: referenceCoords.dimensions.scaledTotalHeight
-                });
             } else {
                 drawPanelY = patternOriginY;
             }
@@ -199,11 +190,13 @@ function drawPatternInArea(ctx, areaX, areaY, areaWidth, areaHeight, referenceCo
                         const columnOffset = (globalColumnIndex % 2) * (repeatH / 2);
                         
                         if (pattern.hasRepeatHeight) {
+                            // Use the full panel height for consistent positioning
                             const panelBottom = drawPanelY + referenceCoords.dimensions.scaledTotalHeight;
                             // Start from 0 to match Section 1 alignment
                             for (let y = 0 - columnOffset; y >= -referenceCoords.dimensions.scaledTotalHeight - repeatH - columnOffset; y -= repeatH) {
                                 const drawY = Math.floor(panelBottom + y - repeatH);
-                                if (drawY < areaY + areaHeight) {
+                                // Only draw if within the visible area
+                                if (drawY + repeatH >= areaY && drawY < areaY + areaHeight) {
                                     ctx.drawImage(patternImage, drawX, drawY, Math.ceil(repeatW), Math.ceil(repeatH));
                                 }
                             }
@@ -224,14 +217,15 @@ function drawPatternInArea(ctx, areaX, areaY, areaWidth, areaHeight, referenceCo
                     }
                     
                     if (pattern.hasRepeatHeight) {
-                        // Calculate panel bottom position
+                        // Use the full panel height for consistent positioning
                         const panelBottom = drawPanelY + referenceCoords.dimensions.scaledTotalHeight;
                         // Tile upward from bottom with pattern offset
                         // For offset patterns, start lower to ensure coverage
                         const startY = patternOffsetY < 0 ? repeatH + patternOffsetY : 0 + patternOffsetY;
                         for (let y = startY; y >= -referenceCoords.dimensions.scaledTotalHeight - repeatH + patternOffsetY; y -= repeatH) {
                             const drawY = Math.floor(panelBottom + y - repeatH);
-                            if (drawY < areaY + areaHeight) {
+                            // Only draw if within the visible area
+                            if (drawY + repeatH >= areaY && drawY < areaY + areaHeight) {
                                 ctx.drawImage(patternImage, drawX, drawY, Math.ceil(repeatW), Math.ceil(repeatH));
                             }
                         }
