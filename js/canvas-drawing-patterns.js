@@ -122,6 +122,18 @@ function drawPatternInArea(ctx, areaX, areaY, areaWidth, areaHeight, referenceCo
                 if (pattern.hasRepeatHeight) {
                     // Start from bottom of panel area
                     const bottomY = offsetAreaY + offsetAreaHeight;
+                    
+                    // Debug: Let's see what we're doing in Section 1
+                    if (panelIndex === 0) { // Only log for first panel
+                        console.log(`🔍 Section 1 tiling debug:`, {
+                            bottomY,
+                            offsetAreaY,
+                            offsetAreaHeight,
+                            patternOffsetY,
+                            repeatH: repeatH / scale // Show in inches
+                        });
+                    }
+                    
                     // First repeat bottom-left corner aligns with panel bottom-left
                     // For offset patterns, we need to start lower to ensure coverage
                     const startY = patternOffsetY < 0 ? repeatH + patternOffsetY : 0 + patternOffsetY;
@@ -219,6 +231,18 @@ function drawPatternInArea(ctx, areaX, areaY, areaWidth, areaHeight, referenceCo
                     if (pattern.hasRepeatHeight) {
                         // Use the full panel height for consistent positioning
                         const panelBottom = drawPanelY + referenceCoords.dimensions.scaledTotalHeight;
+                        
+                        // Debug: Let's see what heights we're using
+                        if (i === 0) { // Only log for first panel to avoid spam
+                            console.log(`🔍 Section 2 tiling debug:`, {
+                                panelBottom,
+                                drawPanelY,
+                                scaledTotalHeight: referenceCoords.dimensions.scaledTotalHeight,
+                                areaHeight,
+                                patternOffsetY
+                            });
+                        }
+                        
                         // Tile upward from bottom with pattern offset
                         // For offset patterns, start lower to ensure coverage
                         const startY = patternOffsetY < 0 ? repeatH + patternOffsetY : 0 + patternOffsetY;
