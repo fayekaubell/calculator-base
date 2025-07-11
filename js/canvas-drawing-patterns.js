@@ -150,22 +150,21 @@ function drawPatternInArea(ctx, areaX, areaY, areaWidth, areaHeight, referenceCo
                 // Repeating patterns: Calculate EXACT same position relative to wall in both sections
                 drawPanelX = panelX + coordinateOffsetX;
                 
-                // The pattern starts from bottom of panel area in Section 1
-                // We need to maintain that same relationship in Section 2
-                const panelBottom = patternOriginY + referenceCoords.dimensions.scaledTotalHeight;
+                // Pattern starts from bottom of panel area in Section 1
+                const section1PanelBottom = referenceCoords.section1.patternStartY + referenceCoords.dimensions.scaledTotalHeight;
                 
                 if (isSection2) {
-                    // Calculate where the pattern appears relative to wall
+                    // In Section 1, pattern starts with bottom at panel bottom
+                    // Calculate where this appears relative to the wall
                     const section1WallTop = referenceCoords.section1.wallStartY;
                     const section1WallBottom = section1WallTop + referenceCoords.dimensions.scaledWallHeight;
-                    const section1PanelBottom = referenceCoords.section1.patternStartY + referenceCoords.dimensions.scaledTotalHeight;
                     
-                    // How many pixels from panel bottom to wall bottom in Section 1
-                    const panelBottomToWallBottom = section1PanelBottom - section1WallBottom;
+                    // Pattern position relative to wall in Section 1
+                    const patternToWallOffset = section1PanelBottom - section1WallBottom;
                     
                     // Apply same relationship in Section 2
                     const section2WallBottom = areaY + areaHeight;
-                    const section2PanelBottom = section2WallBottom + panelBottomToWallBottom;
+                    const section2PanelBottom = section2WallBottom + patternToWallOffset;
                     
                     drawPanelY = section2PanelBottom - drawHeight;
                 } else {
