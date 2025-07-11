@@ -143,37 +143,25 @@ function drawPatternInArea(ctx, areaX, areaY, areaWidth, areaHeight, referenceCo
             // Calculate panel position in the reference coordinate system
             const panelX = patternOriginX + (i * pattern.panelWidth * scale);
             
-            // For repeating patterns, maintain pattern alignment but adjust for clipping area
-            let drawPanelX, drawPanelY;
+            // Pattern always starts from bottom of panels
+            let drawPanelX = panelX + coordinateOffsetX;
+            let drawPanelY;
             
-            if (pattern.hasRepeatHeight) {
-                // Repeating patterns: Calculate EXACT same position relative to wall in both sections
-                drawPanelX = panelX + coordinateOffsetX;
+            // For Section 2, we need to position the panels to maintain pattern alignment
+            if (isSection2) {
+                // Calculate where the pattern appears relative to the wall
+                const section1PanelBottom = patternOriginY + referenceCoords.dimensions.scaledTotalHeight;
+                const section1WallBottom = referenceCoords.section1.wallStartY + referenceCoords.dimensions.scaledWallHeight;
                 
-                // Pattern starts from bottom of panel area in Section 1
-                const section1PanelBottom = referenceCoords.section1.patternStartY + referenceCoords.dimensions.scaledTotalHeight;
+                // Distance from panel bottom to wall bottom in Section 1
+                const panelToWallOffset = section1PanelBottom - section1WallBottom;
                 
-                if (isSection2) {
-                    // In Section 1, pattern starts with bottom at panel bottom
-                    // Calculate where this appears relative to the wall
-                    const section1WallTop = referenceCoords.section1.wallStartY;
-                    const section1WallBottom = section1WallTop + referenceCoords.dimensions.scaledWallHeight;
-                    
-                    // Pattern position relative to wall in Section 1
-                    const patternToWallOffset = section1PanelBottom - section1WallBottom;
-                    
-                    // Apply same relationship in Section 2
-                    const section2WallBottom = areaY + areaHeight;
-                    const section2PanelBottom = section2WallBottom + patternToWallOffset;
-                    
-                    drawPanelY = section2PanelBottom - drawHeight;
-                } else {
-                    drawPanelY = patternOriginY;
-                }
+                // Apply same offset in Section 2
+                const section2WallBottom = areaY + areaHeight;
+                const section2PanelBottom = section2WallBottom + panelToWallOffset;
+                drawPanelY = section2PanelBottom - referenceCoords.dimensions.scaledTotalHeight;
             } else {
-                // Non-repeating patterns: Apply coordinate offset for Section 2
-                drawPanelX = panelX + coordinateOffsetX;
-                drawPanelY = patternOriginY + coordinateOffsetY;
+                drawPanelY = patternOriginY;
             }
             
             // Calculate sequence offset for panel patterns
@@ -184,30 +172,33 @@ function drawPatternInArea(ctx, areaX, areaY, areaWidth, areaHeight, referenceCo
             const panelWidth = pattern.panelWidth * scale;
             
             // For half-drop patterns that repeat within strip in Section 2
-            if (isSection2 && isHalfDrop && repeatsPerStrip > 1) {
+            if (isHalfDrop && repeatsPerStrip > 1) {
                 // Need to maintain the half-drop pattern as it appears
                 let xPos = 0;
-                let columnIndex = Math.floor((panelX + coordinateOffsetX - areaX) / repeatW);
+                // Calculate starting column index based on panel position
+                let columnIndex = 0;
                 
                 for (let x = -repeatW; x < panelWidth + repeatW; x += repeatW) {
                     const drawX = Math.floor(drawPanelX + x - (sourceOffsetX * scale));
                     
                     // Only draw if within the clipped area
                     if (drawX + repeatW >= areaX && drawX < areaX + areaWidth) {
-                        const columnOffset = (columnIndex % 2) * (repeatH / 2);
+                        // Calculate which column we're in across all panels
+                        const globalX = (drawPanelX + x - patternOriginX - coordinateOffsetX) / repeatW;
+                        const globalColumnIndex = Math.floor(globalX);
+                        const columnOffset = (globalColumnIndex % 2) * (repeatH / 2);
                         
                         if (pattern.hasRepeatHeight) {
-                            // Calculate panel bottom position
-                            const panelBottom = drawPanelY + drawHeight;
-                            // Tile upward from bottom with column offset
-                            // Start from 0 to maintain bottom-left alignment
-                            for (let y = 0 - columnOffset; y >= -drawHeight - repeatH - columnOffset; y -= repeatH) {
+                            const panelBottom = drawPanelY + referenceCoords.dimensions.scaledTotalHeight;
+                            // Start from 0 to match Section 1 alignment
+                            for (let y = 0 - columnOffset; y >= -referenceCoords.dimensions.scaledTotalHeight - repeatH - columnOffset; y -= repeatH) {
                                 const drawY = Math.floor(panelBottom + y - repeatH);
-                                ctx.drawImage(patternImage, drawX, drawY, Math.ceil(repeatW), Math.ceil(repeatH));
+                                if (drawY < areaY + areaHeight) {
+                                    ctx.drawImage(patternImage, drawX, drawY, Math.ceil(repeatW), Math.ceil(repeatH));
+                                }
                             }
                         }
                     }
-                    columnIndex++;
                 }
             } else {
                 // For full-width half-drop or straight match patterns
@@ -224,13 +215,15 @@ function drawPatternInArea(ctx, areaX, areaY, areaWidth, areaHeight, referenceCo
                     
                     if (pattern.hasRepeatHeight) {
                         // Calculate panel bottom position
-                        const panelBottom = drawPanelY + drawHeight;
+                        const panelBottom = drawPanelY + referenceCoords.dimensions.scaledTotalHeight;
                         // Tile upward from bottom with pattern offset
                         // For offset patterns, start lower to ensure coverage
                         const startY = patternOffsetY < 0 ? repeatH + patternOffsetY : 0 + patternOffsetY;
-                        for (let y = startY; y >= -drawHeight - repeatH + patternOffsetY; y -= repeatH) {
+                        for (let y = startY; y >= -referenceCoords.dimensions.scaledTotalHeight - repeatH + patternOffsetY; y -= repeatH) {
                             const drawY = Math.floor(panelBottom + y - repeatH);
-                            ctx.drawImage(patternImage, drawX, drawY, Math.ceil(repeatW), Math.ceil(repeatH));
+                            if (drawY < areaY + areaHeight) {
+                                ctx.drawImage(patternImage, drawX, drawY, Math.ceil(repeatW), Math.ceil(repeatH));
+                            }
                         }
                     } else {
                         let drawY;
@@ -246,11 +239,11 @@ function drawPatternInArea(ctx, areaX, areaY, areaWidth, areaHeight, referenceCo
                             
                             // Apply the EXACT same offset in Section 2
                             const section2WallBottom = areaY + areaHeight;
-                            drawY = Math.floor(section2WallBottom - repeatH - patternOffsetFromWallBottom);
+                            drawY = Math.floor(section2WallBottom - repeatH - patternOffsetFromWallBottom + patternOffsetY);
                         } else {
                             // Section 1: Position pattern at bottom of PANEL
                             const panelBottom = drawPanelY + drawHeight;
-                            drawY = Math.floor(panelBottom - repeatH);
+                            drawY = Math.floor(panelBottom - repeatH + patternOffsetY);
                         }
                         
                         ctx.drawImage(patternImage, drawX, drawY, Math.ceil(repeatW), Math.ceil(repeatH));
