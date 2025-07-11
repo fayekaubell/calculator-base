@@ -363,25 +363,25 @@ function calculateYardRequirements(pattern, wallWidth, wallHeight) {
             
             console.log(`🎯 Half-drop with ${repeatsPerStrip} repeats per strip - all strips: ${stripLengthInches}" material`);
         } else {
-            // Full-width pattern - even strips need extra height
+            // Full-width pattern - calculate height that works for both odd and even strips
+            // All strips need the same height, accounting for the half-drop offset
+            
+            // For even strips that start offset, we need to ensure coverage
+            // Calculate based on wall+overage plus potential half repeat
+            const baseHeight = totalHeight;
+            const withOffset = baseHeight + (pattern.repeatHeight / 2);
+            
+            // Round up to nearest full repeat or half repeat
+            const repeatsNeeded = Math.ceil(withOffset / pattern.repeatHeight);
+            const stripLengthInches = repeatsNeeded * pattern.repeatHeight;
+            
+            // All strips get the same height
             for (let i = 0; i < stripsNeeded; i++) {
-                let stripHeight = totalHeight;
-                
-                // Even strips (2nd, 4th, 6th, etc.) need ONLY the extra half repeat
-                // No additional overage needed beyond what's already in totalHeight
-                if (i % 2 === 1) { // Index 1, 3, 5 = strips 2, 4, 6
-                    stripHeight += pattern.repeatHeight / 2;
-                }
-                
-                // Calculate repeats needed for this strip
-                const repeatsNeeded = Math.ceil(stripHeight / pattern.repeatHeight);
-                const stripLengthInches = repeatsNeeded * pattern.repeatHeight;
-                
                 stripLengths.push(stripLengthInches);
-                maxStripLength = Math.max(maxStripLength, stripLengthInches);
-                
-                console.log(`🎯 Strip ${i + 1}: ${stripHeight}" height needs ${repeatsNeeded} repeats = ${stripLengthInches}" material`);
             }
+            maxStripLength = stripLengthInches;
+            
+            console.log(`🎯 Full-width half-drop - all strips: ${stripLengthInches}" material (${repeatsNeeded} repeats)`);
         }
     } else {
         // Straight match - all strips are the same
