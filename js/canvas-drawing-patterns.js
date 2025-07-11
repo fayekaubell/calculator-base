@@ -149,28 +149,26 @@ function drawPatternInArea(ctx, areaX, areaY, areaWidth, areaHeight, referenceCo
             
             // For Section 2, we need to position the panels to maintain pattern alignment
             if (isSection2) {
-                // Calculate where the pattern appears relative to the wall
-                const section1PanelBottom = patternOriginY + referenceCoords.dimensions.scaledTotalHeight;
-                const section1WallBottom = referenceCoords.section1.wallStartY + referenceCoords.dimensions.scaledWallHeight;
+                // In Section 1, panels are drawn starting at patternOriginY
+                // We need to maintain the same relative position to the wall
                 
-                // Distance from panel bottom to wall bottom in Section 1
-                const panelToWallOffset = section1PanelBottom - section1WallBottom;
+                const section1PanelTop = patternOriginY;
+                const section1WallTop = referenceCoords.section1.wallStartY;
+                
+                // How far is the panel top from wall top in Section 1?
+                const panelToWallOffsetTop = section1PanelTop - section1WallTop;
                 
                 // Apply same offset in Section 2
-                const section2WallBottom = areaY + areaHeight;
-                const section2PanelBottom = section2WallBottom + panelToWallOffset;
-                drawPanelY = section2PanelBottom - referenceCoords.dimensions.scaledTotalHeight;
+                const section2WallTop = areaY;
+                drawPanelY = section2WallTop + panelToWallOffsetTop;
                 
-                // Debug logging
                 console.log(`🔍 Section 2 Y-axis debug for panel ${i}:`, {
-                    section1PanelBottom,
-                    section1WallBottom,
-                    panelToWallOffset,
-                    section2WallBottom,
-                    section2PanelBottom,
+                    section1PanelTop,
+                    section1WallTop,
+                    panelToWallOffsetTop,
+                    section2WallTop,
                     drawPanelY,
-                    areaY,
-                    areaHeight
+                    scaledTotalHeight: referenceCoords.dimensions.scaledTotalHeight
                 });
             } else {
                 drawPanelY = patternOriginY;
