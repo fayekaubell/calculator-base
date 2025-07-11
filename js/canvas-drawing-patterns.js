@@ -160,6 +160,18 @@ function drawPatternInArea(ctx, areaX, areaY, areaWidth, areaHeight, referenceCo
                 const section2WallBottom = areaY + areaHeight;
                 const section2PanelBottom = section2WallBottom + panelToWallOffset;
                 drawPanelY = section2PanelBottom - referenceCoords.dimensions.scaledTotalHeight;
+                
+                // Debug logging
+                console.log(`🔍 Section 2 Y-axis debug for panel ${i}:`, {
+                    section1PanelBottom,
+                    section1WallBottom,
+                    panelToWallOffset,
+                    section2WallBottom,
+                    section2PanelBottom,
+                    drawPanelY,
+                    areaY,
+                    areaHeight
+                });
             } else {
                 drawPanelY = patternOriginY;
             }
