@@ -4,32 +4,9 @@
 
 // Calculate visual offset for half-drop patterns based on repeat width
 function calculateHalfDropVisualOffset(pattern, panelIndex) {
-    if (!pattern.patternMatch || pattern.patternMatch.toLowerCase() !== 'half drop') {
-        return 0;
-    }
-    
-    // ONLY offset strips when pattern is full width
-    const repeatsPerStrip = pattern.panelWidth / pattern.repeatWidth;
-    if (repeatsPerStrip > 1) {
-        return 0; // Pattern repeats within strip - no strip offset
-    }
-    
-    // Even strips (2nd, 4th, 6th) get offset for full-width patterns
-    if (panelIndex % 2 === 0) {
-        return 0; // Odd strips (1, 3, 5) - no offset
-    }
-    
-    const visualOffset = pattern.repeatHeight / 2;
-    
-    console.log(`🎨 Half-drop visual offset for strip ${panelIndex + 1}:`, {
-        repeatWidth: pattern.repeatWidth,
-        panelWidth: pattern.panelWidth,
-        ratio: pattern.repeatWidth / pattern.panelWidth,
-        fullOffset: pattern.repeatHeight / 2,
-        visualOffset: visualOffset
-    });
-    
-    return visualOffset;
+    // No visual offset for strips - they all align at the same height
+    // The pattern offset is handled internally in drawPatternInArea
+    return 0;
 }
 
 // Draw pattern with consistent coordinate system - RESTORED ORIGINAL WITH HALF-DROP
@@ -129,22 +106,31 @@ function drawPatternInArea(ctx, areaX, areaY, areaWidth, areaHeight, referenceCo
                 columnIndex++;
             }
         } else {
-            // Original drawing logic for non-half-drop or full-width patterns
+            // For full-width patterns or straight match
+            const isFullWidthHalfDrop = isHalfDrop && repeatsPerStrip <= 1;
+            
+            // Calculate pattern offset for even strips in full-width half-drop
+            let patternOffsetY = 0;
+            if (isFullWidthHalfDrop && panelIndex % 2 === 1) { // Even strips (2, 4, 6)
+                patternOffsetY = -(repeatH / 2); // Shift pattern up by half repeat
+            }
+            
+            // Draw pattern repeats
             for (let x = -repeatW; x < panelWidth + repeatW; x += repeatW) {
                 const drawX = Math.floor(areaX + x - (sourceOffsetX * scale));
                 
                 if (pattern.hasRepeatHeight) {
                     // Start from bottom of panel area
                     const bottomY = offsetAreaY + offsetAreaHeight;
-                    // Tile upward from bottom, but start from below to ensure full coverage
-                    for (let y = repeatH; y >= -offsetAreaHeight - repeatH; y -= repeatH) {
+                    // Tile upward from bottom, applying any pattern offset
+                    for (let y = repeatH + patternOffsetY; y >= -offsetAreaHeight - repeatH + patternOffsetY; y -= repeatH) {
                         const drawY = Math.floor(bottomY + y - repeatH);
                         ctx.drawImage(patternImage, drawX, drawY, Math.ceil(repeatW), Math.ceil(repeatH));
                     }
                 } else {
-                    // Non-repeating pattern - position at bottom
+                    // Non-repeating pattern - position at bottom with offset
                     const bottomY = offsetAreaY + offsetAreaHeight;
-                    const drawY = Math.floor(bottomY - repeatH);
+                    const drawY = Math.floor(bottomY - repeatH + patternOffsetY);
                     ctx.drawImage(patternImage, drawX, drawY, Math.ceil(repeatW), Math.ceil(repeatH));
                 }
             }
@@ -222,15 +208,23 @@ function drawPatternInArea(ctx, areaX, areaY, areaWidth, areaHeight, referenceCo
                     columnIndex++;
                 }
             } else {
-                // Original drawing logic for non-half-drop patterns
+                // For full-width half-drop or straight match patterns
+                const isFullWidthHalfDrop = isHalfDrop && repeatsPerStrip <= 1;
+                
                 for (let x = -repeatW; x < panelWidth + repeatW; x += repeatW) {
                     const drawX = Math.floor(drawPanelX + x - (sourceOffsetX * scale));
+                    
+                    // Calculate pattern offset for even strips in full-width half-drop
+                    let patternOffsetY = 0;
+                    if (isFullWidthHalfDrop && i % 2 === 1) { // Even strips (2, 4, 6)
+                        patternOffsetY = -(repeatH / 2); // Shift pattern up by half repeat
+                    }
                     
                     if (pattern.hasRepeatHeight) {
                         // Calculate panel bottom position
                         const panelBottom = drawPanelY + drawHeight;
-                        // Tile upward from bottom, start below to ensure coverage
-                        for (let y = repeatH; y >= -drawHeight - repeatH; y -= repeatH) {
+                        // Tile upward from bottom with pattern offset
+                        for (let y = repeatH + patternOffsetY; y >= -drawHeight - repeatH + patternOffsetY; y -= repeatH) {
                             const drawY = Math.floor(panelBottom + y - repeatH);
                             ctx.drawImage(patternImage, drawX, drawY, Math.ceil(repeatW), Math.ceil(repeatH));
                         }
