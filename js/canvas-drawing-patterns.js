@@ -122,18 +122,6 @@ function drawPatternInArea(ctx, areaX, areaY, areaWidth, areaHeight, referenceCo
                 if (pattern.hasRepeatHeight) {
                     // Start from bottom of panel area
                     const bottomY = offsetAreaY + offsetAreaHeight;
-                    
-                    // Debug: Let's see what we're doing in Section 1
-                    if (panelIndex === 0) { // Only log for first panel
-                        console.log(`🔍 Section 1 tiling debug:`, {
-                            bottomY,
-                            offsetAreaY,
-                            offsetAreaHeight,
-                            patternOffsetY,
-                            repeatH: repeatH / scale // Show in inches
-                        });
-                    }
-                    
                     // First repeat bottom-left corner aligns with panel bottom-left
                     // For offset patterns, we need to start lower to ensure coverage
                     const startY = patternOffsetY < 0 ? repeatH + patternOffsetY : 0 + patternOffsetY;
@@ -161,18 +149,13 @@ function drawPatternInArea(ctx, areaX, areaY, areaWidth, areaHeight, referenceCo
             
             // For Section 2, we need to position the panels to maintain pattern alignment
             if (isSection2) {
-                // In Section 1, panels are drawn starting at patternOriginY
-                // We need to maintain the same relative position to the wall
+                // The wall bottom in Section 2 should align with strip bottom in Section 1
+                // So we position the panel top accordingly
+                const section1PanelBottom = patternOriginY + referenceCoords.dimensions.scaledTotalHeight;
+                const section2WallBottom = areaY + areaHeight;
                 
-                const section1PanelTop = patternOriginY;
-                const section1WallTop = referenceCoords.section1.wallStartY;
-                
-                // How far is the panel top from wall top in Section 1?
-                const panelToWallOffsetTop = section1PanelTop - section1WallTop;
-                
-                // Apply same offset in Section 2
-                const section2WallTop = areaY;
-                drawPanelY = section2WallTop + panelToWallOffsetTop;
+                // Panel bottom should align with wall bottom
+                drawPanelY = section2WallBottom - referenceCoords.dimensions.scaledTotalHeight;
             } else {
                 drawPanelY = patternOriginY;
             }
@@ -231,18 +214,6 @@ function drawPatternInArea(ctx, areaX, areaY, areaWidth, areaHeight, referenceCo
                     if (pattern.hasRepeatHeight) {
                         // Use the full panel height for consistent positioning
                         const panelBottom = drawPanelY + referenceCoords.dimensions.scaledTotalHeight;
-                        
-                        // Debug: Let's see what heights we're using
-                        if (i === 0) { // Only log for first panel to avoid spam
-                            console.log(`🔍 Section 2 tiling debug:`, {
-                                panelBottom,
-                                drawPanelY,
-                                scaledTotalHeight: referenceCoords.dimensions.scaledTotalHeight,
-                                areaHeight,
-                                patternOffsetY
-                            });
-                        }
-                        
                         // Tile upward from bottom with pattern offset
                         // For offset patterns, start lower to ensure coverage
                         const startY = patternOffsetY < 0 ? repeatH + patternOffsetY : 0 + patternOffsetY;
