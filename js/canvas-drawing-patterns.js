@@ -1,4 +1,4 @@
-// Canvas Drawing Patterns Module - FIXED: No gaps, exact positioning
+// Canvas Drawing Patterns Module - FIXED: Universal pattern positioning for perfect Section 1/2 alignment
 
 function calculateHalfDropVisualOffset(pattern, panelIndex) {
     return 0;
@@ -17,59 +17,82 @@ function drawPatternInArea(ctx, areaX, areaY, areaWidth, areaHeight, referenceCo
     // DEBUG: Log basic info for Alpine Tulip
     const isAlpine = pattern.name.toLowerCase().includes('alpine tulip');
     if (isAlpine) {
-        console.log(`🌷 ALPINE TULIP FIXED - ${isSection2 ? 'Section 2' : 'Section 1'} Panel ${panelIndex}:`, {
+        console.log(`🌷 ALPINE TULIP UNIVERSAL FIX - ${isSection2 ? 'Section 2' : 'Section 1'} Panel ${panelIndex}:`, {
             areaX: areaX,
             areaY: areaY, 
             areaWidth: areaWidth,
-            areaHeight: areaHeight,
-            patternRepeatWidth: pattern.repeatWidth,
-            patternPanelWidth: pattern.panelWidth,
-            scale: scale
+            areaHeight: areaHeight
         });
     }
     
     // Calculate repeat size to fit perfectly within strip width
     const stripWidthPixels = pattern.panelWidth * scale;
-    const repeatsPerStrip = pattern.panelWidth / pattern.repeatWidth; // For Alpine Tulip: 27/9 = 3
+    const repeatsPerStrip = pattern.panelWidth / pattern.repeatWidth;
     const repeatWidthPixels = stripWidthPixels / repeatsPerStrip; // EXACT fit, no rounding
     const repeatHeightPixels = (pattern.repeatHeight / pattern.repeatWidth) * repeatWidthPixels; // Maintain aspect ratio
     
-    // DEBUG for Alpine Tulip
+    // UNIVERSAL COORDINATE SYSTEM - THE KEY FIX
+    // Create a universal pattern grid where the first panel's lower-left corner is always the pattern origin
+    const universalPatternOriginX = referenceCoords.section1.patternStartX;
+    const universalPatternOriginY = referenceCoords.section1.patternStartY + referenceCoords.dimensions.scaledTotalHeight;
+    
+    // Calculate where the wall sits within this universal pattern grid for Section 1
+    const section1WallRelativeX = referenceCoords.section1.wallStartX - universalPatternOriginX;
+    const section1WallRelativeY = universalPatternOriginY - (referenceCoords.section1.wallStartY + referenceCoords.dimensions.scaledWallHeight);
+    
     if (isAlpine) {
-        console.log(`🎯 ALPINE TULIP FIXED CALCULATIONS:`, {
-            stripWidthPixels: stripWidthPixels,
-            repeatsPerStrip: repeatsPerStrip,
-            exactRepeatWidth: repeatWidthPixels,
-            exactRepeatHeight: repeatHeightPixels,
-            calculation: `${stripWidthPixels} ÷ ${repeatsPerStrip} = ${repeatWidthPixels} EXACT pixels per repeat`
+        console.log(`🎯 ALPINE TULIP UNIVERSAL COORDINATES:`, {
+            universalPatternOriginX: universalPatternOriginX,
+            universalPatternOriginY: universalPatternOriginY,
+            section1WallRelativeX: section1WallRelativeX,
+            section1WallRelativeY: section1WallRelativeY
         });
     }
     
-    const offsetPerPanel = (pattern.sequenceLength === 0 || pattern.sequenceLength === 1) ? 0 : 
-        pattern.repeatWidth / pattern.sequenceLength;
+    // For Section 2, calculate the universal pattern origin in Section 2's coordinate space
+    // The pattern must maintain the EXACT same relationship to the wall as in Section 1
+    let patternStartX, patternStartY;
     
-    const isHalfDrop = pattern.patternMatch && pattern.patternMatch.toLowerCase() === 'half drop';
+    if (isSection2) {
+        // Section 2: Position the pattern so the wall has the same relative position as in Section 1
+        const section2WallLeft = referenceCoords.section2.wallStartX;
+        const section2WallBottom = referenceCoords.section2.wallStartY + referenceCoords.dimensions.scaledWallHeight;
+        
+        patternStartX = section2WallLeft - section1WallRelativeX;
+        patternStartY = section2WallBottom + section1WallRelativeY;
+        
+        if (isAlpine) {
+            console.log(`🌷 ALPINE TULIP SECTION 2 UNIVERSAL POSITIONING:`, {
+                section2WallLeft: section2WallLeft,
+                section2WallBottom: section2WallBottom,
+                patternStartX: patternStartX,
+                patternStartY: patternStartY,
+                maintainedWallRelativeX: section1WallRelativeX,
+                maintainedWallRelativeY: section1WallRelativeY
+            });
+        }
+    } else {
+        // Section 1: Use the universal pattern origin directly
+        patternStartX = universalPatternOriginX;
+        patternStartY = universalPatternOriginY;
+        
+        if (isAlpine) {
+            console.log(`🌷 ALPINE TULIP SECTION 1 UNIVERSAL POSITIONING:`, {
+                patternStartX: patternStartX,
+                patternStartY: patternStartY
+            });
+        }
+    }
     
-    // Set clip area - ONLY clip to the actual drawing area, not individual panels
+    // Set clip area - ONLY clip to the actual drawing area
     ctx.save();
     ctx.beginPath();
     ctx.rect(areaX, areaY, areaWidth, areaHeight);
     ctx.clip();
     
-    const patternOriginX = referenceCoords.section1.patternStartX;
-    const patternOriginY = referenceCoords.section1.patternStartY;
-    
-    let coordinateOffsetX = 0;
-    let coordinateOffsetY = 0;
-    
-    if (isSection2) {
-        coordinateOffsetX = referenceCoords.section2.wallStartX - referenceCoords.section1.wallStartX;
-        coordinateOffsetY = referenceCoords.section2.wallStartY - referenceCoords.section1.wallStartY;
-    }
-    
     const drawHeight = isSection2 ? areaHeight : referenceCoords.dimensions.scaledTotalHeight;
     
-    // FIXED: Instead of drawing panel-by-panel, draw continuously across the full area
+    // Draw pattern continuously across the full area using universal positioning
     if (panelIndex !== null) {
         // Section 1: Draw for specific panel but use continuous pattern positioning
         const numPanels = calculations.panelsNeeded;
@@ -77,132 +100,96 @@ function drawPatternInArea(ctx, areaX, areaY, areaWidth, areaHeight, referenceCo
         const totalHorizontalRepeats = Math.ceil(totalPatternWidth / repeatWidthPixels);
         
         if (isAlpine) {
-            console.log(`🔄 ALPINE TULIP CONTINUOUS PATTERN:`, {
+            console.log(`🔄 ALPINE TULIP SECTION 1 CONTINUOUS PATTERN:`, {
                 numPanels: numPanels,
-                totalPatternWidth: totalPatternWidth,
-                totalHorizontalRepeats: totalHorizontalRepeats,
-                targetPanel: panelIndex
+                totalHorizontalRepeats: totalHorizontalRepeats
             });
         }
         
         // Draw all repeats that could be visible in this area
         for (let i = 0; i < totalHorizontalRepeats; i++) {
-            const repeatX = i * repeatWidthPixels; // EXACT positioning - NO ROUNDING
-            const drawX = patternOriginX + repeatX; // EXACT positioning - NO ROUNDING
+            const repeatX = i * repeatWidthPixels;
+            const drawX = patternStartX + repeatX;
             
             // Only draw if this repeat intersects with the current area
             if (drawX + repeatWidthPixels >= areaX && drawX < areaX + areaWidth) {
-                if (isAlpine && i < 10) {
-                    console.log(`🎨 ALPINE TULIP CONTINUOUS REPEAT ${i}:`, {
-                        repeatX: repeatX,
+                if (isAlpine && i < 5) {
+                    console.log(`🎨 ALPINE TULIP SECTION 1 REPEAT ${i}:`, {
                         drawX: drawX,
-                        exactRight: drawX + repeatWidthPixels,
-                        areaRight: areaX + areaWidth,
-                        willDraw: (drawX + repeatWidthPixels >= areaX && drawX < areaX + areaWidth)
+                        repeatX: repeatX
                     });
                 }
                 
                 if (pattern.hasRepeatHeight) {
                     // Vertical repeating pattern
-                    const numVerticalRepeats = Math.ceil(areaHeight / repeatHeightPixels) + 1; // +1 to ensure full coverage
-                    
-                    if (isAlpine && i === 0) {
-                        console.log(`🔄 ALPINE TULIP VERTICAL REPEATS:`, {
-                            areaHeight: areaHeight,
-                            repeatHeightPixels: repeatHeightPixels,
-                            numVerticalRepeats: numVerticalRepeats
-                        });
-                    }
+                    const numVerticalRepeats = Math.ceil(drawHeight / repeatHeightPixels) + 3; // Extra coverage
                     
                     for (let v = 0; v < numVerticalRepeats; v++) {
-                        const repeatY = v * repeatHeightPixels; // EXACT positioning - NO ROUNDING
-                        const drawY = (areaY + areaHeight) - repeatY - repeatHeightPixels; // EXACT positioning - NO ROUNDING
+                        const repeatY = v * repeatHeightPixels;
+                        const drawY = patternStartY - repeatY - repeatHeightPixels;
                         
                         // Only draw if this repeat is visible
                         if (drawY + repeatHeightPixels >= areaY && drawY < areaY + areaHeight) {
-                            if (isAlpine && i === 0 && v < 5) {
-                                console.log(`🎨 ALPINE TULIP VERTICAL REPEAT ${v}:`, {
-                                    repeatY: repeatY,
-                                    drawY: drawY,
-                                    exactBottom: drawY + repeatHeightPixels,
-                                    areaBottom: areaY + areaHeight
-                                });
-                            }
-                            
-                            // FIXED: Use exact pixel dimensions - NO ROUNDING
                             ctx.drawImage(patternImage, drawX, drawY, repeatWidthPixels, repeatHeightPixels);
                         }
                     }
                 } else {
-                    // Non-repeating pattern
-                    const drawY = (areaY + areaHeight) - repeatHeightPixels; // EXACT positioning - NO ROUNDING
+                    // Non-repeating pattern - position at bottom of pattern area
+                    const drawY = patternStartY - repeatHeightPixels;
                     
-                    if (isAlpine && i === 0) {
-                        console.log(`🎨 ALPINE TULIP NON-REPEATING:`, {
-                            areaBottom: areaY + areaHeight,
-                            drawY: drawY,
-                            repeatHeightPixels: repeatHeightPixels
-                        });
+                    if (drawY + repeatHeightPixels >= areaY && drawY < areaY + areaHeight) {
+                        ctx.drawImage(patternImage, drawX, drawY, repeatWidthPixels, repeatHeightPixels);
                     }
-                    
-                    // FIXED: Use exact pixel dimensions - NO ROUNDING
-                    ctx.drawImage(patternImage, drawX, drawY, repeatWidthPixels, repeatHeightPixels);
                 }
             }
         }
     } else {
-        // Section 2: Draw continuously across the full wall area
+        // Section 2: Draw continuously using the same universal positioning system
         const numPanels = calculations.panelsNeeded;
         const totalPatternWidth = numPanels * stripWidthPixels;
         const totalHorizontalRepeats = Math.ceil(totalPatternWidth / repeatWidthPixels);
         
         if (isAlpine) {
-            console.log(`🌷 ALPINE TULIP SECTION 2 CONTINUOUS:`, {
+            console.log(`🌷 ALPINE TULIP SECTION 2 CONTINUOUS PATTERN:`, {
                 numPanels: numPanels,
-                totalPatternWidth: totalPatternWidth,
-                totalHorizontalRepeats: totalHorizontalRepeats,
-                coordinateOffsetX: coordinateOffsetX,
-                coordinateOffsetY: coordinateOffsetY
+                totalHorizontalRepeats: totalHorizontalRepeats
             });
         }
         
-        // Draw all repeats continuously
+        // Draw all repeats continuously using universal coordinates
         for (let i = 0; i < totalHorizontalRepeats; i++) {
-            const repeatX = i * repeatWidthPixels; // EXACT positioning - NO ROUNDING
-            const drawX = patternOriginX + repeatX + coordinateOffsetX; // EXACT positioning - NO ROUNDING
+            const repeatX = i * repeatWidthPixels;
+            const drawX = patternStartX + repeatX;
             
             // Only draw if this repeat intersects with the current area
             if (drawX + repeatWidthPixels >= areaX && drawX < areaX + areaWidth) {
+                if (isAlpine && i < 5) {
+                    console.log(`🎨 ALPINE TULIP SECTION 2 REPEAT ${i}:`, {
+                        drawX: drawX,
+                        repeatX: repeatX
+                    });
+                }
+                
                 if (pattern.hasRepeatHeight) {
-                    const numVerticalRepeats = Math.ceil(areaHeight / repeatHeightPixels) + 1; // +1 to ensure full coverage
+                    // Vertical repeating pattern
+                    const numVerticalRepeats = Math.ceil(areaHeight / repeatHeightPixels) + 3; // Extra coverage
                     
                     for (let v = 0; v < numVerticalRepeats; v++) {
-                        const repeatY = v * repeatHeightPixels; // EXACT positioning - NO ROUNDING
-                        const drawY = (areaY + areaHeight) - repeatY - repeatHeightPixels; // EXACT positioning - NO ROUNDING
+                        const repeatY = v * repeatHeightPixels;
+                        const drawY = patternStartY - repeatY - repeatHeightPixels;
                         
                         // Only draw if this repeat is visible
                         if (drawY + repeatHeightPixels >= areaY && drawY < areaY + areaHeight) {
-                            // FIXED: Use exact pixel dimensions - NO ROUNDING
                             ctx.drawImage(patternImage, drawX, drawY, repeatWidthPixels, repeatHeightPixels);
                         }
                     }
                 } else {
-                    // Non-repeating pattern - need to maintain alignment with Section 1
-                    let drawY;
+                    // Non-repeating pattern - maintain same Y position as Section 1
+                    const drawY = patternStartY - repeatHeightPixels;
                     
-                    if (isSection2) {
-                        const section1PanelBottom = referenceCoords.section1.patternStartY + referenceCoords.dimensions.scaledTotalHeight;
-                        const section1WallBottom = referenceCoords.section1.wallStartY + referenceCoords.dimensions.scaledWallHeight;
-                        const section1PatternBottom = section1PanelBottom - repeatHeightPixels;
-                        const patternOffsetFromWallBottom = section1WallBottom - (section1PatternBottom + repeatHeightPixels);
-                        const section2WallBottom = areaY + areaHeight;
-                        drawY = section2WallBottom - repeatHeightPixels - patternOffsetFromWallBottom; // EXACT positioning - NO ROUNDING
-                    } else {
-                        drawY = (areaY + areaHeight) - repeatHeightPixels; // EXACT positioning - NO ROUNDING
+                    if (drawY + repeatHeightPixels >= areaY && drawY < areaY + areaHeight) {
+                        ctx.drawImage(patternImage, drawX, drawY, repeatWidthPixels, repeatHeightPixels);
                     }
-                    
-                    // FIXED: Use exact pixel dimensions - NO ROUNDING
-                    ctx.drawImage(patternImage, drawX, drawY, repeatWidthPixels, repeatHeightPixels);
                 }
             }
         }
