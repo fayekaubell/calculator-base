@@ -400,6 +400,7 @@ function calculateYardRequirements(pattern, wallWidth, wallHeight) {
     
     // For full-width half-drop patterns, add 1 extra yard
     let extraYardage = 0;
+    const repeatsPerStrip = pattern.panelWidth / pattern.repeatWidth;
     if (isHalfDrop && repeatsPerStrip <= 1) {
         extraYardage = 1;
         console.log('🎯 Adding 1 extra yard for full-width half-drop pattern');
