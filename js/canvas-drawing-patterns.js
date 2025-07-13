@@ -73,12 +73,12 @@ function drawPatternInArea(ctx, areaX, areaY, areaWidth, areaHeight, referenceCo
                     const bottomY = areaY + areaHeight;
                     for (let y = 0 - columnOffset; y >= -areaHeight - repeatH - columnOffset; y -= repeatH) {
                         const drawY = Math.floor(bottomY + y - repeatH);
-                        ctx.drawImage(patternImage, drawX, drawY, Math.ceil(repeatW), Math.ceil(repeatH));
+                        ctx.drawImage(patternImage, drawX, drawY, repeatW, repeatH);
                     }
                 } else {
                     const bottomY = areaY + areaHeight;
                     const drawY = Math.floor(bottomY - repeatH - columnOffset);
-                    ctx.drawImage(patternImage, drawX, drawY, Math.ceil(repeatW), Math.ceil(repeatH));
+                    ctx.drawImage(patternImage, drawX, drawY, repeatW, repeatH);
                 }
                 
                 xPos += repeatW;
@@ -108,19 +108,16 @@ function drawPatternInArea(ctx, areaX, areaY, areaWidth, areaHeight, referenceCo
                         
                         // CRITICAL DEBUG: Only for Alpine Tulip, only first repeat of first panel
                         if (pattern.name.toLowerCase().includes('alpine tulip') && panelIndex === 0 && i === 0) {
-                            console.log(`🔍 ALPINE TULIP drawImage:`, {
+                            console.log(`✅ ALPINE TULIP FIXED - drawImage now using exact dimensions:`, {
                                 exactRepeatW: repeatW,
                                 exactRepeatH: repeatH,
-                                drawnWidth: Math.ceil(repeatW),
-                                drawnHeight: Math.ceil(repeatH),
-                                difference: {
-                                    width: Math.ceil(repeatW) - repeatW,
-                                    height: Math.ceil(repeatH) - repeatH
-                                }
+                                drawnWidth: repeatW,
+                                drawnHeight: repeatH,
+                                previouslyDrawn: Math.ceil(repeatW) + ' (was causing clipping)'
                             });
                         }
                         
-                        ctx.drawImage(patternImage, drawX, drawY, Math.ceil(repeatW), Math.ceil(repeatH));
+                                                            ctx.drawImage(patternImage, drawX, drawY, repeatW, repeatH);
                     }
                 } else {
                     const bottomY = areaY + areaHeight;
@@ -128,15 +125,12 @@ function drawPatternInArea(ctx, areaX, areaY, areaWidth, areaHeight, referenceCo
                     
                     // CRITICAL DEBUG: Only for Alpine Tulip, only first repeat of first panel
                     if (pattern.name.toLowerCase().includes('alpine tulip') && panelIndex === 0 && i === 0) {
-                        console.log(`🔍 ALPINE TULIP drawImage:`, {
+                        console.log(`✅ ALPINE TULIP FIXED - drawImage now using exact dimensions:`, {
                             exactRepeatW: repeatW,
                             exactRepeatH: repeatH,
-                            drawnWidth: Math.ceil(repeatW),
-                            drawnHeight: Math.ceil(repeatH),
-                            difference: {
-                                width: Math.ceil(repeatW) - repeatW,
-                                height: Math.ceil(repeatH) - repeatH
-                            }
+                            drawnWidth: repeatW,
+                            drawnHeight: repeatH,
+                            previouslyDrawn: Math.ceil(repeatW) + ' (was causing clipping)'
                         });
                     }
                     
@@ -179,7 +173,7 @@ function drawPatternInArea(ctx, areaX, areaY, areaWidth, areaHeight, referenceCo
                             for (let y = 0 - columnOffset; y >= -referenceCoords.dimensions.scaledTotalHeight - repeatH - columnOffset; y -= repeatH) {
                                 const drawY = Math.floor(panelBottom + y - repeatH);
                                 if (drawY + repeatH >= areaY && drawY < areaY + areaHeight) {
-                                    ctx.drawImage(patternImage, drawX, drawY, Math.ceil(repeatW), Math.ceil(repeatH));
+                                    ctx.drawImage(patternImage, drawX, drawY, repeatW, repeatH);
                                 }
                             }
                         }
@@ -205,7 +199,7 @@ function drawPatternInArea(ctx, areaX, areaY, areaWidth, areaHeight, referenceCo
                         for (let y = startY; y >= -referenceCoords.dimensions.scaledTotalHeight - repeatH + patternOffsetY; y -= repeatH) {
                             const drawY = Math.floor(panelBottom + y - repeatH);
                             if (drawY + repeatH >= areaY && drawY < areaY + areaHeight) {
-                                ctx.drawImage(patternImage, drawX, drawY, Math.ceil(repeatW), Math.ceil(repeatH));
+                                ctx.drawImage(patternImage, drawX, drawY, repeatW, repeatH);
                             }
                         }
                     } else {
@@ -223,7 +217,7 @@ function drawPatternInArea(ctx, areaX, areaY, areaWidth, areaHeight, referenceCo
                             drawY = Math.floor(panelBottom - repeatH + patternOffsetY);
                         }
                         
-                        ctx.drawImage(patternImage, drawX, drawY, Math.ceil(repeatW), Math.ceil(repeatH));
+                        ctx.drawImage(patternImage, drawX, drawY, repeatW, repeatH);
                     }
                 }
             }
