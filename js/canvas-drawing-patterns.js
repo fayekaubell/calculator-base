@@ -73,12 +73,12 @@ function drawPatternInArea(ctx, areaX, areaY, areaWidth, areaHeight, referenceCo
                     const bottomY = areaY + areaHeight;
                     for (let y = 0 - columnOffset; y >= -areaHeight - repeatH - columnOffset; y -= repeatH) {
                         const drawY = Math.floor(bottomY + y - repeatH);
-                        ctx.drawImage(patternImage, drawX, drawY, repeatW, repeatH);
+                        ctx.drawImage(patternImage, drawX, drawY, repeatW + 0.5, repeatH + 0.5);
                     }
                 } else {
                     const bottomY = areaY + areaHeight;
                     const drawY = Math.floor(bottomY - repeatH - columnOffset);
-                    ctx.drawImage(patternImage, drawX, drawY, repeatW, repeatH);
+                    ctx.drawImage(patternImage, drawX, drawY, repeatW + 0.5, repeatH + 0.5);
                 }
                 
                 xPos += repeatW;
@@ -173,7 +173,7 @@ function drawPatternInArea(ctx, areaX, areaY, areaWidth, areaHeight, referenceCo
                             for (let y = 0 - columnOffset; y >= -referenceCoords.dimensions.scaledTotalHeight - repeatH - columnOffset; y -= repeatH) {
                                 const drawY = Math.floor(panelBottom + y - repeatH);
                                 if (drawY + repeatH >= areaY && drawY < areaY + areaHeight) {
-                                    ctx.drawImage(patternImage, drawX, drawY, repeatW, repeatH);
+                                    ctx.drawImage(patternImage, drawX, drawY, repeatW + 0.5, repeatH + 0.5);
                                 }
                             }
                         }
@@ -183,6 +183,7 @@ function drawPatternInArea(ctx, areaX, areaY, areaWidth, areaHeight, referenceCo
                 // For straight match patterns in Section 2
                 const isFullWidthHalfDrop = isHalfDrop && repeatsPerStrip <= 1;
                 const maxRepeats = Math.floor(panelWidth / repeatW);
+                const overlapPixels = 0.5; // Same overlap for Section 2
                 
                 for (let r = 0; r < maxRepeats; r++) {
                     const x = r * repeatW;
@@ -199,7 +200,7 @@ function drawPatternInArea(ctx, areaX, areaY, areaWidth, areaHeight, referenceCo
                         for (let y = startY; y >= -referenceCoords.dimensions.scaledTotalHeight - repeatH + patternOffsetY; y -= repeatH) {
                             const drawY = Math.floor(panelBottom + y - repeatH);
                             if (drawY + repeatH >= areaY && drawY < areaY + areaHeight) {
-                                ctx.drawImage(patternImage, drawX, drawY, repeatW, repeatH);
+                                ctx.drawImage(patternImage, drawX, drawY, repeatW + overlapPixels, repeatH + overlapPixels);
                             }
                         }
                     } else {
@@ -217,7 +218,7 @@ function drawPatternInArea(ctx, areaX, areaY, areaWidth, areaHeight, referenceCo
                             drawY = Math.floor(panelBottom - repeatH + patternOffsetY);
                         }
                         
-                        ctx.drawImage(patternImage, drawX, drawY, repeatW, repeatH);
+                        ctx.drawImage(patternImage, drawX, drawY, repeatW + overlapPixels, repeatH + overlapPixels);
                     }
                 }
             }
