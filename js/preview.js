@@ -376,12 +376,60 @@ async function openHighResInNewTab() {
             const container = img.parentElement;
             
             if (isZoomed) {
+                // Zoom out - restore to fit container
                 img.classList.remove('zoomed');
                 container.style.overflow = 'auto';
                 isZoomed = false;
             } else {
+                // Zoom in - center on current visible area
+                
+                // Get current scroll position relative to container
+                const containerRect = container.getBoundingClientRect();
+                const currentScrollLeft = container.scrollLeft;
+                const currentScrollTop = container.scrollTop;
+                
+                // Calculate the center point of the currently visible area
+                const visibleCenterX = currentScrollLeft + (container.clientWidth / 2);
+                const visibleCenterY = currentScrollTop + (container.clientHeight / 2);
+                
+                // Get current image dimensions (before zoom)
+                const currentImgWidth = img.offsetWidth;
+                const currentImgHeight = img.offsetHeight;
+                
+                // Calculate the relative position as percentage of current image
+                const centerXPercent = visibleCenterX / currentImgWidth;
+                const centerYPercent = visibleCenterY / currentImgHeight;
+                
+                // Apply zoom
                 img.classList.add('zoomed');
                 container.style.overflow = 'scroll';
+                
+                // Wait for the image to resize, then adjust scroll position
+                setTimeout(() => {
+                    // Get new image dimensions (after zoom)
+                    const newImgWidth = img.offsetWidth;
+                    const newImgHeight = img.offsetHeight;
+                    
+                    // Calculate where the center point is now located
+                    const newCenterX = centerXPercent * newImgWidth;
+                    const newCenterY = centerYPercent * newImgHeight;
+                    
+                    // Calculate new scroll position to keep the center point visible
+                    const newScrollLeft = newCenterX - (container.clientWidth / 2);
+                    const newScrollTop = newCenterY - (container.clientHeight / 2);
+                    
+                    // Apply the scroll position (browser will handle bounds automatically)
+                    container.scrollLeft = Math.max(0, newScrollLeft);
+                    container.scrollTop = Math.max(0, newScrollTop);
+                    
+                    console.log('🔍 Zoom centered on:', {
+                        originalCenter: { x: visibleCenterX, y: visibleCenterY },
+                        percentages: { x: centerXPercent, y: centerYPercent },
+                        newCenter: { x: newCenterX, y: newCenterY },
+                        newScroll: { left: newScrollLeft, top: newScrollTop }
+                    });
+                }, 50); // Small delay to ensure CSS changes are applied
+                
                 isZoomed = true;
             }
         }
