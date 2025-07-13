@@ -397,7 +397,15 @@ function calculateYardRequirements(pattern, wallWidth, wallHeight) {
     // Calculate total yardage
     const totalInches = stripLengths.reduce((sum, length) => sum + length, 0);
     const totalYardageRaw = totalInches / 36;
-    const totalYardage = Math.max(Math.ceil(totalYardageRaw), pattern.minYardOrder || 5);
+    
+    // For full-width half-drop patterns, add 1 extra yard
+    let extraYardage = 0;
+    if (isHalfDrop && repeatsPerStrip <= 1) {
+        extraYardage = 1;
+        console.log('🎯 Adding 1 extra yard for full-width half-drop pattern');
+    }
+    
+    const totalYardage = Math.max(Math.ceil(totalYardageRaw + extraYardage), pattern.minYardOrder || 5);
     
     console.log('📏 Yard calculation result:', {
         stripsNeeded,
