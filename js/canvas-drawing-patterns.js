@@ -137,29 +137,12 @@ function drawPatternInArea(ctx, areaX, areaY, areaWidth, areaHeight, referenceCo
                 }
                 
                 if (pattern.hasRepeatHeight) {
-                    // FIXED: Section 1 half-drop bottom gap coverage
-                    const baseNumVerticalRepeats = Math.ceil(drawHeight / repeatHeightPixels) + 3;
-                    
-                    // For half-drop patterns, calculate additional coverage needed
-                    let numVerticalRepeats = baseNumVerticalRepeats;
-                    if (isHalfDrop) {
-                        // When offset is applied, pattern moves UP, creating gap at bottom
-                        // We need to extend the pattern DOWN to fill this gap
-                        const isOffsetPanel = panelForThisRepeat % 2 === 1;
-                        if (isOffsetPanel) {
-                            // Add enough repeats to cover the offset gap at the bottom
-                            // The offset creates a gap equal to half the repeat height
-                            const gapCoverage = Math.ceil((halfDropOffset) / repeatHeightPixels);
-                            numVerticalRepeats += gapCoverage + 1; // +1 for safety margin
-                        } else {
-                            // Even panels still need some extra coverage for seamless tiling
-                            numVerticalRepeats += 1;
-                        }
-                    }
+                    // Vertical repeating pattern with half-drop offset DOWN (eliminates bottom gap)
+                    const numVerticalRepeats = Math.ceil(drawHeight / repeatHeightPixels) + 3;
                     
                     for (let v = 0; v < numVerticalRepeats; v++) {
                         const repeatY = v * repeatHeightPixels;
-                        const drawY = patternStartY - repeatY - repeatHeightPixels - halfDropOffset;
+                        const drawY = patternStartY - repeatY - repeatHeightPixels + halfDropOffset;
                         
                         // Only draw if this repeat is visible
                         if (drawY + repeatHeightPixels >= areaY && drawY < areaY + areaHeight) {
@@ -168,7 +151,7 @@ function drawPatternInArea(ctx, areaX, areaY, areaWidth, areaHeight, referenceCo
                     }
                 } else {
                     // Non-repeating pattern - position at bottom of pattern area with half-drop offset
-                    const drawY = patternStartY - repeatHeightPixels - halfDropOffset;
+                    const drawY = patternStartY - repeatHeightPixels + halfDropOffset;
                     
                     if (drawY + repeatHeightPixels >= areaY && drawY < areaY + areaHeight) {
                         ctx.drawImage(patternImage, drawX, drawY, repeatWidthPixels, repeatHeightPixels);
@@ -213,10 +196,10 @@ function drawPatternInArea(ctx, areaX, areaY, areaWidth, areaHeight, referenceCo
                 }
                 
                 if (pattern.hasRepeatHeight) {
-                    // Vertical repeating pattern with half-drop offset
+                    // Vertical repeating pattern with half-drop offset DOWN (consistent with Section 1)
                     const baseNumVerticalRepeats = Math.ceil(areaHeight / repeatHeightPixels) + 3;
                     
-                    // Add one extra repeat at the bottom for offset panels to fill white space
+                    // For half-drop, we may need one extra repeat if the downward offset pushes pattern beyond area
                     const extraRepeatForOffset = (isHalfDrop && panelForThisRepeat % 2 === 1) ? 1 : 0;
                     const numVerticalRepeats = baseNumVerticalRepeats + extraRepeatForOffset;
                     
