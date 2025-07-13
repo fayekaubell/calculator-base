@@ -138,7 +138,9 @@ function drawPatternInArea(ctx, areaX, areaY, areaWidth, areaHeight, referenceCo
                 
                 if (pattern.hasRepeatHeight) {
                     // Vertical repeating pattern with half-drop offset
-                    const numVerticalRepeats = Math.ceil(drawHeight / repeatHeightPixels) + 3; // Extra coverage
+                    // Add extra repeats to account for half-drop offset pushing pattern down
+                    const extraRepeatsForHalfDrop = isHalfDrop ? 2 : 0;
+                    const numVerticalRepeats = Math.ceil(drawHeight / repeatHeightPixels) + 3 + extraRepeatsForHalfDrop;
                     
                     for (let v = 0; v < numVerticalRepeats; v++) {
                         const repeatY = v * repeatHeightPixels;
@@ -194,7 +196,9 @@ function drawPatternInArea(ctx, areaX, areaY, areaWidth, areaHeight, referenceCo
                 
                 if (pattern.hasRepeatHeight) {
                     // Vertical repeating pattern with half-drop offset
-                    const numVerticalRepeats = Math.ceil(areaHeight / repeatHeightPixels) + 3; // Extra coverage
+                    // Add extra repeats to account for half-drop offset pushing pattern down
+                    const extraRepeatsForHalfDrop = isHalfDrop ? 2 : 0;
+                    const numVerticalRepeats = Math.ceil(areaHeight / repeatHeightPixels) + 3 + extraRepeatsForHalfDrop;
                     
                     for (let v = 0; v < numVerticalRepeats; v++) {
                         const repeatY = v * repeatHeightPixels;
