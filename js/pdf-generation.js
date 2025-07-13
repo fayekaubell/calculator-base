@@ -471,7 +471,7 @@ async function addEnhancedTextContentToPDF(pdf, startX, startY, maxWidth, availa
         `SKU: ${pattern.sku || 'N/A'}`,
         `Match: ${formatPatternMatch(pattern.patternMatch)}`,
         `Repeat: ${formatDimension(pattern.repeatWidth)}w ${pattern.hasRepeatHeight ? 'x ' + formatDimension(pattern.repeatHeight) + 'h' : '/ No vertical repeat'}`,
-        `Panel Width: ${formatDimension(pattern.panelWidth)}`
+        `Material Width: ${formatDimension(pattern.panelWidth)}`
     ];
     
     patternDetails.forEach(detail => {
