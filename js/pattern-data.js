@@ -1,5 +1,5 @@
 // Pattern Data Module - Data loading, CSV parsing, and calculations
-// CLEAN VERSION - No debug logs
+// UPDATED: Multi-repeat half-drop pattern support in yard calculations
 
 // Global variables for data
 let patterns = {};
@@ -240,7 +240,7 @@ function calculatePanelRequirements(pattern, wallWidth, wallHeight) {
     };
 }
 
-// Calculate yard requirements
+// Calculate yard requirements - UPDATED for multi-repeat half-drop support
 function calculateYardRequirements(pattern, wallWidth, wallHeight) {
     const totalWidth = wallWidth + pattern.minOverage;
     const totalHeight = wallHeight + pattern.minOverage;
@@ -276,26 +276,54 @@ function calculateYardRequirements(pattern, wallWidth, wallHeight) {
     }
     
     const stripsNeeded = Math.ceil(totalWidth / pattern.panelWidth);
+    const repeatsPerPanel = pattern.panelWidth / pattern.repeatWidth;
+    
+    // Enhanced logging for half-drop yard calculations
+    if (isHalfDrop) {
+        console.log(`🔄 HALF-DROP YARD CALCULATION for ${pattern.name}:`, {
+            repeatsPerPanel: repeatsPerPanel,
+            isMultiRepeat: repeatsPerPanel >= 2,
+            totalWidth: totalWidth,
+            totalHeight: totalHeight,
+            stripsNeeded: stripsNeeded
+        });
+    }
     
     let stripLengths = [];
     let maxStripLength = 0;
     
     if (isHalfDrop) {
-        const repeatsPerStrip = pattern.panelWidth / pattern.repeatWidth;
-        
-        if (repeatsPerStrip > 1) {
+        if (repeatsPerPanel >= 2) {
+            // UPDATED: Multi-repeat half-drop patterns
+            // Panels align straight, so no extra height needed for panel offset
+            // Just calculate enough height to cover the wall with proper repeats
             const repeatsNeeded = Math.ceil(totalHeight / pattern.repeatHeight);
             const stripLengthInches = repeatsNeeded * pattern.repeatHeight;
+            
+            console.log(`📐 Multi-repeat half-drop calculation:`, {
+                repeatsNeeded: repeatsNeeded,
+                stripLengthInches: stripLengthInches,
+                patternHeight: pattern.repeatHeight
+            });
             
             for (let i = 0; i < stripsNeeded; i++) {
                 stripLengths.push(stripLengthInches);
             }
             maxStripLength = stripLengthInches;
         } else {
+            // EXISTING: Single-repeat half-drop patterns (every other panel offset)
+            // Need extra height to accommodate the panel offset
             const baseHeight = totalHeight;
             const withOffset = baseHeight + (pattern.repeatHeight / 2);
             const repeatsNeeded = Math.ceil(withOffset / pattern.repeatHeight);
             const stripLengthInches = repeatsNeeded * pattern.repeatHeight;
+            
+            console.log(`📐 Single-repeat half-drop calculation:`, {
+                baseHeight: baseHeight,
+                withOffset: withOffset,
+                repeatsNeeded: repeatsNeeded,
+                stripLengthInches: stripLengthInches
+            });
             
             for (let i = 0; i < stripsNeeded; i++) {
                 stripLengths.push(stripLengthInches);
@@ -303,6 +331,7 @@ function calculateYardRequirements(pattern, wallWidth, wallHeight) {
             maxStripLength = stripLengthInches;
         }
     } else {
+        // Straight match patterns
         const repeatsNeeded = Math.ceil(totalHeight / pattern.repeatHeight);
         const stripLengthInches = repeatsNeeded * pattern.repeatHeight;
         
@@ -315,13 +344,25 @@ function calculateYardRequirements(pattern, wallWidth, wallHeight) {
     const totalInches = stripLengths.reduce((sum, length) => sum + length, 0);
     const totalYardageRaw = totalInches / 36;
     
+    // UPDATED: Extra yardage logic for half-drop patterns
     let extraYardage = 0;
-    const repeatsPerStrip = pattern.panelWidth / pattern.repeatWidth;
-    if (isHalfDrop && repeatsPerStrip <= 1) {
+    if (isHalfDrop && repeatsPerPanel <= 1) {
+        // Only add extra yardage for single-repeat half-drop patterns
         extraYardage = 1;
+        console.log(`🔄 Adding extra yardage for single-repeat half-drop pattern`);
+    } else if (isHalfDrop && repeatsPerPanel >= 2) {
+        // Multi-repeat half-drop patterns don't need extra yardage since panels align
+        console.log(`📐 No extra yardage needed for multi-repeat half-drop pattern`);
     }
     
     const totalYardage = Math.max(Math.ceil(totalYardageRaw + extraYardage), pattern.minYardOrder || 5);
+    
+    console.log(`✅ YARD CALCULATION COMPLETE:`, {
+        totalYardageRaw: totalYardageRaw,
+        extraYardage: extraYardage,
+        finalTotalYardage: totalYardage,
+        maxStripLength: maxStripLength
+    });
     
     return {
         panelsNeeded: stripsNeeded,
@@ -334,7 +375,8 @@ function calculateYardRequirements(pattern, wallWidth, wallHeight) {
         stripLengthInches: maxStripLength,
         stripLengths: stripLengths,
         patternMatch: pattern.patternMatch || 'straight',
-        isHalfDrop: isHalfDrop
+        isHalfDrop: isHalfDrop,
+        repeatsPerPanel: repeatsPerPanel
     };
 }
 
