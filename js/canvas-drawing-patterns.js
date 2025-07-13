@@ -1,5 +1,4 @@
-// Canvas Drawing Patterns Module - SIMPLE auto-sizing approach
-// Each repeat automatically sizes to fit perfectly within strip width
+// Canvas Drawing Patterns Module - EXACT PIXELS - No rounding anywhere
 
 function calculateHalfDropVisualOffset(pattern, panelIndex) {
     return 0;
@@ -15,20 +14,20 @@ function drawPatternInArea(ctx, areaX, areaY, areaWidth, areaHeight, referenceCo
     
     const { scale } = referenceCoords;
     
-    // SIMPLE: Calculate repeat size based on strip width divided by number of repeats
+    // EXACT: Calculate repeat size to fit perfectly within strip width
     const stripWidthPixels = pattern.panelWidth * scale;
     const repeatsPerStrip = pattern.panelWidth / pattern.repeatWidth; // For Alpine Tulip: 27/9 = 3
-    const repeatWidthPixels = stripWidthPixels / repeatsPerStrip; // Exact fit, no fractions
+    const repeatWidthPixels = stripWidthPixels / repeatsPerStrip; // EXACT fit, no rounding
     const repeatHeightPixels = (pattern.repeatHeight / pattern.repeatWidth) * repeatWidthPixels; // Maintain aspect ratio
     
     // DEBUG for Alpine Tulip
     if (pattern.name.toLowerCase().includes('alpine tulip') && panelIndex === 0) {
-        console.log(`🔥 SIMPLE ALPINE TULIP:`, {
+        console.log(`🎯 EXACT PIXELS ALPINE TULIP:`, {
             stripWidthPixels: stripWidthPixels,
             repeatsPerStrip: repeatsPerStrip,
-            repeatWidthPixels: repeatWidthPixels,
-            repeatHeightPixels: repeatHeightPixels,
-            calculation: `${stripWidthPixels} ÷ ${repeatsPerStrip} = ${repeatWidthPixels} pixels per repeat`
+            exactRepeatWidth: repeatWidthPixels,
+            exactRepeatHeight: repeatHeightPixels,
+            calculation: `${stripWidthPixels} ÷ ${repeatsPerStrip} = ${repeatWidthPixels} EXACT pixels per repeat`
         });
     }
     
@@ -62,11 +61,11 @@ function drawPatternInArea(ctx, areaX, areaY, areaWidth, areaHeight, referenceCo
         const sequencePosition = pattern.sequenceLength === 0 ? 0 : panelIndex % pattern.sequenceLength;
         const sourceOffsetX = sequencePosition * offsetPerPanel;
         
-        // SIMPLE: Draw exactly the number of repeats that fit, each at exact size
+        // EXACT: Draw exactly the number of repeats that fit, each at EXACT size
         const numRepeats = Math.round(repeatsPerStrip); // For Alpine Tulip: 3
         
         for (let i = 0; i < numRepeats; i++) {
-            const repeatX = i * repeatWidthPixels;
+            const repeatX = i * repeatWidthPixels; // EXACT positioning
             const drawX = Math.floor(areaX + repeatX - (sourceOffsetX * scale));
             
             if (pattern.hasRepeatHeight) {
@@ -75,18 +74,20 @@ function drawPatternInArea(ctx, areaX, areaY, areaWidth, areaHeight, referenceCo
                 const numVerticalRepeats = Math.ceil(areaHeight / repeatHeightPixels);
                 
                 for (let v = 0; v < numVerticalRepeats; v++) {
-                    const repeatY = v * repeatHeightPixels;
+                    const repeatY = v * repeatHeightPixels; // EXACT positioning
                     const drawY = Math.floor(bottomY - repeatY - repeatHeightPixels);
                     
                     if (pattern.name.toLowerCase().includes('alpine tulip') && panelIndex === 0 && i === 0 && v === 0) {
-                        console.log(`✅ SIMPLE drawImage - perfect fit:`, {
-                            drawWidth: Math.round(repeatWidthPixels),
-                            drawHeight: Math.round(repeatHeightPixels),
-                            position: `${drawX}, ${drawY}`
+                        console.log(`✅ EXACT PIXELS drawImage:`, {
+                            exactWidth: repeatWidthPixels,
+                            exactHeight: repeatHeightPixels,
+                            position: `${drawX}, ${drawY}`,
+                            noRounding: 'Using exact fractional pixels for perfect fit'
                         });
                     }
                     
-                    ctx.drawImage(patternImage, drawX, drawY, Math.round(repeatWidthPixels), Math.round(repeatHeightPixels));
+                    // EXACT: Use exact pixel dimensions - no rounding
+                    ctx.drawImage(patternImage, drawX, drawY, repeatWidthPixels, repeatHeightPixels);
                 }
             } else {
                 // Non-repeating pattern
@@ -94,14 +95,16 @@ function drawPatternInArea(ctx, areaX, areaY, areaWidth, areaHeight, referenceCo
                 const drawY = Math.floor(bottomY - repeatHeightPixels);
                 
                 if (pattern.name.toLowerCase().includes('alpine tulip') && panelIndex === 0 && i === 0) {
-                    console.log(`✅ SIMPLE drawImage - perfect fit:`, {
-                        drawWidth: Math.round(repeatWidthPixels),
-                        drawHeight: Math.round(repeatHeightPixels),
-                        position: `${drawX}, ${drawY}`
+                    console.log(`✅ EXACT PIXELS drawImage:`, {
+                        exactWidth: repeatWidthPixels,
+                        exactHeight: repeatHeightPixels,
+                        position: `${drawX}, ${drawY}`,
+                        noRounding: 'Using exact fractional pixels for perfect fit'
                     });
                 }
                 
-                ctx.drawImage(patternImage, drawX, drawY, Math.round(repeatWidthPixels), Math.round(repeatHeightPixels));
+                // EXACT: Use exact pixel dimensions - no rounding
+                ctx.drawImage(patternImage, drawX, drawY, repeatWidthPixels, repeatHeightPixels);
             }
         }
     } else {
@@ -123,11 +126,11 @@ function drawPatternInArea(ctx, areaX, areaY, areaWidth, areaHeight, referenceCo
             const sequencePosition = pattern.sequenceLength === 0 ? 0 : panelIdx % pattern.sequenceLength;
             const sourceOffsetX = sequencePosition * offsetPerPanel;
             
-            // SIMPLE: Same logic for Section 2
+            // EXACT: Same logic for Section 2
             const numRepeats = Math.round(repeatsPerStrip);
             
             for (let i = 0; i < numRepeats; i++) {
-                const repeatX = i * repeatWidthPixels;
+                const repeatX = i * repeatWidthPixels; // EXACT positioning
                 const drawX = Math.floor(drawPanelX + repeatX - (sourceOffsetX * scale));
                 
                 if (pattern.hasRepeatHeight) {
@@ -135,11 +138,12 @@ function drawPatternInArea(ctx, areaX, areaY, areaWidth, areaHeight, referenceCo
                     const numVerticalRepeats = Math.ceil(referenceCoords.dimensions.scaledTotalHeight / repeatHeightPixels);
                     
                     for (let v = 0; v < numVerticalRepeats; v++) {
-                        const repeatY = v * repeatHeightPixels;
+                        const repeatY = v * repeatHeightPixels; // EXACT positioning
                         const drawY = Math.floor(panelBottom - repeatY - repeatHeightPixels);
                         
                         if (drawY + repeatHeightPixels >= areaY && drawY < areaY + areaHeight) {
-                            ctx.drawImage(patternImage, drawX, drawY, Math.round(repeatWidthPixels), Math.round(repeatHeightPixels));
+                            // EXACT: Use exact pixel dimensions - no rounding
+                            ctx.drawImage(patternImage, drawX, drawY, repeatWidthPixels, repeatHeightPixels);
                         }
                     }
                 } else {
@@ -157,7 +161,8 @@ function drawPatternInArea(ctx, areaX, areaY, areaWidth, areaHeight, referenceCo
                         drawY = Math.floor(panelBottom - repeatHeightPixels);
                     }
                     
-                    ctx.drawImage(patternImage, drawX, drawY, Math.round(repeatWidthPixels), Math.round(repeatHeightPixels));
+                    // EXACT: Use exact pixel dimensions - no rounding
+                    ctx.drawImage(patternImage, drawX, drawY, repeatWidthPixels, repeatHeightPixels);
                 }
             }
         }
