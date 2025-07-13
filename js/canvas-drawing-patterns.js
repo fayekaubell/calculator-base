@@ -200,7 +200,10 @@ function drawPatternInArea(ctx, areaX, areaY, areaWidth, areaHeight, referenceCo
                     const extraRepeatsForHalfDrop = isHalfDrop ? 2 : 0;
                     const numVerticalRepeats = Math.ceil(areaHeight / repeatHeightPixels) + 3 + extraRepeatsForHalfDrop;
                     
-                    for (let v = 0; v < numVerticalRepeats; v++) {
+                    // Start from negative values to ensure coverage above, and extend further down for half-drop
+                    const startV = isHalfDrop ? -1 : 0;
+                    
+                    for (let v = startV; v < numVerticalRepeats; v++) {
                         const repeatY = v * repeatHeightPixels;
                         const drawY = patternStartY - repeatY - repeatHeightPixels - halfDropOffset;
                         
