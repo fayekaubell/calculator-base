@@ -59,30 +59,11 @@ function drawPatternInArea(ctx, areaX, areaY, areaWidth, areaHeight, referenceCo
         });
     }
     
-    // Set clip area with small buffer to prevent edge clipping
+    // Set clip area
     ctx.save();
     ctx.beginPath();
-    // Add 2 pixels buffer on all sides to prevent slight edge clipping
-    const clipBuffer = 2;
-    ctx.rect(
-        Math.floor(areaX - clipBuffer), 
-        Math.floor(areaY - clipBuffer), 
-        Math.ceil(areaWidth + clipBuffer * 2), 
-        Math.ceil(areaHeight + clipBuffer * 2)
-    );
+    ctx.rect(Math.floor(areaX), Math.floor(areaY), Math.ceil(areaWidth), Math.ceil(areaHeight));
     ctx.clip();
-    
-    if (isAlpineTulip) {
-        console.log(`🌷 ALPINE TULIP - Clipping area:`, {
-            originalArea: {x: areaX, y: areaY, w: areaWidth, h: areaHeight},
-            clippingArea: {
-                x: Math.floor(areaX - clipBuffer),
-                y: Math.floor(areaY - clipBuffer), 
-                w: Math.ceil(areaWidth + clipBuffer * 2),
-                h: Math.ceil(areaHeight + clipBuffer * 2)
-            }
-        });
-    }
     
     // Use consistent pattern origin for both sections
     const patternOriginX = referenceCoords.section1.patternStartX;
@@ -185,11 +166,39 @@ function drawPatternInArea(ctx, areaX, areaY, areaWidth, areaHeight, referenceCo
                     const startY = patternOffsetY < 0 ? repeatH + patternOffsetY : 0 + patternOffsetY;
                     for (let y = startY; y >= -areaHeight - repeatH + patternOffsetY; y -= repeatH) {
                         const drawY = Math.floor(bottomY + y - repeatH);
+                        
+                        if (isAlpineTulip && i === 0) {
+                            console.log(`🌷 ALPINE TULIP - drawImage call for repeat ${i}:`, {
+                                drawX: drawX,
+                                drawY: drawY,
+                                drawWidth: Math.ceil(repeatW),
+                                drawHeight: Math.ceil(repeatH),
+                                exactRepeatW: repeatW,
+                                exactRepeatH: repeatH,
+                                imageNaturalWidth: patternImage.naturalWidth,
+                                imageNaturalHeight: patternImage.naturalHeight
+                            });
+                        }
+                        
                         ctx.drawImage(patternImage, drawX, drawY, Math.ceil(repeatW), Math.ceil(repeatH));
                     }
                 } else {
                     const bottomY = areaY + areaHeight;
                     const drawY = Math.floor(bottomY - repeatH + patternOffsetY);
+                    
+                    if (isAlpineTulip && i === 0) {
+                        console.log(`🌷 ALPINE TULIP - drawImage call for repeat ${i}:`, {
+                            drawX: drawX,
+                            drawY: drawY,
+                            drawWidth: Math.ceil(repeatW),
+                            drawHeight: Math.ceil(repeatH),
+                            exactRepeatW: repeatW,
+                            exactRepeatH: repeatH,
+                            imageNaturalWidth: patternImage.naturalWidth,
+                            imageNaturalHeight: patternImage.naturalHeight
+                        });
+                    }
+                    
                     ctx.drawImage(patternImage, drawX, drawY, Math.ceil(repeatW), Math.ceil(repeatH));
                 }
             }
