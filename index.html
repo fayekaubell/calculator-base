@@ -67,9 +67,25 @@
                 <div class="form-group">
                     <h3>Select Wallpaper Pattern</h3>
                     <div class="pattern-input">
-                        <select id="pattern" required aria-describedby="pattern-help">
-                            <option value="">Choose a pattern...</option>
-                        </select>
+                        <!-- Custom Searchable Dropdown -->
+                        <div class="custom-dropdown" id="patternDropdown">
+                            <div class="dropdown-selected" id="dropdownSelected" tabindex="0" role="combobox" aria-expanded="false" aria-haspopup="listbox">
+                                <span class="selected-text">Choose a pattern...</span>
+                                <span class="dropdown-arrow">▼</span>
+                            </div>
+                            <div class="dropdown-options" id="dropdownOptions" role="listbox">
+                                <div class="dropdown-search">
+                                    <input type="text" id="patternSearch" placeholder="Search patterns..." autocomplete="off" aria-label="Search wallpaper patterns">
+                                </div>
+                                <div class="options-list" id="optionsList">
+                                    <!-- Options will be populated by JavaScript -->
+                                </div>
+                            </div>
+                        </div>
+                        
+                        <!-- Hidden input to maintain form compatibility -->
+                        <input type="hidden" id="pattern" name="pattern" required>
+                        
                         <div id="pattern-help" class="sr-only">Select a wallpaper pattern from the dropdown to begin calculations</div>
                     </div>
                 </div>
