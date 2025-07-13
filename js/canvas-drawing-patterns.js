@@ -1,13 +1,52 @@
-// Canvas Drawing Patterns Module - FIXED: Half-drop Section 1 bottom gap coverage
+// Canvas Drawing Patterns Module - UPDATED: Multi-repeat half-drop pattern support
 
 function calculateHalfDropVisualOffset(pattern, panelIndex) {
     // Calculate half-drop offset for patterns that need it
     const isHalfDrop = pattern.patternMatch && pattern.patternMatch.toLowerCase() === 'half drop';
     if (!isHalfDrop) return 0;
     
-    // For half-drop patterns, alternate panels are offset by half the repeat height
-    const isOddPanel = panelIndex % 2 === 1;
-    return isOddPanel ? pattern.repeatHeight / 2 : 0;
+    // Calculate repeats per panel
+    const repeatsPerPanel = pattern.panelWidth / pattern.repeatWidth;
+    
+    console.log(`🔄 Half-drop calculation for ${pattern.name}:`, {
+        panelIndex,
+        repeatsPerPanel,
+        panelWidth: pattern.panelWidth,
+        repeatWidth: pattern.repeatWidth
+    });
+    
+    // NEW LOGIC: Multi-repeat vs single-repeat behavior
+    if (repeatsPerPanel >= 2) {
+        // Multi-repeat patterns: No panel-level offset
+        // Individual tiles within panels will be handled in drawPatternInArea
+        console.log(`📐 Multi-repeat half-drop: Panel ${panelIndex} gets NO panel offset`);
+        return 0;
+    } else {
+        // Single-repeat patterns: Alternate panel offset (existing behavior)
+        const isOddPanel = panelIndex % 2 === 1;
+        const offset = isOddPanel ? pattern.repeatHeight / 2 : 0;
+        console.log(`📐 Single-repeat half-drop: Panel ${panelIndex} gets ${offset}" offset`);
+        return offset;
+    }
+}
+
+function calculateTileOffsetWithinPanel(pattern, tileIndex) {
+    // NEW FUNCTION: Calculate offset for individual tiles within a panel
+    const isHalfDrop = pattern.patternMatch && pattern.patternMatch.toLowerCase() === 'half drop';
+    if (!isHalfDrop) return 0;
+    
+    const repeatsPerPanel = pattern.panelWidth / pattern.repeatWidth;
+    
+    if (repeatsPerPanel >= 2) {
+        // Multi-repeat patterns: Alternate tiles within panel
+        const isOddTile = tileIndex % 2 === 1;
+        const offset = isOddTile ? pattern.repeatHeight / 2 : 0;
+        console.log(`🎯 Tile ${tileIndex} within panel gets ${offset}" offset`);
+        return offset;
+    }
+    
+    // Single-repeat patterns: No tile-level offset (handled at panel level)
+    return 0;
 }
 
 function drawPatternInArea(ctx, areaX, areaY, areaWidth, areaHeight, referenceCoords, isSection2 = false, panelIndex = null) {
@@ -22,23 +61,23 @@ function drawPatternInArea(ctx, areaX, areaY, areaWidth, areaHeight, referenceCo
     
     // Check if this is a half-drop pattern
     const isHalfDrop = pattern.patternMatch && pattern.patternMatch.toLowerCase() === 'half drop';
+    const repeatsPerPanel = pattern.panelWidth / pattern.repeatWidth;
     
-    // DEBUG: Log basic info for Alpine Tulip
-    const isAlpine = pattern.name.toLowerCase().includes('alpine tulip');
-    if (isAlpine) {
-        console.log(`🌷 ALPINE TULIP UNIVERSAL FIX - ${isSection2 ? 'Section 2' : 'Section 1'} Panel ${panelIndex}:`, {
+    // Enhanced logging for half-drop patterns
+    if (isHalfDrop) {
+        console.log(`🌟 HALF-DROP PATTERN: ${pattern.name} - ${isSection2 ? 'Section 2' : 'Section 1'} Panel ${panelIndex}:`, {
+            repeatsPerPanel: repeatsPerPanel,
+            isMultiRepeat: repeatsPerPanel >= 2,
             areaX: areaX,
             areaY: areaY, 
             areaWidth: areaWidth,
-            areaHeight: areaHeight,
-            isHalfDrop: isHalfDrop
+            areaHeight: areaHeight
         });
     }
     
     // Calculate repeat size to fit perfectly within strip width
     const stripWidthPixels = pattern.panelWidth * scale;
-    const repeatsPerStrip = pattern.panelWidth / pattern.repeatWidth;
-    const repeatWidthPixels = stripWidthPixels / repeatsPerStrip; // EXACT fit, no rounding
+    const repeatWidthPixels = stripWidthPixels / repeatsPerPanel; // EXACT fit, no rounding
     const repeatHeightPixels = (pattern.repeatHeight / pattern.repeatWidth) * repeatWidthPixels; // Maintain aspect ratio
     
     // UNIVERSAL COORDINATE SYSTEM - THE KEY FIX
@@ -50,8 +89,8 @@ function drawPatternInArea(ctx, areaX, areaY, areaWidth, areaHeight, referenceCo
     const section1WallRelativeX = referenceCoords.section1.wallStartX - universalPatternOriginX;
     const section1WallRelativeY = universalPatternOriginY - (referenceCoords.section1.wallStartY + referenceCoords.dimensions.scaledWallHeight);
     
-    if (isAlpine) {
-        console.log(`🎯 ALPINE TULIP UNIVERSAL COORDINATES:`, {
+    if (isHalfDrop) {
+        console.log(`🎯 HALF-DROP UNIVERSAL COORDINATES:`, {
             universalPatternOriginX: universalPatternOriginX,
             universalPatternOriginY: universalPatternOriginY,
             section1WallRelativeX: section1WallRelativeX,
@@ -71,8 +110,8 @@ function drawPatternInArea(ctx, areaX, areaY, areaWidth, areaHeight, referenceCo
         patternStartX = section2WallLeft - section1WallRelativeX;
         patternStartY = section2WallBottom + section1WallRelativeY;
         
-        if (isAlpine) {
-            console.log(`🌷 ALPINE TULIP SECTION 2 UNIVERSAL POSITIONING:`, {
+        if (isHalfDrop) {
+            console.log(`🌟 HALF-DROP SECTION 2 UNIVERSAL POSITIONING:`, {
                 section2WallLeft: section2WallLeft,
                 section2WallBottom: section2WallBottom,
                 patternStartX: patternStartX,
@@ -86,8 +125,8 @@ function drawPatternInArea(ctx, areaX, areaY, areaWidth, areaHeight, referenceCo
         patternStartX = universalPatternOriginX;
         patternStartY = universalPatternOriginY;
         
-        if (isAlpine) {
-            console.log(`🌷 ALPINE TULIP SECTION 1 UNIVERSAL POSITIONING:`, {
+        if (isHalfDrop) {
+            console.log(`🌟 HALF-DROP SECTION 1 UNIVERSAL POSITIONING:`, {
                 patternStartX: patternStartX,
                 patternStartY: patternStartY
             });
@@ -109,10 +148,11 @@ function drawPatternInArea(ctx, areaX, areaY, areaWidth, areaHeight, referenceCo
         const totalPatternWidth = numPanels * stripWidthPixels;
         const totalHorizontalRepeats = Math.ceil(totalPatternWidth / repeatWidthPixels);
         
-        if (isAlpine) {
-            console.log(`🔄 ALPINE TULIP SECTION 1 CONTINUOUS PATTERN:`, {
+        if (isHalfDrop) {
+            console.log(`🔄 HALF-DROP SECTION 1 CONTINUOUS PATTERN:`, {
                 numPanels: numPanels,
-                totalHorizontalRepeats: totalHorizontalRepeats
+                totalHorizontalRepeats: totalHorizontalRepeats,
+                repeatsPerPanel: repeatsPerPanel
             });
         }
         
@@ -121,21 +161,41 @@ function drawPatternInArea(ctx, areaX, areaY, areaWidth, areaHeight, referenceCo
             const repeatX = i * repeatWidthPixels;
             const drawX = patternStartX + repeatX;
             
-            // Calculate half-drop offset for this specific panel position
-            const panelForThisRepeat = Math.floor(i * pattern.repeatWidth / pattern.panelWidth);
-            const halfDropOffset = isHalfDrop ? calculateHalfDropVisualOffset(pattern, panelForThisRepeat) * scale : 0;
+            // UPDATED HALF-DROP LOGIC: Multi-repeat vs single-repeat
+            let halfDropOffset = 0;
+            
+            if (isHalfDrop) {
+                if (repeatsPerPanel >= 2) {
+                    // Multi-repeat patterns: Use tile-based offset within panel
+                    const tileIndexWithinPanel = i % repeatsPerPanel;
+                    halfDropOffset = calculateTileOffsetWithinPanel(pattern, tileIndexWithinPanel) * scale;
+                    
+                    if (i < 8) { // Log first few for debugging
+                        console.log(`🎨 MULTI-REPEAT TILE ${i} (tile ${tileIndexWithinPanel} in panel):`, {
+                            drawX: drawX,
+                            repeatX: repeatX,
+                            halfDropOffset: halfDropOffset,
+                            tileIndexWithinPanel: tileIndexWithinPanel
+                        });
+                    }
+                } else {
+                    // Single-repeat patterns: Use panel-based offset (existing logic)
+                    const panelForThisRepeat = Math.floor(i * pattern.repeatWidth / pattern.panelWidth);
+                    halfDropOffset = calculateHalfDropVisualOffset(pattern, panelForThisRepeat) * scale;
+                    
+                    if (i < 5) { // Log first few for debugging
+                        console.log(`🎨 SINGLE-REPEAT PANEL ${i}:`, {
+                            drawX: drawX,
+                            repeatX: repeatX,
+                            halfDropOffset: halfDropOffset,
+                            panelForThisRepeat: panelForThisRepeat
+                        });
+                    }
+                }
+            }
             
             // Only draw if this repeat intersects with the current area
             if (drawX + repeatWidthPixels >= areaX && drawX < areaX + areaWidth) {
-                if (isAlpine && i < 5) {
-                    console.log(`🎨 ALPINE TULIP SECTION 1 REPEAT ${i}:`, {
-                        drawX: drawX,
-                        repeatX: repeatX,
-                        halfDropOffset: halfDropOffset,
-                        panelForThisRepeat: panelForThisRepeat
-                    });
-                }
-                
                 if (pattern.hasRepeatHeight) {
                     // Vertical repeating pattern with half-drop offset DOWN (eliminates bottom gap)
                     const numVerticalRepeats = Math.ceil(drawHeight / repeatHeightPixels) + 3;
@@ -165,10 +225,11 @@ function drawPatternInArea(ctx, areaX, areaY, areaWidth, areaHeight, referenceCo
         const totalPatternWidth = numPanels * stripWidthPixels;
         const totalHorizontalRepeats = Math.ceil(totalPatternWidth / repeatWidthPixels);
         
-        if (isAlpine) {
-            console.log(`🌷 ALPINE TULIP SECTION 2 CONTINUOUS PATTERN:`, {
+        if (isHalfDrop) {
+            console.log(`🌟 HALF-DROP SECTION 2 CONTINUOUS PATTERN:`, {
                 numPanels: numPanels,
-                totalHorizontalRepeats: totalHorizontalRepeats
+                totalHorizontalRepeats: totalHorizontalRepeats,
+                repeatsPerPanel: repeatsPerPanel
             });
         }
         
@@ -177,30 +238,47 @@ function drawPatternInArea(ctx, areaX, areaY, areaWidth, areaHeight, referenceCo
             const repeatX = i * repeatWidthPixels;
             const drawX = patternStartX + repeatX;
             
-            // Calculate half-drop offset for this specific panel position (same logic as Section 1)
-            const panelForThisRepeat = Math.floor(i * pattern.repeatWidth / pattern.panelWidth);
-            const halfDropOffset = isHalfDrop ? calculateHalfDropVisualOffset(pattern, panelForThisRepeat) * scale : 0;
+            // UPDATED HALF-DROP LOGIC: Multi-repeat vs single-repeat (same as Section 1)
+            let halfDropOffset = 0;
             
-            // For half-drop patterns, offset panels need extra coverage at the bottom
-            // because the offset pushes the pattern UP, creating white space below
+            if (isHalfDrop) {
+                if (repeatsPerPanel >= 2) {
+                    // Multi-repeat patterns: Use tile-based offset within panel
+                    const tileIndexWithinPanel = i % repeatsPerPanel;
+                    halfDropOffset = calculateTileOffsetWithinPanel(pattern, tileIndexWithinPanel) * scale;
+                    
+                    if (i < 8) { // Log first few for debugging
+                        console.log(`🎨 MULTI-REPEAT SECTION 2 TILE ${i} (tile ${tileIndexWithinPanel} in panel):`, {
+                            drawX: drawX,
+                            repeatX: repeatX,
+                            halfDropOffset: halfDropOffset,
+                            tileIndexWithinPanel: tileIndexWithinPanel
+                        });
+                    }
+                } else {
+                    // Single-repeat patterns: Use panel-based offset (existing logic)
+                    const panelForThisRepeat = Math.floor(i * pattern.repeatWidth / pattern.panelWidth);
+                    halfDropOffset = calculateHalfDropVisualOffset(pattern, panelForThisRepeat) * scale;
+                    
+                    if (i < 5) { // Log first few for debugging
+                        console.log(`🎨 SINGLE-REPEAT SECTION 2 PANEL ${i}:`, {
+                            drawX: drawX,
+                            repeatX: repeatX,
+                            halfDropOffset: halfDropOffset,
+                            panelForThisRepeat: panelForThisRepeat
+                        });
+                    }
+                }
+            }
             
             // Only draw if this repeat intersects with the current area
             if (drawX + repeatWidthPixels >= areaX && drawX < areaX + areaWidth) {
-                if (isAlpine && i < 5) {
-                    console.log(`🎨 ALPINE TULIP SECTION 2 REPEAT ${i}:`, {
-                        drawX: drawX,
-                        repeatX: repeatX,
-                        halfDropOffset: halfDropOffset,
-                        panelForThisRepeat: panelForThisRepeat
-                    });
-                }
-                
                 if (pattern.hasRepeatHeight) {
                     // Vertical repeating pattern with half-drop offset DOWN (consistent with Section 1)
                     const baseNumVerticalRepeats = Math.ceil(areaHeight / repeatHeightPixels) + 3;
                     
                     // For half-drop, we may need one extra repeat if the downward offset pushes pattern beyond area
-                    const extraRepeatForOffset = (isHalfDrop && panelForThisRepeat % 2 === 1) ? 1 : 0;
+                    const extraRepeatForOffset = (isHalfDrop && halfDropOffset > 0) ? 1 : 0;
                     const numVerticalRepeats = baseNumVerticalRepeats + extraRepeatForOffset;
                     
                     for (let v = 0; v < numVerticalRepeats; v++) {
@@ -228,4 +306,5 @@ function drawPatternInArea(ctx, areaX, areaY, areaWidth, areaHeight, referenceCo
 }
 
 window.calculateHalfDropVisualOffset = calculateHalfDropVisualOffset;
+window.calculateTileOffsetWithinPanel = calculateTileOffsetWithinPanel;
 window.drawPatternInArea = drawPatternInArea;
