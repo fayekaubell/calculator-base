@@ -1,26 +1,10 @@
 // Canvas Drawing Core Module - Core functions and coordinate calculations
-// Part 1 of modularized canvas drawing system
-// ADDED: Comprehensive debug logging for Alpine Tulip coordinate calculations
+// CLEAN VERSION - No debug logs
 
 // Calculate the reference coordinate system for consistent pattern positioning
 function calculateReferenceCoordinates() {
     const canvas = document.getElementById('previewCanvas');
     const { wallWidth, wallHeight, calculations } = currentPreview;
-    
-    // DEBUG: Alpine Tulip specific logging
-    const isAlpineTulip = currentPreview.pattern.name.toLowerCase().includes('alpine tulip');
-    if (isAlpineTulip) {
-        console.log(`🌷 ALPINE TULIP COORDINATES - Starting calculation:`, {
-            canvasWidth: canvas.width,
-            canvasHeight: canvas.height,
-            wallWidth: wallWidth,
-            wallHeight: wallHeight,
-            wallWidthFeet: wallWidth / 12,
-            wallHeightFeet: wallHeight / 12,
-            calculationsTotalWidth: calculations.totalWidth,
-            calculationsTotalHeight: calculations.totalHeight
-        });
-    }
     
     // Use the same layout constants as the main drawing function
     const leftMargin = 120;
@@ -31,18 +15,6 @@ function calculateReferenceCoordinates() {
     
     const maxWidth = canvas.width - leftMargin - rightMargin;
     const maxHeight = canvas.height - topMargin - bottomMargin;
-    
-    if (isAlpineTulip) {
-        console.log(`🌷 ALPINE TULIP COORDINATES - Canvas layout:`, {
-            leftMargin: leftMargin,
-            rightMargin: rightMargin,
-            topMargin: topMargin,
-            bottomMargin: bottomMargin,
-            sectionGap: sectionGap,
-            maxWidth: maxWidth,
-            maxHeight: maxHeight
-        });
-    }
     
     // Calculate dimensions for both sections - ensuring pattern alignment
     const wallOnlyHeight = wallHeight;
@@ -58,31 +30,10 @@ function calculateReferenceCoordinates() {
     
     const effectiveWidth = Math.max(calculations.totalWidth, wallWidth);
     
-    if (isAlpineTulip) {
-        console.log(`🌷 ALPINE TULIP COORDINATES - Height calculations:`, {
-            wallOnlyHeight: wallOnlyHeight,
-            calculationsTotalHeight: calculations.totalHeight,
-            stripLengths: calculations.stripLengths,
-            maxStripLength: calculations.stripLengths ? Math.max(...calculations.stripLengths) : 'N/A',
-            completeViewHeight: completeViewHeight,
-            totalContentHeight: totalContentHeight,
-            effectiveWidth: effectiveWidth
-        });
-    }
-    
     // Calculate scale
     const widthScale = maxWidth / effectiveWidth;
     const heightScale = maxHeight / totalContentHeight;
     const scale = Math.min(widthScale, heightScale);
-    
-    if (isAlpineTulip) {
-        console.log(`🌷 ALPINE TULIP COORDINATES - Scale calculation:`, {
-            widthScale: widthScale,
-            heightScale: heightScale,
-            finalScale: scale,
-            scaleChoice: scale === widthScale ? 'limited by width' : 'limited by height'
-        });
-    }
     
     // Calculate vertical positioning
     const actualContentHeight = (completeViewHeight * scale) + (wallOnlyHeight * scale) + sectionGap;
@@ -94,17 +45,6 @@ function calculateReferenceCoordinates() {
     const scaledWallWidth = wallWidth * scale;
     const scaledWallHeight = wallHeight * scale;
     
-    if (isAlpineTulip) {
-        console.log(`🌷 ALPINE TULIP COORDINATES - Scaled dimensions:`, {
-            actualContentHeight: actualContentHeight,
-            section1StartY: section1StartY,
-            scaledTotalWidth: scaledTotalWidth,
-            scaledTotalHeight: scaledTotalHeight,
-            scaledWallWidth: scaledWallWidth,
-            scaledWallHeight: scaledWallHeight
-        });
-    }
-    
     // Section 1 coordinates
     const section1OffsetX = leftMargin + (maxWidth - scaledTotalWidth) / 2;
     const section1OffsetY = section1StartY;
@@ -115,23 +55,6 @@ function calculateReferenceCoordinates() {
     const section2StartY = section1StartY + completeViewHeight * scale + sectionGap;
     const section2WallOffsetX = leftMargin + (maxWidth - scaledWallWidth) / 2;
     const section2WallOffsetY = section2StartY;
-    
-    if (isAlpineTulip) {
-        console.log(`🌷 ALPINE TULIP COORDINATES - Final coordinates:`, {
-            section1: {
-                patternStartX: section1OffsetX,
-                patternStartY: section1OffsetY,
-                wallStartX: section1WallOffsetX,
-                wallStartY: section1WallOffsetY
-            },
-            section2: {
-                wallStartX: section2WallOffsetX,
-                wallStartY: section2WallOffsetY
-            },
-            section2StartY: section2StartY,
-            completeViewHeightScaled: completeViewHeight * scale
-        });
-    }
     
     return {
         scale,
