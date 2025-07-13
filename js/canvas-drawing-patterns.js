@@ -185,7 +185,6 @@ function drawPatternInArea(ctx, areaX, areaY, areaWidth, areaHeight, referenceCo
             
             // For half-drop patterns, offset panels need extra coverage at the bottom
             // because the offset pushes the pattern UP, creating white space below
-            const needsExtraBottomCoverage = isHalfDrop && (panelForThisRepeat % 2 === 1);
             
             // Only draw if this repeat intersects with the current area
             if (drawX + repeatWidthPixels >= areaX && drawX < areaX + areaWidth) {
@@ -194,20 +193,21 @@ function drawPatternInArea(ctx, areaX, areaY, areaWidth, areaHeight, referenceCo
                         drawX: drawX,
                         repeatX: repeatX,
                         halfDropOffset: halfDropOffset,
-                        panelForThisRepeat: panelForThisRepeat,
-                        needsExtraBottomCoverage: needsExtraBottomCoverage
+                        panelForThisRepeat: panelForThisRepeat
                     });
                 }
                 
                 if (pattern.hasRepeatHeight) {
                     // Vertical repeating pattern with half-drop offset
-                    // Add extra repeats for offset panels that need bottom coverage
-                    const extraRepeatsForOffset = needsExtraBottomCoverage ? 2 : 0;
-                    const numVerticalRepeats = Math.ceil(areaHeight / repeatHeightPixels) + 3 + extraRepeatsForOffset;
+                    const baseNumVerticalRepeats = Math.ceil(areaHeight / repeatHeightPixels) + 3;
+                    
+                    // Add one extra repeat at the bottom for offset panels to fill white space
+                    const extraRepeatForOffset = (isHalfDrop && panelForThisRepeat % 2 === 1) ? 1 : 0;
+                    const numVerticalRepeats = baseNumVerticalRepeats + extraRepeatForOffset;
                     
                     for (let v = 0; v < numVerticalRepeats; v++) {
                         const repeatY = v * repeatHeightPixels;
-                        const drawY = patternStartY - repeatY - repeatHeightPixels + halfDropOffset; // + for UP offset
+                        const drawY = patternStartY - repeatY - repeatHeightPixels + halfDropOffset;
                         
                         // Only draw if this repeat is visible
                         if (drawY + repeatHeightPixels >= areaY && drawY < areaY + areaHeight) {
@@ -215,8 +215,8 @@ function drawPatternInArea(ctx, areaX, areaY, areaWidth, areaHeight, referenceCo
                         }
                     }
                 } else {
-                    // Non-repeating pattern - maintain same Y position as Section 1 with half-drop offset
-                    const drawY = patternStartY - repeatHeightPixels + halfDropOffset; // + for UP offset
+                    // Non-repeating pattern
+                    const drawY = patternStartY - repeatHeightPixels + halfDropOffset;
                     
                     if (drawY + repeatHeightPixels >= areaY && drawY < areaY + areaHeight) {
                         ctx.drawImage(patternImage, drawX, drawY, repeatWidthPixels, repeatHeightPixels);
