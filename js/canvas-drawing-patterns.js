@@ -59,11 +59,30 @@ function drawPatternInArea(ctx, areaX, areaY, areaWidth, areaHeight, referenceCo
         });
     }
     
-    // Set clip area
+    // Set clip area with small buffer to prevent edge clipping
     ctx.save();
     ctx.beginPath();
-    ctx.rect(Math.floor(areaX), Math.floor(areaY), Math.ceil(areaWidth), Math.ceil(areaHeight));
+    // Add 2 pixels buffer on all sides to prevent slight edge clipping
+    const clipBuffer = 2;
+    ctx.rect(
+        Math.floor(areaX - clipBuffer), 
+        Math.floor(areaY - clipBuffer), 
+        Math.ceil(areaWidth + clipBuffer * 2), 
+        Math.ceil(areaHeight + clipBuffer * 2)
+    );
     ctx.clip();
+    
+    if (isAlpineTulip) {
+        console.log(`🌷 ALPINE TULIP - Clipping area:`, {
+            originalArea: {x: areaX, y: areaY, w: areaWidth, h: areaHeight},
+            clippingArea: {
+                x: Math.floor(areaX - clipBuffer),
+                y: Math.floor(areaY - clipBuffer), 
+                w: Math.ceil(areaWidth + clipBuffer * 2),
+                h: Math.ceil(areaHeight + clipBuffer * 2)
+            }
+        });
+    }
     
     // Use consistent pattern origin for both sections
     const patternOriginX = referenceCoords.section1.patternStartX;
