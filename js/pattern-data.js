@@ -1,6 +1,5 @@
 // Pattern Data Module - Data loading, CSV parsing, and calculations
-// Updated to handle product link columns for PDF generation and HALF-DROP patterns
-// ADDED: Comprehensive debug logging for Alpine Tulip calculations
+// CLEAN VERSION - No debug logs
 
 // Global variables for data
 let patterns = {};
@@ -42,7 +41,6 @@ async function loadPatternsFromCSV() {
                 const pattern = createPatternFromCSV(row);
                 if (pattern) {
                     patterns[pattern.id] = pattern;
-                    console.log(`✅ Created pattern ${pattern.id}:`, pattern.name);
                 }
             } catch (error) {
                 console.error(`❌ Error processing pattern at row ${index + 1}:`, error, row);
@@ -85,7 +83,7 @@ async function loadPatternsFromCSV() {
     }
 }
 
-// Create pattern object from CSV row - UPDATED FOR PRODUCT LINKS
+// Create pattern object from CSV row
 function createPatternFromCSV(row) {
     if (!row.pattern_name || !row.sku) {
         console.warn('⚠️ Skipping row with missing required fields:', row);
@@ -103,7 +101,7 @@ function createPatternFromCSV(row) {
         availableLengthsStr.split(',').map(l => parseInt(l.trim())).filter(l => !isNaN(l)) :
         defaults.availableLengths;
     
-    // FIXED: Parse panel sequence with proper yard pattern handling
+    // Parse panel sequence
     const panelSequence = row.panel_sequence || (row.sale_type === 'yard' ? '' : 'AB');
     const sequenceLength = panelSequence.length;
     
@@ -119,21 +117,17 @@ function createPatternFromCSV(row) {
         repeatHeight = parseFloat(repeatHeightValue) || 144;
     }
     
-    // Determine image URL - SIMPLE: Use CSV URL or construct from SKU
+    // Determine image URL
     let imageUrl = '';
     let thumbnailUrl = '';
     
     if (row.repeat_url && row.repeat_url.trim()) {
-        // Use the URL from CSV as-is
         imageUrl = row.repeat_url.trim();
         thumbnailUrl = imageUrl;
-        console.log(`🔍 Using CSV URL for ${row.sku}: "${imageUrl}"`);
     } else {
-        // Construct from SKU + .jpg
         const filename = row.sku + '.jpg';
         imageUrl = CONFIG.data.imageBaseUrl + filename;
         thumbnailUrl = imageUrl;
-        console.log(`🔧 Constructed URL for ${row.sku}: CONFIG.data.imageBaseUrl ("${CONFIG.data.imageBaseUrl}") + filename ("${filename}") = "${imageUrl}"`);
     }
     
     return {
@@ -155,14 +149,13 @@ function createPatternFromCSV(row) {
         minYardOrder: row.sale_type === 'yard' ? (row.min_yard_order || defaults.minYardOrder) : null,
         patternMatch: row.pattern_match || 'straight',
         handle: patternId,
-        // NEW: Product links for PDF generation
         product_tearsheet_url: row.product_tearsheet_url || '',
         product_page_url: row.product_page_url || '',
-        product_360_url: row['360_view_url'] || '' // Note: CSV column is 360_view_url
+        product_360_url: row['360_view_url'] || ''
     };
 }
 
-// SIMPLE: Preload pattern images with basic error handling and debugging
+// Preload pattern images
 function preloadPatternImage(pattern) {
     return new Promise((resolve, reject) => {
         if (!pattern.imageUrl) {
@@ -171,15 +164,11 @@ function preloadPatternImage(pattern) {
             return;
         }
         
-        console.log('🖼️ About to load pattern image for:', pattern.name);
-        console.log('🖼️ Pattern object imageUrl:', pattern.imageUrl);
-        console.log('🖼️ typeof pattern.imageUrl:', typeof pattern.imageUrl);
-        
         const img = new Image();
         img.crossOrigin = 'anonymous';
         
         img.onload = function() {
-            console.log('✅ Pattern image loaded successfully from:', this.src);
+            console.log('✅ Pattern image loaded successfully');
             patternImage = img;
             imageLoaded = true;
             resolve(img);
@@ -187,43 +176,17 @@ function preloadPatternImage(pattern) {
         
         img.onerror = function() {
             console.error('⚠️ Failed to load pattern image');
-            console.error('⚠️ Attempted URL:', this.src);
-            console.error('⚠️ Original pattern.imageUrl was:', pattern.imageUrl);
-            console.error('⚠️ Pattern object:', pattern);
-            
-            // Continue without image
             patternImage = null;
             imageLoaded = false;
             resolve(null);
         };
         
-        // Log the exact URL we're about to set
-        console.log('🔍 Setting img.src to:', pattern.imageUrl);
-        
-        // Start loading the image
         img.src = pattern.imageUrl;
-        
-        // Log what the browser actually received
-        console.log('🔍 Browser received img.src as:', img.src);
     });
 }
 
 // Calculate panel requirements
 function calculatePanelRequirements(pattern, wallWidth, wallHeight) {
-    // DEBUG: Alpine Tulip specific logging
-    const isAlpineTulip = pattern.name.toLowerCase().includes('alpine tulip');
-    if (isAlpineTulip) {
-        console.log(`🌷 ALPINE TULIP CALCULATION START:`, {
-            patternName: pattern.name,
-            wallWidth: wallWidth,
-            wallHeight: wallHeight,
-            wallWidthFeet: wallWidth / 12,
-            wallHeightFeet: wallHeight / 12,
-            saleType: pattern.saleType
-        });
-    }
-    
-    // Safety check
     if (!pattern || !pattern.saleType) {
         console.error('Invalid pattern data');
         return {
@@ -235,47 +198,26 @@ function calculatePanelRequirements(pattern, wallWidth, wallHeight) {
         };
     }
     
-    // If it's a yard-based pattern, use the yard calculation
     if (pattern.saleType === 'yard') {
-        if (isAlpineTulip) {
-            console.log(`🌷 ALPINE TULIP - Calling yard calculation`);
-        }
         return calculateYardRequirements(pattern, wallWidth, wallHeight);
     }
     
     const totalWidth = wallWidth + pattern.minOverage;
     const totalHeight = wallHeight + pattern.minOverage;
     
-    console.log('🔢 Panel calculation debug:', {
-        wallWidth,
-        wallHeight,
-        minOverage: pattern.minOverage,
-        totalWidth,
-        totalHeight,
-        totalHeightInFeet: totalHeight / 12,
-        availableLengths: pattern.availableLengths
-    });
-    
     const panelsNeeded = Math.ceil(totalWidth / pattern.panelWidth);
     
     let panelLength = 0;
-    console.log('📏 Looking for panel length that covers', totalHeight, 'inches (', totalHeight / 12, 'feet)');
-    
     for (let length of pattern.availableLengths) {
-        console.log(`  Checking length ${length}' (${length * 12}" total) vs needed ${totalHeight}"`);
         if (length * 12 >= totalHeight) {
             panelLength = length;
-            console.log(`  ✅ Selected ${length}' panel length`);
             break;
-        } else {
-            console.log(`  ❌ ${length}' too short (${length * 12}" < ${totalHeight}")`);
         }
     }
     
     if (panelLength === 0) {
         const minLengthFeet = Math.ceil(totalHeight / 12);
         panelLength = Math.ceil(minLengthFeet / 3) * 3;
-        console.log(`🎯 No standard length found, calculated custom length: ${panelLength}'`);
     }
     
     // Check for limitations
@@ -284,16 +226,6 @@ function calculatePanelRequirements(pattern, wallWidth, wallHeight) {
     const idealPanelLength = panelLength;
     const actualPanelLength = Math.min(panelLength, CONFIG.calculator.limits.maxPanelHeight);
     const uncoveredHeight = exceedsLimit ? totalHeightNeeded - (CONFIG.calculator.limits.maxPanelHeight * 12) : 0;
-    
-    console.log('📊 Final calculation result:', {
-        panelsNeeded,
-        idealPanelLength,
-        actualPanelLength,
-        exceedsLimit,
-        uncoveredHeight,
-        totalWidth: panelsNeeded * pattern.panelWidth,
-        totalHeight: actualPanelLength * 12
-    });
     
     return {
         panelsNeeded,
@@ -308,38 +240,13 @@ function calculatePanelRequirements(pattern, wallWidth, wallHeight) {
     };
 }
 
-// Calculate yard requirements - UPDATED FOR HALF-DROP + ALPINE TULIP DEBUG
+// Calculate yard requirements
 function calculateYardRequirements(pattern, wallWidth, wallHeight) {
     const totalWidth = wallWidth + pattern.minOverage;
     const totalHeight = wallHeight + pattern.minOverage;
     
-    // Check if this is a half-drop pattern
     const isHalfDrop = pattern.patternMatch && pattern.patternMatch.toLowerCase() === 'half drop';
     
-    // DEBUG: Alpine Tulip specific logging
-    const isAlpineTulip = pattern.name.toLowerCase().includes('alpine tulip');
-    if (isAlpineTulip) {
-        console.log(`🌷 ALPINE TULIP YARD CALCULATION:`, {
-            wallWidth: wallWidth,
-            wallHeight: wallHeight,
-            wallWidthInches: wallWidth,
-            wallHeightInches: wallHeight,
-            wallWidthFeet: wallWidth / 12,
-            wallHeightFeet: wallHeight / 12,
-            minOverage: pattern.minOverage,
-            totalWidth: totalWidth,
-            totalHeight: totalHeight,
-            totalWidthFeet: totalWidth / 12,
-            totalHeightFeet: totalHeight / 12,
-            repeatWidth: pattern.repeatWidth,
-            repeatHeight: pattern.repeatHeight,
-            panelWidth: pattern.panelWidth,
-            patternMatch: pattern.patternMatch,
-            isHalfDrop: isHalfDrop
-        });
-    }
-    
-    // Safety checks
     if (!pattern.repeatHeight || pattern.repeatHeight <= 0) {
         console.error('Invalid repeat height for yard calculation');
         return {
@@ -368,28 +275,15 @@ function calculateYardRequirements(pattern, wallWidth, wallHeight) {
         };
     }
     
-    // Calculate number of strips needed
     const stripsNeeded = Math.ceil(totalWidth / pattern.panelWidth);
     
-    if (isAlpineTulip) {
-        console.log(`🌷 ALPINE TULIP - Strips calculation:`, {
-            totalWidth: totalWidth,
-            panelWidth: pattern.panelWidth,
-            stripsNeeded: stripsNeeded,
-            calculation: `Math.ceil(${totalWidth} / ${pattern.panelWidth}) = ${stripsNeeded}`
-        });
-    }
-    
-    // Calculate strip lengths - UPDATED FOR HALF-DROP
     let stripLengths = [];
     let maxStripLength = 0;
     
     if (isHalfDrop) {
-        // Check if pattern repeats within strip width
         const repeatsPerStrip = pattern.panelWidth / pattern.repeatWidth;
         
         if (repeatsPerStrip > 1) {
-            // Pattern repeats within strip - all strips same height (like straight match)
             const repeatsNeeded = Math.ceil(totalHeight / pattern.repeatHeight);
             const stripLengthInches = repeatsNeeded * pattern.repeatHeight;
             
@@ -397,44 +291,20 @@ function calculateYardRequirements(pattern, wallWidth, wallHeight) {
                 stripLengths.push(stripLengthInches);
             }
             maxStripLength = stripLengthInches;
-            
-            console.log(`🎯 Half-drop with ${repeatsPerStrip} repeats per strip - all strips: ${stripLengthInches}" material`);
         } else {
-            // Full-width pattern - calculate height that works for both odd and even strips
-            // All strips need the same height, accounting for the half-drop offset
-            
-            // For even strips that start offset, we need to ensure coverage
-            // Calculate based on wall+overage plus potential half repeat
             const baseHeight = totalHeight;
             const withOffset = baseHeight + (pattern.repeatHeight / 2);
-            
-            // Round up to nearest full repeat or half repeat
             const repeatsNeeded = Math.ceil(withOffset / pattern.repeatHeight);
             const stripLengthInches = repeatsNeeded * pattern.repeatHeight;
             
-            // All strips get the same height
             for (let i = 0; i < stripsNeeded; i++) {
                 stripLengths.push(stripLengthInches);
             }
             maxStripLength = stripLengthInches;
-            
-            console.log(`🎯 Full-width half-drop - all strips: ${stripLengthInches}" material (${repeatsNeeded} repeats)`);
         }
     } else {
-        // Straight match - all strips are the same
         const repeatsNeeded = Math.ceil(totalHeight / pattern.repeatHeight);
         const stripLengthInches = repeatsNeeded * pattern.repeatHeight;
-        
-        if (isAlpineTulip) {
-            console.log(`🌷 ALPINE TULIP - Straight match calculation:`, {
-                totalHeight: totalHeight,
-                repeatHeight: pattern.repeatHeight,
-                repeatsNeeded: repeatsNeeded,
-                calculation: `Math.ceil(${totalHeight} / ${pattern.repeatHeight}) = ${repeatsNeeded}`,
-                stripLengthInches: stripLengthInches,
-                stripLengthFeet: stripLengthInches / 12
-            });
-        }
         
         for (let i = 0; i < stripsNeeded; i++) {
             stripLengths.push(stripLengthInches);
@@ -442,36 +312,16 @@ function calculateYardRequirements(pattern, wallWidth, wallHeight) {
         maxStripLength = stripLengthInches;
     }
     
-    // Calculate total yardage
     const totalInches = stripLengths.reduce((sum, length) => sum + length, 0);
     const totalYardageRaw = totalInches / 36;
     
-    // For full-width half-drop patterns, add 1 extra yard
     let extraYardage = 0;
     const repeatsPerStrip = pattern.panelWidth / pattern.repeatWidth;
     if (isHalfDrop && repeatsPerStrip <= 1) {
         extraYardage = 1;
-        console.log('🎯 Adding 1 extra yard for full-width half-drop pattern');
     }
     
     const totalYardage = Math.max(Math.ceil(totalYardageRaw + extraYardage), pattern.minYardOrder || 5);
-    
-    if (isAlpineTulip) {
-        console.log(`🌷 ALPINE TULIP - Final yard calculation:`, {
-            stripsNeeded: stripsNeeded,
-            stripLengths: stripLengths,
-            maxStripLength: maxStripLength,
-            maxStripLengthFeet: maxStripLength / 12,
-            totalInches: totalInches,
-            totalYardageRaw: totalYardageRaw,
-            extraYardage: extraYardage,
-            totalYardage: totalYardage,
-            totalWidth: stripsNeeded * pattern.panelWidth,
-            totalHeight: maxStripLength,
-            isHalfDrop: isHalfDrop,
-            repeatsPerStrip: repeatsPerStrip
-        });
-    }
     
     return {
         panelsNeeded: stripsNeeded,
@@ -482,7 +332,7 @@ function calculateYardRequirements(pattern, wallWidth, wallHeight) {
         totalHeight: maxStripLength,
         saleType: 'yard',
         stripLengthInches: maxStripLength,
-        stripLengths: stripLengths, // Array of individual strip lengths for half-drop
+        stripLengths: stripLengths,
         patternMatch: pattern.patternMatch || 'straight',
         isHalfDrop: isHalfDrop
     };
