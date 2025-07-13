@@ -1,4 +1,4 @@
-// Canvas Drawing Patterns Module - FIXED: Universal pattern positioning for perfect Section 1/2 alignment
+// Canvas Drawing Patterns Module - FIXED: Half-drop Section 1 bottom gap coverage
 
 function calculateHalfDropVisualOffset(pattern, panelIndex) {
     // Calculate half-drop offset for patterns that need it
@@ -137,10 +137,25 @@ function drawPatternInArea(ctx, areaX, areaY, areaWidth, areaHeight, referenceCo
                 }
                 
                 if (pattern.hasRepeatHeight) {
-                    // Vertical repeating pattern with half-drop offset
-                    // Add extra repeats to account for half-drop offset pushing pattern down
-                    const extraRepeatsForHalfDrop = isHalfDrop ? 2 : 0;
-                    const numVerticalRepeats = Math.ceil(drawHeight / repeatHeightPixels) + 3 + extraRepeatsForHalfDrop;
+                    // FIXED: Section 1 half-drop bottom gap coverage
+                    const baseNumVerticalRepeats = Math.ceil(drawHeight / repeatHeightPixels) + 3;
+                    
+                    // For half-drop patterns, calculate additional coverage needed
+                    let numVerticalRepeats = baseNumVerticalRepeats;
+                    if (isHalfDrop) {
+                        // When offset is applied, pattern moves UP, creating gap at bottom
+                        // We need to extend the pattern DOWN to fill this gap
+                        const isOffsetPanel = panelForThisRepeat % 2 === 1;
+                        if (isOffsetPanel) {
+                            // Add enough repeats to cover the offset gap at the bottom
+                            // The offset creates a gap equal to half the repeat height
+                            const gapCoverage = Math.ceil((halfDropOffset) / repeatHeightPixels);
+                            numVerticalRepeats += gapCoverage + 1; // +1 for safety margin
+                        } else {
+                            // Even panels still need some extra coverage for seamless tiling
+                            numVerticalRepeats += 1;
+                        }
+                    }
                     
                     for (let v = 0; v < numVerticalRepeats; v++) {
                         const repeatY = v * repeatHeightPixels;
