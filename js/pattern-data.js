@@ -1,5 +1,6 @@
 // Pattern Data Module - Data loading, CSV parsing, and calculations
 // Updated to handle product link columns for PDF generation and HALF-DROP patterns
+// ADDED: Comprehensive debug logging for Alpine Tulip calculations
 
 // Global variables for data
 let patterns = {};
@@ -209,6 +210,19 @@ function preloadPatternImage(pattern) {
 
 // Calculate panel requirements
 function calculatePanelRequirements(pattern, wallWidth, wallHeight) {
+    // DEBUG: Alpine Tulip specific logging
+    const isAlpineTulip = pattern.name.toLowerCase().includes('alpine tulip');
+    if (isAlpineTulip) {
+        console.log(`🌷 ALPINE TULIP CALCULATION START:`, {
+            patternName: pattern.name,
+            wallWidth: wallWidth,
+            wallHeight: wallHeight,
+            wallWidthFeet: wallWidth / 12,
+            wallHeightFeet: wallHeight / 12,
+            saleType: pattern.saleType
+        });
+    }
+    
     // Safety check
     if (!pattern || !pattern.saleType) {
         console.error('Invalid pattern data');
@@ -223,6 +237,9 @@ function calculatePanelRequirements(pattern, wallWidth, wallHeight) {
     
     // If it's a yard-based pattern, use the yard calculation
     if (pattern.saleType === 'yard') {
+        if (isAlpineTulip) {
+            console.log(`🌷 ALPINE TULIP - Calling yard calculation`);
+        }
         return calculateYardRequirements(pattern, wallWidth, wallHeight);
     }
     
@@ -291,7 +308,7 @@ function calculatePanelRequirements(pattern, wallWidth, wallHeight) {
     };
 }
 
-// Calculate yard requirements - UPDATED FOR HALF-DROP
+// Calculate yard requirements - UPDATED FOR HALF-DROP + ALPINE TULIP DEBUG
 function calculateYardRequirements(pattern, wallWidth, wallHeight) {
     const totalWidth = wallWidth + pattern.minOverage;
     const totalHeight = wallHeight + pattern.minOverage;
@@ -299,17 +316,28 @@ function calculateYardRequirements(pattern, wallWidth, wallHeight) {
     // Check if this is a half-drop pattern
     const isHalfDrop = pattern.patternMatch && pattern.patternMatch.toLowerCase() === 'half drop';
     
-    console.log('🧮 Yard calculation debug:', {
-        wallWidth,
-        wallHeight,
-        minOverage: pattern.minOverage,
-        totalWidth,
-        totalHeight,
-        repeatHeight: pattern.repeatHeight,
-        panelWidth: pattern.panelWidth,
-        patternMatch: pattern.patternMatch,
-        isHalfDrop: isHalfDrop
-    });
+    // DEBUG: Alpine Tulip specific logging
+    const isAlpineTulip = pattern.name.toLowerCase().includes('alpine tulip');
+    if (isAlpineTulip) {
+        console.log(`🌷 ALPINE TULIP YARD CALCULATION:`, {
+            wallWidth: wallWidth,
+            wallHeight: wallHeight,
+            wallWidthInches: wallWidth,
+            wallHeightInches: wallHeight,
+            wallWidthFeet: wallWidth / 12,
+            wallHeightFeet: wallHeight / 12,
+            minOverage: pattern.minOverage,
+            totalWidth: totalWidth,
+            totalHeight: totalHeight,
+            totalWidthFeet: totalWidth / 12,
+            totalHeightFeet: totalHeight / 12,
+            repeatWidth: pattern.repeatWidth,
+            repeatHeight: pattern.repeatHeight,
+            panelWidth: pattern.panelWidth,
+            patternMatch: pattern.patternMatch,
+            isHalfDrop: isHalfDrop
+        });
+    }
     
     // Safety checks
     if (!pattern.repeatHeight || pattern.repeatHeight <= 0) {
@@ -342,6 +370,15 @@ function calculateYardRequirements(pattern, wallWidth, wallHeight) {
     
     // Calculate number of strips needed
     const stripsNeeded = Math.ceil(totalWidth / pattern.panelWidth);
+    
+    if (isAlpineTulip) {
+        console.log(`🌷 ALPINE TULIP - Strips calculation:`, {
+            totalWidth: totalWidth,
+            panelWidth: pattern.panelWidth,
+            stripsNeeded: stripsNeeded,
+            calculation: `Math.ceil(${totalWidth} / ${pattern.panelWidth}) = ${stripsNeeded}`
+        });
+    }
     
     // Calculate strip lengths - UPDATED FOR HALF-DROP
     let stripLengths = [];
@@ -388,6 +425,17 @@ function calculateYardRequirements(pattern, wallWidth, wallHeight) {
         const repeatsNeeded = Math.ceil(totalHeight / pattern.repeatHeight);
         const stripLengthInches = repeatsNeeded * pattern.repeatHeight;
         
+        if (isAlpineTulip) {
+            console.log(`🌷 ALPINE TULIP - Straight match calculation:`, {
+                totalHeight: totalHeight,
+                repeatHeight: pattern.repeatHeight,
+                repeatsNeeded: repeatsNeeded,
+                calculation: `Math.ceil(${totalHeight} / ${pattern.repeatHeight}) = ${repeatsNeeded}`,
+                stripLengthInches: stripLengthInches,
+                stripLengthFeet: stripLengthInches / 12
+            });
+        }
+        
         for (let i = 0; i < stripsNeeded; i++) {
             stripLengths.push(stripLengthInches);
         }
@@ -408,17 +456,22 @@ function calculateYardRequirements(pattern, wallWidth, wallHeight) {
     
     const totalYardage = Math.max(Math.ceil(totalYardageRaw + extraYardage), pattern.minYardOrder || 5);
     
-    console.log('📏 Yard calculation result:', {
-        stripsNeeded,
-        stripLengths,
-        maxStripLength,
-        totalInches,
-        totalYardageRaw,
-        totalYardage,
-        totalWidth: stripsNeeded * pattern.panelWidth,
-        totalHeight: maxStripLength,
-        isHalfDrop
-    });
+    if (isAlpineTulip) {
+        console.log(`🌷 ALPINE TULIP - Final yard calculation:`, {
+            stripsNeeded: stripsNeeded,
+            stripLengths: stripLengths,
+            maxStripLength: maxStripLength,
+            maxStripLengthFeet: maxStripLength / 12,
+            totalInches: totalInches,
+            totalYardageRaw: totalYardageRaw,
+            extraYardage: extraYardage,
+            totalYardage: totalYardage,
+            totalWidth: stripsNeeded * pattern.panelWidth,
+            totalHeight: maxStripLength,
+            isHalfDrop: isHalfDrop,
+            repeatsPerStrip: repeatsPerStrip
+        });
+    }
     
     return {
         panelsNeeded: stripsNeeded,
