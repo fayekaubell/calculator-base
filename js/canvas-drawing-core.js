@@ -1,5 +1,5 @@
 // Canvas Drawing Core Module - Core functions and coordinate calculations
-// CLEAN VERSION - No debug logs
+// UPDATED: Panel anchoring - panels now anchor to bottom of wall
 
 // Calculate the reference coordinate system for consistent pattern positioning
 function calculateReferenceCoordinates() {
@@ -18,14 +18,16 @@ function calculateReferenceCoordinates() {
     
     // Calculate dimensions for both sections - ensuring pattern alignment
     const wallOnlyHeight = wallHeight;
-    // For Section 1, use the maximum strip height for full-width half-drop patterns
+    
+    // For Section 1, use the actual panel height (not wall height)
     let completeViewHeight = calculations.totalHeight;
     if (calculations.stripLengths && calculations.stripLengths.length > 0) {
         // Use the maximum strip length for layout calculation
         const maxStripLength = Math.max(...calculations.stripLengths);
         completeViewHeight = maxStripLength;
     }
-    completeViewHeight = Math.max(completeViewHeight, wallHeight);
+    // UPDATED: Don't use wall height as minimum - use actual panel coverage
+    
     const totalContentHeight = completeViewHeight + wallOnlyHeight + sectionGap;
     
     const effectiveWidth = Math.max(calculations.totalWidth, wallWidth);
@@ -48,8 +50,15 @@ function calculateReferenceCoordinates() {
     // Section 1 coordinates
     const section1OffsetX = leftMargin + (maxWidth - scaledTotalWidth) / 2;
     const section1OffsetY = section1StartY;
+    
+    // UPDATED: Wall positioning - anchor panels to bottom of wall
+    // Calculate where the wall should be positioned within the panel area
+    const panelBottomY = section1OffsetY + scaledTotalHeight;
+    const wallBottomY = panelBottomY; // Anchor wall bottom to panel bottom
+    const wallTopY = wallBottomY - scaledWallHeight;
+    
     const section1WallOffsetX = section1OffsetX + (scaledTotalWidth - scaledWallWidth) / 2;
-    const section1WallOffsetY = section1OffsetY + ((completeViewHeight * scale) - scaledWallHeight) / 2;
+    const section1WallOffsetY = wallTopY;
     
     // Section 2 coordinates
     const section2StartY = section1StartY + completeViewHeight * scale + sectionGap;
@@ -95,13 +104,13 @@ function drawOverageOverlay(ctx, panelStartX, panelStartY, panelTotalWidth, pane
         ctx.fillRect(overageStartX, panelStartY, overageWidth, panelTotalHeight);
     }
     
-    // Top overage
+    // Top overage - UPDATED: Only show if panel extends above wall
     if (wallStartY > panelStartY) {
         const overageHeight = wallStartY - panelStartY;
         ctx.fillRect(wallStartX, panelStartY, wallWidth, overageHeight);
     }
     
-    // Bottom overage
+    // Bottom overage - UPDATED: Only show if panel extends below wall (should not happen with bottom anchoring)
     if (wallStartY + wallHeight < panelStartY + panelTotalHeight) {
         const overageStartY = wallStartY + wallHeight;
         const overageHeight = (panelStartY + panelTotalHeight) - overageStartY;
