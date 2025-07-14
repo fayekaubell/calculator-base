@@ -21,7 +21,7 @@ function drawPreview() {
     // Calculate reference coordinates
     const referenceCoords = calculateReferenceCoordinates();
     
-    // Section 1: Complete view with half-drop support
+    // Section 1: Complete view with half-drop support and bottom anchoring
     drawCompleteViewWithOverlay(ctx, referenceCoords);
     
     // Section 2: Wall only view
@@ -31,8 +31,8 @@ function drawPreview() {
 // Export to global scope
 window.drawPreview = drawPreview;
 
-// Verify that all required functions are available
-window.addEventListener('DOMContentLoaded', function() {
+// Verify that all required functions are available - FIXED: Run after page load
+function verifyCanvasDrawingFunctions() {
     const requiredFunctions = [
         'calculateReferenceCoordinates',
         'drawOverageOverlay', 
@@ -47,7 +47,28 @@ window.addEventListener('DOMContentLoaded', function() {
     
     if (missingFunctions.length > 0) {
         console.error('❌ Missing canvas drawing functions:', missingFunctions);
+        
+        // Try to wait a bit more and check again
+        setTimeout(() => {
+            const stillMissing = requiredFunctions.filter(fn => typeof window[fn] !== 'function');
+            if (stillMissing.length > 0) {
+                console.error('❌ Still missing canvas drawing functions after delay:', stillMissing);
+            } else {
+                console.log('✅ All canvas drawing functions loaded successfully (after delay)');
+            }
+        }, 500);
     } else {
         console.log('✅ All canvas drawing functions loaded successfully');
     }
-});
+}
+
+// FIXED: Run verification after DOM is fully loaded and all scripts have executed
+if (document.readyState === 'loading') {
+    document.addEventListener('DOMContentLoaded', function() {
+        // Add a small delay to ensure all modules have finished executing
+        setTimeout(verifyCanvasDrawingFunctions, 100);
+    });
+} else {
+    // DOM already loaded
+    setTimeout(verifyCanvasDrawingFunctions, 100);
+}
