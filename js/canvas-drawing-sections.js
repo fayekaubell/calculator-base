@@ -345,3 +345,10 @@ function drawWallOnlyView(ctx, referenceCoords) {
     ctx.fillText(wallHeightText, 0, 0);
     ctx.restore();
 }
+
+// Export functions to global scope for use in other modules
+window.drawCompleteViewWithOverlay = drawCompleteViewWithOverlay;
+window.drawCompleteViewOutlines = drawCompleteViewOutlines;
+window.drawCompleteDimensionLabels = drawCompleteDimensionLabels;
+window.drawPanelLabels = drawPanelLabels;
+window.drawWallOnlyView = drawWallOnlyView;
