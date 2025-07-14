@@ -1,5 +1,5 @@
 // Pattern Data Module - Data loading, CSV parsing, and calculations
-// UPDATED: Multi-repeat half-drop pattern support in yard calculations
+// UPDATED: Simplified calculations - cap panels at max available length and anchor to bottom
 
 // Global variables for data
 let patterns = {};
@@ -185,7 +185,7 @@ function preloadPatternImage(pattern) {
     });
 }
 
-// Calculate panel requirements
+// Calculate panel requirements - UPDATED: Simplified logic, cap at max length, anchor to bottom
 function calculatePanelRequirements(pattern, wallWidth, wallHeight) {
     if (!pattern || !pattern.saleType) {
         console.error('Invalid pattern data');
@@ -207,6 +207,7 @@ function calculatePanelRequirements(pattern, wallWidth, wallHeight) {
     
     const panelsNeeded = Math.ceil(totalWidth / pattern.panelWidth);
     
+    // Find the appropriate panel length
     let panelLength = 0;
     for (let length of pattern.availableLengths) {
         if (length * 12 >= totalHeight) {
@@ -215,26 +216,18 @@ function calculatePanelRequirements(pattern, wallWidth, wallHeight) {
         }
     }
     
+    // If no available length covers the wall, use the maximum available length
     if (panelLength === 0) {
-        const minLengthFeet = Math.ceil(totalHeight / 12);
-        panelLength = Math.ceil(minLengthFeet / 3) * 3;
+        panelLength = Math.max(...pattern.availableLengths);
+        console.log(`ℹ️ Wall height ${totalHeight}" exceeds max available panel length, using ${panelLength}' panels`);
     }
     
-    // Check for limitations
-    const totalHeightNeeded = totalHeight;
-    const exceedsLimit = totalHeightNeeded > (CONFIG.calculator.limits.maxPanelHeight * 12);
-    const idealPanelLength = panelLength;
-    const actualPanelLength = Math.min(panelLength, CONFIG.calculator.limits.maxPanelHeight);
-    const uncoveredHeight = exceedsLimit ? totalHeightNeeded - (CONFIG.calculator.limits.maxPanelHeight * 12) : 0;
-    
+    // Simple calculation - no complexity around limitations
     return {
         panelsNeeded,
-        panelLength: actualPanelLength,
-        exceedsLimit,
-        idealPanelLength,
-        uncoveredHeight,
+        panelLength: panelLength,
         totalWidth: panelsNeeded * pattern.panelWidth,
-        totalHeight: actualPanelLength * 12,
+        totalHeight: panelLength * 12,
         saleType: 'panel',
         patternMatch: pattern.patternMatch || 'straight'
     };
