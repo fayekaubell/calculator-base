@@ -297,10 +297,11 @@ function calculateTotalContentHeight(pdf, maxWidth) {
     totalHeight += sectionSpacing;
     
     // Order quantity section - count lines based on pattern type (with extra spacing)
+    // Add one extra line for each pattern type due to the split overage header
     if (calculations.saleType === 'yard') {
-        totalHeight += lineHeight * 5; // Order lines for yard patterns + extra spacing
+        totalHeight += lineHeight * 6; // Order lines for yard patterns + extra spacing + split header
     } else {
-        totalHeight += lineHeight * 9; // Order lines for panel patterns + extra spacing
+        totalHeight += lineHeight * 10; // Order lines for panel patterns + extra spacing + split header
     }
     totalHeight += sectionSpacing;
     
@@ -427,7 +428,9 @@ async function addEnhancedTextContentToPDF(pdf, x, y, maxWidth, maxHeight) {
         // Header font for overage section title
         pdf.setFontSize(14);
         pdf.setFont(undefined, 'bold');
-        pdf.text('Order quantity with 20% overage added:', centerX, currentY, { align: 'center' });
+        pdf.text('Order quantity with 20%', centerX, currentY, { align: 'center' });
+        currentY += lineHeight;
+        pdf.text('overage added:', centerX, currentY, { align: 'center' });
         currentY += lineHeight;
         
         // Body font for overage content
@@ -466,7 +469,9 @@ async function addEnhancedTextContentToPDF(pdf, x, y, maxWidth, maxHeight) {
         // Header font for overage section title
         pdf.setFontSize(14);
         pdf.setFont(undefined, 'bold');
-        pdf.text('Order quantity with 20% overage added:', centerX, currentY, { align: 'center' });
+        pdf.text('Order quantity with 20%', centerX, currentY, { align: 'center' });
+        currentY += lineHeight;
+        pdf.text('overage added:', centerX, currentY, { align: 'center' });
         currentY += lineHeight;
         
         // Body font for overage content
