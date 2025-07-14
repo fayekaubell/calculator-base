@@ -49,10 +49,10 @@ function drawCompleteViewWithOverlay(ctx, referenceCoords) {
                       wallOffsetX, wallOffsetY, scaledWallWidth, scaledWallHeight);
     
     // Step 3: FIXED - Draw red shading for uncovered wall area at TOP of wall
-    const hasLimitation = (calculations.exceedsLimit || calculations.exceedsAvailableLength) && 
-                         calculations.uncoveredWallHeight > 0;
+    // Use hasLimitation from referenceCoords and add additional check
+    const shouldDrawRedArea = hasLimitation && calculations.uncoveredWallHeight > 0;
     
-    if (hasLimitation) {
+    if (shouldDrawRedArea) {
         console.log('🔴 Drawing red uncovered wall area in Section 1:', {
             uncoveredWallHeight: calculations.uncoveredWallHeight,
             wallOffsetX: wallOffsetX,
