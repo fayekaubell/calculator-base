@@ -1,5 +1,6 @@
 // Canvas Drawing Sections Module - Section 1 and Section 2 drawing
 // Part 3 of modularized canvas drawing system
+// UPDATED: Removed red limitation overlays, panels now anchor to bottom of wall
 
 // Draw Complete View - pattern + overlay + annotations - UPDATED FOR HALF-DROP
 function drawCompleteViewWithOverlay(ctx, referenceCoords) {
@@ -42,19 +43,7 @@ function drawCompleteViewWithOverlay(ctx, referenceCoords) {
     drawOverageOverlay(ctx, offsetX, offsetY, scaledTotalWidth, scaledTotalHeight,
                       wallOffsetX, wallOffsetY, scaledWallWidth, scaledWallHeight);
     
-    // Step 3: Handle limitations (uncovered areas)
-    const hasLimitation = calculations.exceedsLimit || calculations.exceedsAvailableLength;
-    if (hasLimitation) {
-        const actualPanelLengthToUse = calculations.exceedsAvailableLength ? 
-            calculations.actualPanelLength : calculations.panelLength;
-        const panelCoverageHeight = actualPanelLengthToUse * 12 * scale;
-        const uncoveredAreaHeight = scaledWallHeight - panelCoverageHeight;
-        
-        if (uncoveredAreaHeight > 0) {
-            ctx.fillStyle = 'rgba(255, 0, 0, 0.5)';
-            ctx.fillRect(wallOffsetX, wallOffsetY, scaledWallWidth, uncoveredAreaHeight);
-        }
-    }
+    // Step 3: REMOVED - No more red limitation overlays
     
     // Step 4: Draw outlines and annotations with half-drop adjustments
     drawCompleteViewOutlines(ctx, offsetX, offsetY, scaledTotalWidth, scaledTotalHeight, 
@@ -224,7 +213,7 @@ function drawPanelLabels(ctx, offsetX, offsetY, scaledTotalWidth, scaledTotalHei
     }
 }
 
-// Draw Wall Only View with perfect pattern alignment
+// Draw Wall Only View with perfect pattern alignment - UPDATED: Removed red overlays
 function drawWallOnlyView(ctx, referenceCoords) {
     const { pattern, wallWidth, wallHeight, calculations, wallWidthFeet, wallWidthInches, wallHeightFeet, wallHeightInches } = currentPreview;
     const { section2, dimensions } = referenceCoords;
@@ -239,19 +228,7 @@ function drawWallOnlyView(ctx, referenceCoords) {
         drawPatternInArea(ctx, wallOffsetX, wallOffsetY, scaledWallWidth, scaledWallHeight, referenceCoords, true);
     }
     
-    // Draw uncovered area if needed
-    const hasLimitation = calculations.exceedsLimit || calculations.exceedsAvailableLength;
-    if (hasLimitation) {
-        const actualPanelLengthToUse = calculations.exceedsAvailableLength ? 
-            calculations.actualPanelLength : calculations.panelLength;
-        const coveredHeight = actualPanelLengthToUse * 12 * referenceCoords.scale;
-        const uncoveredAreaHeight = scaledWallHeight - coveredHeight;
-        
-        if (uncoveredAreaHeight > 0) {
-            ctx.fillStyle = 'rgba(255, 0, 0, 0.5)';
-            ctx.fillRect(wallOffsetX, wallOffsetY, scaledWallWidth, uncoveredAreaHeight);
-        }
-    }
+    // REMOVED: No more red uncovered area drawing
     
     // Draw wall outline
     ctx.strokeStyle = '#2c3e50';
