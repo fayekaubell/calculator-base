@@ -1,4 +1,4 @@
-// Canvas Drawing Patterns Module - FIXED: Pattern anchoring to bottom of wall
+// Canvas Drawing Patterns Module - FIXED: Pattern positioning with panels anchored to wall bottom
 
 function calculateHalfDropVisualOffset(pattern, panelIndex) {
     // Calculate half-drop offset for patterns that need it
@@ -18,7 +18,6 @@ function calculateHalfDropVisualOffset(pattern, panelIndex) {
     // Multi-repeat vs single-repeat behavior
     if (repeatsPerPanel >= 2) {
         // Multi-repeat patterns: No panel-level offset
-        // Individual tiles within panels will be handled in drawPatternInArea
         console.log(`📐 Multi-repeat half-drop: Panel ${panelIndex} gets NO panel offset`);
         return 0;
     } else {
@@ -49,7 +48,7 @@ function calculateTileOffsetWithinPanel(pattern, tileIndex) {
     return 0;
 }
 
-// FIXED: Pattern drawing with bottom anchoring support
+// FIXED: Pattern drawing with bottom anchoring
 function drawPatternInArea(ctx, areaX, areaY, areaWidth, areaHeight, referenceCoords, isSection2 = false, panelIndex = null) {
     const { pattern, calculations } = currentPreview;
     
@@ -58,7 +57,7 @@ function drawPatternInArea(ctx, areaX, areaY, areaWidth, areaHeight, referenceCo
         return;
     }
     
-    const { scale, hasLimitation } = referenceCoords;
+    const { scale } = referenceCoords;
     
     // Check if this is a half-drop pattern
     const isHalfDrop = pattern.patternMatch && pattern.patternMatch.toLowerCase() === 'half drop';
@@ -69,7 +68,6 @@ function drawPatternInArea(ctx, areaX, areaY, areaWidth, areaHeight, referenceCo
         console.log(`🌟 HALF-DROP PATTERN: ${pattern.name} - ${isSection2 ? 'Section 2' : 'Section 1'} Panel ${panelIndex}:`, {
             repeatsPerPanel: repeatsPerPanel,
             isMultiRepeat: repeatsPerPanel >= 2,
-            hasLimitation: hasLimitation,
             areaX: areaX,
             areaY: areaY, 
             areaWidth: areaWidth,
@@ -79,45 +77,20 @@ function drawPatternInArea(ctx, areaX, areaY, areaWidth, areaHeight, referenceCo
     
     // Calculate repeat size to fit perfectly within strip width
     const stripWidthPixels = pattern.panelWidth * scale;
-    const repeatWidthPixels = stripWidthPixels / repeatsPerPanel; // EXACT fit, no rounding
-    const repeatHeightPixels = (pattern.repeatHeight / pattern.repeatWidth) * repeatWidthPixels; // Maintain aspect ratio
+    const repeatWidthPixels = stripWidthPixels / repeatsPerPanel;
+    const repeatHeightPixels = (pattern.repeatHeight / pattern.repeatWidth) * repeatWidthPixels;
     
-    // FIXED: Universal coordinate system with bottom anchoring
-    // For limited patterns, anchor to bottom of wall
-    let universalPatternOriginX, universalPatternOriginY;
-    
-    if (hasLimitation && !isSection2) {
-        // Section 1 with limitation: Anchor pattern to bottom of wall
-        universalPatternOriginX = referenceCoords.section1.patternStartX;
-        // Pattern origin at bottom of available panel area
-        universalPatternOriginY = referenceCoords.section1.wallStartY + referenceCoords.dimensions.scaledWallHeight;
-        
-        console.log('🔧 BOTTOM-ANCHORED pattern positioning (Section 1):', {
-            wallBottom: universalPatternOriginY,
-            patternHeight: referenceCoords.section1.actualPanelHeight * scale,
-            limitedHeight: true
-        });
-    } else if (hasLimitation && isSection2) {
-        // Section 2 with limitation: Anchor pattern to bottom of wall
-        universalPatternOriginX = referenceCoords.section2.wallStartX;
-        universalPatternOriginY = referenceCoords.section2.wallStartY + referenceCoords.dimensions.scaledWallHeight;
-        
-        console.log('🔧 BOTTOM-ANCHORED pattern positioning (Section 2):', {
-            wallBottom: universalPatternOriginY,
-            limitedHeight: true
-        });
-    } else {
-        // No limitation: Use original top-aligned positioning
-        universalPatternOriginX = referenceCoords.section1.patternStartX;
-        universalPatternOriginY = referenceCoords.section1.patternStartY + referenceCoords.dimensions.scaledTotalHeight;
-    }
+    // FIXED: BOTTOM-ANCHORED COORDINATE SYSTEM
+    // Pattern origin is now at the bottom-left of the first panel, aligned with wall bottom
+    const universalPatternOriginX = referenceCoords.section1.patternStartX;
+    const universalPatternOriginY = referenceCoords.section1.panelBottomY; // FIXED: Bottom anchor
     
     // Calculate where the wall sits within this universal pattern grid for Section 1
     const section1WallRelativeX = referenceCoords.section1.wallStartX - universalPatternOriginX;
-    const section1WallRelativeY = universalPatternOriginY - (referenceCoords.section1.wallStartY + referenceCoords.dimensions.scaledWallHeight);
+    const section1WallRelativeY = 0; // FIXED: Wall bottom aligns with panel bottom
     
     if (isHalfDrop) {
-        console.log(`🎯 HALF-DROP UNIVERSAL COORDINATES (${hasLimitation ? 'BOTTOM-ANCHORED' : 'TOP-ALIGNED'}):`, {
+        console.log(`🎯 HALF-DROP BOTTOM-ANCHORED COORDINATES:`, {
             universalPatternOriginX: universalPatternOriginX,
             universalPatternOriginY: universalPatternOriginY,
             section1WallRelativeX: section1WallRelativeX,
@@ -125,65 +98,47 @@ function drawPatternInArea(ctx, areaX, areaY, areaWidth, areaHeight, referenceCo
         });
     }
     
-    // For Section 2, calculate the universal pattern origin
-    let patternStartX, patternStartY;
+    // For Section 2, calculate pattern positioning to maintain same relationship to wall
+    let patternStartX, patternBottomY;
     
     if (isSection2) {
-        if (hasLimitation) {
-            // Section 2 with limitation: Pattern anchored to bottom of wall
-            patternStartX = universalPatternOriginX;
-            patternStartY = universalPatternOriginY;
-        } else {
-            // Section 2 without limitation: Maintain same relationship as Section 1
-            const section2WallLeft = referenceCoords.section2.wallStartX;
-            const section2WallBottom = referenceCoords.section2.wallStartY + referenceCoords.dimensions.scaledWallHeight;
-            
-            patternStartX = section2WallLeft - section1WallRelativeX;
-            patternStartY = section2WallBottom + section1WallRelativeY;
-        }
+        // Section 2: Position pattern so wall has same relative position as Section 1
+        const section2WallLeft = referenceCoords.section2.wallStartX;
+        const section2WallBottom = referenceCoords.section2.wallBottomY; // FIXED: Use wall bottom
+        
+        patternStartX = section2WallLeft - section1WallRelativeX;
+        patternBottomY = section2WallBottom - section1WallRelativeY; // FIXED: Bottom reference
         
         if (isHalfDrop) {
-            console.log(`🌟 HALF-DROP SECTION 2 POSITIONING (${hasLimitation ? 'BOTTOM-ANCHORED' : 'RELATIVE'}):`, {
+            console.log(`🌟 HALF-DROP SECTION 2 BOTTOM-ANCHORED:`, {
+                section2WallLeft: section2WallLeft,
+                section2WallBottom: section2WallBottom,
                 patternStartX: patternStartX,
-                patternStartY: patternStartY,
-                hasLimitation: hasLimitation
+                patternBottomY: patternBottomY
             });
         }
     } else {
         // Section 1: Use the universal pattern origin directly
         patternStartX = universalPatternOriginX;
-        patternStartY = universalPatternOriginY;
+        patternBottomY = universalPatternOriginY; // FIXED: Bottom reference
         
         if (isHalfDrop) {
-            console.log(`🌟 HALF-DROP SECTION 1 POSITIONING:`, {
+            console.log(`🌟 HALF-DROP SECTION 1 BOTTOM-ANCHORED:`, {
                 patternStartX: patternStartX,
-                patternStartY: patternStartY,
-                hasLimitation: hasLimitation
+                patternBottomY: patternBottomY
             });
         }
     }
     
-    // Set clip area - ONLY clip to the actual drawing area
+    // Set clip area
     ctx.save();
     ctx.beginPath();
     ctx.rect(areaX, areaY, areaWidth, areaHeight);
     ctx.clip();
     
-    // FIXED: Calculate draw height based on limitation
-    let drawHeight;
-    if (hasLimitation && !isSection2) {
-        // Section 1 with limitation: Use actual panel height
-        drawHeight = referenceCoords.section1.actualPanelHeight * scale;
-    } else if (hasLimitation && isSection2) {
-        // Section 2 with limitation: Use wall height minus uncovered area
-        const coveredWallHeight = referenceCoords.dimensions.scaledWallHeight - (calculations.uncoveredWallHeight * scale);
-        drawHeight = coveredWallHeight;
-    } else {
-        // No limitation: Use full height
-        drawHeight = isSection2 ? areaHeight : referenceCoords.dimensions.scaledTotalHeight;
-    }
+    const drawHeight = isSection2 ? areaHeight : referenceCoords.dimensions.scaledTotalHeight;
     
-    // Draw pattern continuously across the full area using universal positioning
+    // Draw pattern continuously across the full area using bottom-anchored positioning
     if (panelIndex !== null) {
         // Section 1: Draw for specific panel but use continuous pattern positioning
         const numPanels = calculations.panelsNeeded;
@@ -191,11 +146,10 @@ function drawPatternInArea(ctx, areaX, areaY, areaWidth, areaHeight, referenceCo
         const totalHorizontalRepeats = Math.ceil(totalPatternWidth / repeatWidthPixels);
         
         if (isHalfDrop) {
-            console.log(`🔄 HALF-DROP SECTION 1 CONTINUOUS PATTERN:`, {
+            console.log(`🔄 HALF-DROP SECTION 1 BOTTOM-ANCHORED PATTERN:`, {
                 numPanels: numPanels,
                 totalHorizontalRepeats: totalHorizontalRepeats,
-                repeatsPerPanel: repeatsPerPanel,
-                drawHeight: drawHeight
+                repeatsPerPanel: repeatsPerPanel
             });
         }
         
@@ -204,16 +158,14 @@ function drawPatternInArea(ctx, areaX, areaY, areaWidth, areaHeight, referenceCo
             const repeatX = i * repeatWidthPixels;
             const drawX = patternStartX + repeatX;
             
-            // Half-drop logic
+            // Half-drop logic (unchanged)
             let halfDropOffset = 0;
             
             if (isHalfDrop) {
                 if (repeatsPerPanel >= 2) {
-                    // Multi-repeat patterns: Use tile-based offset within panel
                     const tileIndexWithinPanel = i % repeatsPerPanel;
                     halfDropOffset = calculateTileOffsetWithinPanel(pattern, tileIndexWithinPanel) * scale;
                 } else {
-                    // Single-repeat patterns: Use panel-based offset
                     const panelForThisRepeat = Math.floor(i * pattern.repeatWidth / pattern.panelWidth);
                     halfDropOffset = calculateHalfDropVisualOffset(pattern, panelForThisRepeat) * scale;
                 }
@@ -222,13 +174,13 @@ function drawPatternInArea(ctx, areaX, areaY, areaWidth, areaHeight, referenceCo
             // Only draw if this repeat intersects with the current area
             if (drawX + repeatWidthPixels >= areaX && drawX < areaX + areaWidth) {
                 if (pattern.hasRepeatHeight) {
-                    // Vertical repeating pattern with half-drop offset DOWN
+                    // FIXED: Vertical repeating pattern anchored from bottom UP
                     const numVerticalRepeats = Math.ceil(drawHeight / repeatHeightPixels) + 3;
                     
                     for (let v = 0; v < numVerticalRepeats; v++) {
                         const repeatY = v * repeatHeightPixels;
-                        // FIXED: Pattern drawn upward from bottom anchor point
-                        const drawY = patternStartY - repeatY - repeatHeightPixels + halfDropOffset;
+                        // FIXED: Draw from bottom up, with half-drop offset
+                        const drawY = patternBottomY - repeatY - repeatHeightPixels - halfDropOffset;
                         
                         // Only draw if this repeat is visible
                         if (drawY + repeatHeightPixels >= areaY && drawY < areaY + areaHeight) {
@@ -236,8 +188,8 @@ function drawPatternInArea(ctx, areaX, areaY, areaWidth, areaHeight, referenceCo
                         }
                     }
                 } else {
-                    // Non-repeating pattern - position at bottom anchor point
-                    const drawY = patternStartY - repeatHeightPixels + halfDropOffset;
+                    // FIXED: Non-repeating pattern anchored at bottom with offset
+                    const drawY = patternBottomY - repeatHeightPixels - halfDropOffset;
                     
                     if (drawY + repeatHeightPixels >= areaY && drawY < areaY + areaHeight) {
                         ctx.drawImage(patternImage, drawX, drawY, repeatWidthPixels, repeatHeightPixels);
@@ -246,21 +198,20 @@ function drawPatternInArea(ctx, areaX, areaY, areaWidth, areaHeight, referenceCo
             }
         }
     } else {
-        // Section 2: Draw continuously using the same universal positioning system
+        // Section 2: Draw continuously using the same bottom-anchored system
         const numPanels = calculations.panelsNeeded;
         const totalPatternWidth = numPanels * stripWidthPixels;
         const totalHorizontalRepeats = Math.ceil(totalPatternWidth / repeatWidthPixels);
         
         if (isHalfDrop) {
-            console.log(`🌟 HALF-DROP SECTION 2 CONTINUOUS PATTERN:`, {
+            console.log(`🌟 HALF-DROP SECTION 2 BOTTOM-ANCHORED PATTERN:`, {
                 numPanels: numPanels,
                 totalHorizontalRepeats: totalHorizontalRepeats,
-                repeatsPerPanel: repeatsPerPanel,
-                drawHeight: drawHeight
+                repeatsPerPanel: repeatsPerPanel
             });
         }
         
-        // Draw all repeats continuously using universal coordinates
+        // Draw all repeats continuously using bottom-anchored coordinates
         for (let i = 0; i < totalHorizontalRepeats; i++) {
             const repeatX = i * repeatWidthPixels;
             const drawX = patternStartX + repeatX;
@@ -270,11 +221,9 @@ function drawPatternInArea(ctx, areaX, areaY, areaWidth, areaHeight, referenceCo
             
             if (isHalfDrop) {
                 if (repeatsPerPanel >= 2) {
-                    // Multi-repeat patterns: Use tile-based offset within panel
                     const tileIndexWithinPanel = i % repeatsPerPanel;
                     halfDropOffset = calculateTileOffsetWithinPanel(pattern, tileIndexWithinPanel) * scale;
                 } else {
-                    // Single-repeat patterns: Use panel-based offset
                     const panelForThisRepeat = Math.floor(i * pattern.repeatWidth / pattern.panelWidth);
                     halfDropOffset = calculateHalfDropVisualOffset(pattern, panelForThisRepeat) * scale;
                 }
@@ -283,15 +232,15 @@ function drawPatternInArea(ctx, areaX, areaY, areaWidth, areaHeight, referenceCo
             // Only draw if this repeat intersects with the current area
             if (drawX + repeatWidthPixels >= areaX && drawX < areaX + areaWidth) {
                 if (pattern.hasRepeatHeight) {
-                    // Vertical repeating pattern
-                    const baseNumVerticalRepeats = Math.ceil(drawHeight / repeatHeightPixels) + 3;
+                    // FIXED: Vertical repeating pattern anchored from bottom UP
+                    const baseNumVerticalRepeats = Math.ceil(areaHeight / repeatHeightPixels) + 3;
                     const extraRepeatForOffset = (isHalfDrop && halfDropOffset > 0) ? 1 : 0;
                     const numVerticalRepeats = baseNumVerticalRepeats + extraRepeatForOffset;
                     
                     for (let v = 0; v < numVerticalRepeats; v++) {
                         const repeatY = v * repeatHeightPixels;
-                        // FIXED: Pattern drawn upward from bottom anchor point
-                        const drawY = patternStartY - repeatY - repeatHeightPixels + halfDropOffset;
+                        // FIXED: Draw from bottom up
+                        const drawY = patternBottomY - repeatY - repeatHeightPixels - halfDropOffset;
                         
                         // Only draw if this repeat is visible
                         if (drawY + repeatHeightPixels >= areaY && drawY < areaY + areaHeight) {
@@ -299,8 +248,8 @@ function drawPatternInArea(ctx, areaX, areaY, areaWidth, areaHeight, referenceCo
                         }
                     }
                 } else {
-                    // Non-repeating pattern
-                    const drawY = patternStartY - repeatHeightPixels + halfDropOffset;
+                    // FIXED: Non-repeating pattern anchored at bottom
+                    const drawY = patternBottomY - repeatHeightPixels - halfDropOffset;
                     
                     if (drawY + repeatHeightPixels >= areaY && drawY < areaY + areaHeight) {
                         ctx.drawImage(patternImage, drawX, drawY, repeatWidthPixels, repeatHeightPixels);
