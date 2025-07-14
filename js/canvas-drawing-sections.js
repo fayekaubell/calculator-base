@@ -1,10 +1,10 @@
 // Canvas Drawing Sections Module - Section 1 and Section 2 drawing
-// FIXED: Red shading shows uncovered wall area at top of wall (panels anchor to bottom)
+// Part 3 of modularized canvas drawing system
 
-// Draw Complete View - pattern + overlay + annotations - FIXED FOR BOTTOM ANCHORING
+// Draw Complete View - pattern + overlay + annotations - UPDATED FOR HALF-DROP
 function drawCompleteViewWithOverlay(ctx, referenceCoords) {
     const { pattern, calculations } = currentPreview;
-    const { scale, section1, dimensions, hasLimitation } = referenceCoords;
+    const { scale, section1, dimensions } = referenceCoords;
     
     const offsetX = section1.patternStartX;
     const offsetY = section1.patternStartY;
@@ -18,72 +18,52 @@ function drawCompleteViewWithOverlay(ctx, referenceCoords) {
     // Check if this is a half-drop pattern
     const isHalfDrop = pattern.patternMatch && pattern.patternMatch.toLowerCase() === 'half drop';
     
-    // Step 1: Draw pattern for each panel/strip individually with bottom anchoring
+    // Step 1: Draw pattern for each panel/strip individually with half-drop offset
     if (imageLoaded && patternImage) {
         ctx.globalAlpha = 1.0;
-        
-        // FIXED: Calculate panel drawing area with bottom anchoring
-        let panelHeight;
-        if (hasLimitation) {
-            // Use actual available panel height
-            panelHeight = section1.actualPanelHeight * scale;
-        } else {
-            // Use full height
-            panelHeight = scaledTotalHeight;
-        }
         
         for (let i = 0; i < calculations.panelsNeeded; i++) {
             const panelX = offsetX + (i * pattern.panelWidth * scale);
             const panelWidth = pattern.panelWidth * scale;
             
-            // Draw pattern for this specific panel with correct height
+            // Calculate visual offset for this panel
+            const halfDropOffset = isHalfDrop ? calculateHalfDropVisualOffset(pattern, i) * scale : 0;
+            
+            // For all patterns, maintain consistent height
+            let panelHeight = scaledTotalHeight;
+            
+            // Draw pattern for this specific panel
+            // For patterns that repeat within the strip width, don't offset the strip position
             drawPatternInArea(ctx, panelX, offsetY, panelWidth, panelHeight, referenceCoords, false, i);
         }
     }
     
     // Step 2: Draw semi-transparent overlay on overage areas (dims them to 50%)
-    // FIXED: Use actual panel height for overlay calculation
-    const overlayPanelHeight = hasLimitation ? section1.actualPanelHeight * scale : scaledTotalHeight;
-    
-    drawOverageOverlay(ctx, offsetX, offsetY, scaledTotalWidth, overlayPanelHeight,
+    drawOverageOverlay(ctx, offsetX, offsetY, scaledTotalWidth, scaledTotalHeight,
                       wallOffsetX, wallOffsetY, scaledWallWidth, scaledWallHeight);
     
-    // Step 3: FIXED - Draw red shading for uncovered wall area at TOP of wall
-    // Use hasLimitation from referenceCoords and add additional check
-    const shouldDrawRedArea = hasLimitation && calculations.uncoveredWallHeight > 0;
-    
-    if (shouldDrawRedArea) {
-        console.log('🔴 Drawing red uncovered wall area in Section 1:', {
-            uncoveredWallHeight: calculations.uncoveredWallHeight,
-            wallOffsetX: wallOffsetX,
-            wallOffsetY: wallOffsetY,
-            scaledWallWidth: scaledWallWidth,
-            scale: scale
-        });
+    // Step 3: Handle limitations (uncovered areas)
+    const hasLimitation = calculations.exceedsLimit || calculations.exceedsAvailableLength;
+    if (hasLimitation) {
+        const actualPanelLengthToUse = calculations.exceedsAvailableLength ? 
+            calculations.actualPanelLength : calculations.panelLength;
+        const panelCoverageHeight = actualPanelLengthToUse * 12 * scale;
+        const uncoveredAreaHeight = scaledWallHeight - panelCoverageHeight;
         
-        ctx.fillStyle = 'rgba(255, 0, 0, 0.5)';
-        
-        // Draw red area at the TOP of the wall outline
-        const redAreaHeight = calculations.uncoveredWallHeight * scale;
-        
-        ctx.fillRect(
-            wallOffsetX, 
-            wallOffsetY, 
-            scaledWallWidth, 
-            redAreaHeight
-        );
+        if (uncoveredAreaHeight > 0) {
+            ctx.fillStyle = 'rgba(255, 0, 0, 0.5)';
+            ctx.fillRect(wallOffsetX, wallOffsetY, scaledWallWidth, uncoveredAreaHeight);
+        }
     }
     
-    // Step 4: Draw outlines and annotations with bottom anchoring
-    const outlineHeight = hasLimitation ? section1.actualPanelHeight * scale : scaledTotalHeight;
-    
-    drawCompleteViewOutlines(ctx, offsetX, offsetY, scaledTotalWidth, outlineHeight, 
+    // Step 4: Draw outlines and annotations with half-drop adjustments
+    drawCompleteViewOutlines(ctx, offsetX, offsetY, scaledTotalWidth, scaledTotalHeight, 
                            scaledWallWidth, scaledWallHeight, wallOffsetX, wallOffsetY, scale, isHalfDrop);
     
-    drawCompleteDimensionLabels(ctx, offsetX, offsetY, scaledTotalWidth, outlineHeight, 
+    drawCompleteDimensionLabels(ctx, offsetX, offsetY, scaledTotalWidth, scaledTotalHeight, 
                               scaledWallWidth, scaledWallHeight, wallOffsetX, wallOffsetY, scale);
     
-    drawPanelLabels(ctx, offsetX, offsetY, scaledTotalWidth, outlineHeight, scale);
+    drawPanelLabels(ctx, offsetX, offsetY, scaledTotalWidth, scaledTotalHeight, scale);
 }
 
 // Draw outlines for complete view - UPDATED FOR HALF-DROP
@@ -244,10 +224,10 @@ function drawPanelLabels(ctx, offsetX, offsetY, scaledTotalWidth, scaledTotalHei
     }
 }
 
-// FIXED: Draw Wall Only View with red shading at top of wall dimensions
+// Draw Wall Only View with perfect pattern alignment
 function drawWallOnlyView(ctx, referenceCoords) {
     const { pattern, wallWidth, wallHeight, calculations, wallWidthFeet, wallWidthInches, wallHeightFeet, wallHeightInches } = currentPreview;
-    const { section2, dimensions, scale, hasLimitation } = referenceCoords;
+    const { section2, dimensions } = referenceCoords;
     
     const wallOffsetX = section2.wallStartX;
     const wallOffsetY = section2.wallStartY;
@@ -259,30 +239,18 @@ function drawWallOnlyView(ctx, referenceCoords) {
         drawPatternInArea(ctx, wallOffsetX, wallOffsetY, scaledWallWidth, scaledWallHeight, referenceCoords, true);
     }
     
-    // FIXED: Draw red shading at TOP of wall (same as Section 1)
-    // Use hasLimitation from referenceCoords instead of declaring it again
-    const hasWallLimitation = hasLimitation && calculations.uncoveredWallHeight > 0;
-    
-    if (hasWallLimitation) {
-        console.log('🔴 Drawing red uncovered wall area in Section 2 (wall-only):', {
-            uncoveredWallHeight: calculations.uncoveredWallHeight,
-            wallOffsetX: wallOffsetX,
-            wallOffsetY: wallOffsetY,
-            scaledWallWidth: scaledWallWidth,
-            scale: scale
-        });
+    // Draw uncovered area if needed
+    const hasLimitation = calculations.exceedsLimit || calculations.exceedsAvailableLength;
+    if (hasLimitation) {
+        const actualPanelLengthToUse = calculations.exceedsAvailableLength ? 
+            calculations.actualPanelLength : calculations.panelLength;
+        const coveredHeight = actualPanelLengthToUse * 12 * referenceCoords.scale;
+        const uncoveredAreaHeight = scaledWallHeight - coveredHeight;
         
-        ctx.fillStyle = 'rgba(255, 0, 0, 0.5)';
-        
-        // Draw red area at the TOP of the wall (exactly matching Section 1)
-        const redAreaHeight = calculations.uncoveredWallHeight * scale;
-        
-        ctx.fillRect(
-            wallOffsetX, 
-            wallOffsetY, 
-            scaledWallWidth, 
-            redAreaHeight
-        );
+        if (uncoveredAreaHeight > 0) {
+            ctx.fillStyle = 'rgba(255, 0, 0, 0.5)';
+            ctx.fillRect(wallOffsetX, wallOffsetY, scaledWallWidth, uncoveredAreaHeight);
+        }
     }
     
     // Draw wall outline
@@ -345,10 +313,3 @@ function drawWallOnlyView(ctx, referenceCoords) {
     ctx.fillText(wallHeightText, 0, 0);
     ctx.restore();
 }
-
-// Export functions to global scope for use in other modules
-window.drawCompleteViewWithOverlay = drawCompleteViewWithOverlay;
-window.drawCompleteViewOutlines = drawCompleteViewOutlines;
-window.drawCompleteDimensionLabels = drawCompleteDimensionLabels;
-window.drawPanelLabels = drawPanelLabels;
-window.drawWallOnlyView = drawWallOnlyView;
