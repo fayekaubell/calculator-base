@@ -157,7 +157,7 @@ class CalculatorLogger {
         }
     }
     
-    // UPDATED: Generate preview logging using GET request
+    // UPDATED: Generate preview logging using GET request - ONLY action that gets NEW preview number
     async logGeneratePreview(eventData = {}) {
         if (this.temporarilyDisabled) {
             console.log('📊 Logging temporarily disabled due to errors, skipping preview log');
@@ -177,16 +177,17 @@ class CalculatorLogger {
                 patternSelected: patternInfo.display,
                 totalYardage: totalYardage,
                 userAgent: this.getUserAgent()
+                // NOTE: No previewNumber sent - Google Apps Script will generate it
             };
             
             const response = await this.sendToWebhook(params);
             
-            // UPDATED: Get the preview number from the response
+            // UPDATED: Get the NEW preview number from the response
             if (response && response.previewNumber) {
                 this.previewNumber = response.previewNumber;
-                console.log('📊 Preview generation logged with sequential number:', this.previewNumber);
+                console.log('📊 NEW preview number assigned:', this.previewNumber);
                 
-                // Store the preview number globally for PDF generation
+                // Store the preview number globally for PDF generation and quote submission
                 if (window.currentPreview) {
                     window.currentPreview.sequentialPreviewNumber = this.previewNumber;
                 }
@@ -214,6 +215,7 @@ class CalculatorLogger {
         }
     }
     
+    // UPDATED: PDF download logging - REUSES existing preview number
     async logDownloadPDF(eventData = {}) {
         if (this.temporarilyDisabled) {
             console.log('📊 Logging temporarily disabled due to errors, skipping PDF log');
@@ -228,6 +230,11 @@ class CalculatorLogger {
             // Generate PDF filename with sequential number
             const pdfFilename = eventData.filename || this.generatePDFFilename();
             
+            // IMPORTANT: Use existing preview number, don't generate new one
+            const currentPreviewNumber = this.previewNumber || 
+                                       window.currentPreview?.sequentialPreviewNumber || 
+                                       this.generateFallbackPreviewNumber();
+            
             const params = {
                 action: 'download_pdf',
                 timestamp: this.getCurrentTimestamp(),
@@ -236,12 +243,12 @@ class CalculatorLogger {
                 patternSelected: patternInfo.display,
                 totalYardage: totalYardage,
                 pdfFilename: pdfFilename,
-                previewNumber: this.previewNumber || 'unknown',
+                previewNumber: currentPreviewNumber, // REUSE existing number
                 userAgent: this.getUserAgent()
             };
             
             await this.sendToWebhook(params);
-            console.log('📊 PDF download logged:', pdfFilename);
+            console.log('📊 PDF download logged with EXISTING preview number:', currentPreviewNumber);
             
             // Reset error counter on success
             this.consecutiveErrors = 0;
@@ -253,6 +260,7 @@ class CalculatorLogger {
         }
     }
     
+    // UPDATED: Quote submission logging - REUSES existing preview number
     async logSubmitQuote(eventData = {}) {
         if (this.temporarilyDisabled) {
             console.log('📊 Logging temporarily disabled due to errors, skipping quote log');
@@ -274,6 +282,11 @@ class CalculatorLogger {
             
             const pdfFilename = eventData.pdfFilename || this.generatePDFFilename();
             
+            // IMPORTANT: Use existing preview number, don't generate new one
+            const currentPreviewNumber = this.previewNumber || 
+                                       window.currentPreview?.sequentialPreviewNumber || 
+                                       this.generateFallbackPreviewNumber();
+            
             const params = {
                 action: 'submit_quote',
                 timestamp: this.getCurrentTimestamp(),
@@ -282,7 +295,7 @@ class CalculatorLogger {
                 patternSelected: patternInfo.display,
                 totalYardage: totalYardage,
                 pdfFilename: pdfFilename,
-                previewNumber: this.previewNumber || 'unknown',
+                previewNumber: currentPreviewNumber, // REUSE existing number
                 userAgent: this.getUserAgent(),
                 customerName: customerName,
                 customerEmail: customerEmail,
@@ -292,7 +305,7 @@ class CalculatorLogger {
             };
             
             await this.sendToWebhook(params);
-            console.log('📊 Quote submission logged:', customerEmail);
+            console.log('📊 Quote submission logged with EXISTING preview number:', currentPreviewNumber);
             
             // Reset error counter on success
             this.consecutiveErrors = 0;
