@@ -349,10 +349,10 @@ async function addEnhancedTextContentToPDF(pdf, x, y, maxWidth, maxHeight) {
     pdf.text(patternDisplay, centerX, currentY, { align: 'center' });
     currentY += lineHeight;
     
-    // Wall dimensions - back to body font
+    // Wall dimensions - back to body font with label
     pdf.setFontSize(bodyFontSize);
     pdf.setFont(undefined, 'normal');
-    pdf.text(`${formattedWidth}w × ${formattedHeight}h`, centerX, currentY, { align: 'center' });
+    pdf.text(`Wall Dimensions: ${formattedWidth}w × ${formattedHeight}h`, centerX, currentY, { align: 'center' });
     currentY += lineHeight;
     
     // Pattern repeat dimensions - add "Repeat:" prefix
