@@ -1,6 +1,6 @@
 // Configuration for Wallpaper Calculator
 // Modify these settings to customize for your business
-// UPDATED: Added Google Sheets logging configuration for Faye Bell
+// UPDATED: Added Google Sheets logging configuration for Faye Bell with NEW WEBHOOK URL
 
 const CONFIG = {
   // Business Information
@@ -25,7 +25,7 @@ const CONFIG = {
     enabled: true,
     
     // Google Apps Script webhook URL - UPDATED FOR NEW DEPLOYMENT
-    webhookUrl: "https://script.google.com/macros/s/AKfycbwFfsV5kmN2xy1jeirtpt0kt5UD_cwrcEIOH0IDqdaKD3F9UDN8uNMxR4vnVqHIA4m7/exec",
+    webhookUrl: "https://script.google.com/macros/s/AKfycbxSN0G1A3EsX1MDoYLz67UVqvroSCF-ojNZc3WtyNwrflWMeLUKNFkHCPQrzDMfVc-9mw/exec",
     
     // Retry settings for webhook requests
     retryAttempts: 3,
