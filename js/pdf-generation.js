@@ -282,9 +282,9 @@ async function loadLogoForPDF() {
 function calculateTotalContentHeight(pdf, maxWidth) {
     const { pattern, calculations, formattedWidth, formattedHeight } = currentPreview;
     
-    const lineHeight = 0.18; // Increased for better spacing
-    const sectionSpacing = 0.25;
-    const headerHeight = 0.5;
+    const lineHeight = 0.2; // Increased for better spacing to prevent overlap
+    const sectionSpacing = 0.3;
+    const headerHeight = 0.6;
     
     let totalHeight = headerHeight; // Title area
     
@@ -292,20 +292,18 @@ function calculateTotalContentHeight(pdf, maxWidth) {
     totalHeight += lineHeight * 4;
     totalHeight += sectionSpacing;
     
-    // Wall dimensions section (2 lines)
-    totalHeight += lineHeight * 2;
-    totalHeight += sectionSpacing;
-    
     // Order quantity section - count lines based on pattern type
     if (calculations.saleType === 'yard') {
-        totalHeight += lineHeight * 6; // Order lines for yard patterns
+        totalHeight += lineHeight * 4; // Order lines for yard patterns
     } else {
         totalHeight += lineHeight * 8; // Order lines for panel patterns
     }
     totalHeight += sectionSpacing;
     
-    // Contact and disclaimer section (4 lines)
-    totalHeight += lineHeight * 4;
+    // Contact and disclaimer section - calculate actual wrapped text height
+    const disclaimerText = CONFIG.ui.text.disclaimers.results;
+    const disclaimerLines = Math.ceil(disclaimerText.length / 80); // Rough estimate of wrapped lines
+    totalHeight += lineHeight * (disclaimerLines + 3); // Disclaimer + contact info + spacing
     
     return totalHeight;
 }
@@ -322,8 +320,8 @@ async function addEnhancedTextContentToPDF(pdf, x, y, maxWidth, maxHeight) {
     const startY = y + (maxHeight - totalContentHeight) / 2;
     
     let currentY = startY;
-    const lineHeight = 0.18; // Consistent line height
-    const sectionSpacing = 0.25; // Spacing between sections
+    const lineHeight = 0.2; // Increased line height to prevent overlap
+    const sectionSpacing = 0.3; // Increased spacing between sections
     const bodyFontSize = 11; // Consistent body font size
     const centerX = x + (maxWidth / 2); // Center position for all text
     
@@ -334,13 +332,13 @@ async function addEnhancedTextContentToPDF(pdf, x, y, maxWidth, maxHeight) {
         const logoX = x + (maxWidth - logoWidth) / 2;
         
         pdf.addImage(logoImg, 'PNG', logoX, currentY, logoWidth, logoHeight);
-        currentY += logoHeight + 0.2;
+        currentY += logoHeight + 0.25;
     } else {
         // Add business name as header
         pdf.setFontSize(16);
         pdf.setFont(undefined, 'bold');
         pdf.text(CONFIG.business.name || 'Wallpaper Calculator', centerX, currentY, { align: 'center' });
-        currentY += 0.3;
+        currentY += 0.35;
     }
     
     // Pattern Details Section
@@ -417,16 +415,25 @@ async function addEnhancedTextContentToPDF(pdf, x, y, maxWidth, maxHeight) {
     
     currentY += sectionSpacing;
     
-    // Footer/Contact/Disclaimer - All centered and same font size
+    // Footer/Contact/Disclaimer - All centered and same font size with proper spacing
     pdf.setFontSize(bodyFontSize); // Same size as body text
-    pdf.setFont(undefined, 'normal');
+    pdf.setFont(undefined, 'italic'); // Italic for disclaimer to match original
     
-    // Disclaimer
+    // Disclaimer - use splitTextToSize to handle wrapping properly
     const disclaimerText = CONFIG.ui.text.disclaimers.results;
-    pdf.text(disclaimerText, centerX, currentY, { align: 'center', maxWidth: maxWidth - 0.2 });
-    currentY += lineHeight * 2; // Account for text wrapping
+    const disclaimerLines = pdf.splitTextToSize(disclaimerText, maxWidth - 0.3);
     
-    // Contact information
+    // Add each line of disclaimer text with proper spacing
+    for (let i = 0; i < disclaimerLines.length; i++) {
+        pdf.text(disclaimerLines[i], centerX, currentY, { align: 'center' });
+        currentY += lineHeight;
+    }
+    
+    // Add extra spacing after disclaimer
+    currentY += 0.1;
+    
+    // Contact information - back to normal font
+    pdf.setFont(undefined, 'normal');
     pdf.text(`${CONFIG.business.email} • ${CONFIG.business.website}`, centerX, currentY, { align: 'center' });
     currentY += lineHeight;
     pdf.text(`${CONFIG.business.location}`, centerX, currentY, { align: 'center' });
