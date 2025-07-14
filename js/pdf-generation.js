@@ -33,10 +33,10 @@ async function generatePDF() {
             format: [pdfWidth, pdfHeight]
         });
 
-        // Enhanced layout dimensions
+        // Enhanced layout dimensions - maintain 0.5" right margin
         const canvasMargin = 0.25;
-        const textAreaWidth = 3.25; // Right side text area
-        const canvasAreaWidth = pdfWidth - textAreaWidth - (canvasMargin * 3); // 20" wide
+        const textAreaWidth = 3.5; // Increased to maintain 0.5" margin on right (was 3.25)
+        const canvasAreaWidth = pdfWidth - textAreaWidth - (canvasMargin * 2); // Adjusted
         const canvasAreaHeight = pdfHeight - (canvasMargin * 2); // 17.5" tall
         
         // Generate high-resolution canvas with processing feedback
@@ -60,7 +60,7 @@ async function generatePDF() {
 
         console.log('📝 Adding text content to PDF...');
         // Add enhanced text content to right side with vertical centering
-        await addEnhancedTextContentToPDF(pdf, canvasAreaWidth + canvasMargin * 2, canvasMargin, textAreaWidth - canvasMargin, canvasAreaHeight);
+        await addEnhancedTextContentToPDF(pdf, canvasAreaWidth + canvasMargin, canvasMargin, textAreaWidth, canvasAreaHeight);
 
         // UPDATED: Generate filename with sequential preview number
         const { pattern } = currentPreview;
@@ -288,8 +288,8 @@ function calculateTotalContentHeight(pdf, maxWidth) {
     
     let totalHeight = headerHeight; // Title area
     
-    // Pattern details section (5 lines now - added repeat line)
-    totalHeight += lineHeight * 5;
+    // Pattern details section (6 lines now - added repeat dimensions and match lines)
+    totalHeight += lineHeight * 6;
     totalHeight += sectionSpacing;
     
     // Order quantity section - count lines based on pattern type (with extra spacing)
@@ -355,9 +355,29 @@ async function addEnhancedTextContentToPDF(pdf, x, y, maxWidth, maxHeight) {
     pdf.text(`${formattedWidth}w × ${formattedHeight}h`, centerX, currentY, { align: 'center' });
     currentY += lineHeight;
     
-    // Pattern repeat information - add "Repeat:" prefix
+    // Pattern repeat dimensions - add "Repeat:" prefix
+    const repeatWidthFeet = Math.floor(pattern.repeatWidth / 12);
+    const repeatWidthInches = pattern.repeatWidth % 12;
+    const repeatWidthDisplay = repeatWidthInches > 0 ? 
+        `${repeatWidthFeet}'-${repeatWidthInches}"` : `${repeatWidthFeet}'`;
+    
+    let repeatDisplay = `Repeat: ${repeatWidthDisplay}w`;
+    
+    // Add height if pattern has repeat height
+    if (pattern.hasRepeatHeight && pattern.repeatHeight) {
+        const repeatHeightFeet = Math.floor(pattern.repeatHeight / 12);
+        const repeatHeightInches = pattern.repeatHeight % 12;
+        const repeatHeightDisplay = repeatHeightInches > 0 ? 
+            `${repeatHeightFeet}'-${repeatHeightInches}"` : `${repeatHeightFeet}'`;
+        repeatDisplay += ` × ${repeatHeightDisplay}h`;
+    }
+    
+    pdf.text(repeatDisplay, centerX, currentY, { align: 'center' });
+    currentY += lineHeight;
+    
+    // Pattern match information - add "Match:" prefix
     const patternMatch = pattern.patternMatch || 'straight';
-    pdf.text(`Repeat: ${patternMatch}`, centerX, currentY, { align: 'center' });
+    pdf.text(`Match: ${patternMatch}`, centerX, currentY, { align: 'center' });
     currentY += lineHeight;
     
     // Preview number
