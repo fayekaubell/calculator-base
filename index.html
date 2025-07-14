@@ -20,6 +20,9 @@
     <script src="js/css-variables-font-config.js"></script>
     <script src="config.js"></script>
     
+    <!-- NEW: Load logging module after config -->
+    <script src="js/logging.js"></script>
+    
     <!-- AUTO-RESIZE SYSTEM -->
     <script src="js/auto-resize.js"></script>
     
@@ -283,7 +286,7 @@
     <script>
         // Enhanced initialization with auto-resize integration
         document.addEventListener('DOMContentLoaded', function() {
-            console.log('🚀 Enhanced Wallpaper Calculator with auto-resize initializing...');
+            console.log('🚀 Enhanced Wallpaper Calculator with auto-resize and logging initializing...');
             
             // Performance monitoring
             const startTime = performance.now();
@@ -353,7 +356,7 @@
                 }, 1000);
                 
                 const endTime = performance.now();
-                console.log(`✅ Calculator with auto-resize initialized in ${Math.round(endTime - startTime)}ms`);
+                console.log(`✅ Calculator with auto-resize and logging initialized in ${Math.round(endTime - startTime)}ms`);
                 
             } catch (error) {
                 console.error('❌ Failed to initialize calculator:', error);
