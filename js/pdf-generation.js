@@ -1,10 +1,8 @@
-// Enhanced PDF Generation Module - Vertically centered layout with logo, download progress, and reset functionality
+// Enhanced PDF Generation Module - Uses sequential preview numbers from Google Sheets
 // Requires jsPDF library to be loaded
-// UPDATED: Shows "Match:" instead of "Type:" in Pattern Details
-// UPDATED: Works with quote form and button container system
-// UPDATED: Added Google Sheets logging integration
+// UPDATED: Uses sequential preview numbers for PDF filename and content
 
-// PDF generation function with improved layout and button feedback
+// PDF generation function with sequential preview numbers
 async function generatePDF() {
     if (!currentPreview) {
         alert('Please generate a preview first before downloading PDF');
@@ -14,7 +12,7 @@ async function generatePDF() {
     const downloadBtn = document.getElementById('downloadPdfBtn');
     
     try {
-        console.log('🎨 Starting enhanced PDF generation...');
+        console.log('🎨 Starting enhanced PDF generation with sequential numbering...');
         
         // Show processing state immediately
         updateDownloadButtonState(downloadBtn, 'processing');
@@ -64,10 +62,10 @@ async function generatePDF() {
         // Add enhanced text content to right side with vertical centering
         await addEnhancedTextContentToPDF(pdf, canvasAreaWidth + canvasMargin * 2, canvasMargin, textAreaWidth - canvasMargin, canvasAreaHeight);
 
-        // Generate filename with preview number
+        // UPDATED: Generate filename with sequential preview number
         const { pattern } = currentPreview;
-        const previewNumber = window.calculatorLogger ? window.calculatorLogger.getPreviewNumber() : '00000';
-        const filename = `Faye-Bell-Wallpaper-Preview-${pattern.sku}-${previewNumber}.pdf`;
+        const sequentialNumber = getSequentialPreviewNumber();
+        const filename = `Faye-Bell-Wallpaper-Preview-${pattern.sku}-${sequentialNumber}.pdf`;
 
         // LOGGING: Dispatch logging event for PDF download
         if (typeof window.dispatchPDFDownloaded === 'function') {
@@ -77,17 +75,18 @@ async function generatePDF() {
                     patternName: pattern.name,
                     patternSku: pattern.sku,
                     wallDimensions: `${currentPreview.formattedWidth} x ${currentPreview.formattedHeight}`,
+                    sequentialNumber: sequentialNumber,
                     generated: true,
                     timestamp: new Date().toISOString()
                 });
             }, 100);
         }
 
-        console.log('💾 Saving PDF with logging enabled:', filename);
+        console.log('💾 Saving PDF with sequential numbering:', filename);
         // Save PDF
         pdf.save(filename);
         
-        console.log('✅ Enhanced PDF generated successfully:', filename);
+        console.log('✅ Enhanced PDF generated successfully with sequential number:', filename);
 
         // Show success state with reset functionality
         updateDownloadButtonState(downloadBtn, 'success');
@@ -99,6 +98,30 @@ async function generatePDF() {
         // Show error state
         updateDownloadButtonState(downloadBtn, 'error');
     }
+}
+
+// UPDATED: Get sequential preview number from various sources
+function getSequentialPreviewNumber() {
+    // Priority order for getting the sequential preview number:
+    // 1. From currentPreview (set by logging system)
+    // 2. From calculator logger
+    // 3. Fallback to timestamp-based
+    
+    if (window.currentPreview?.sequentialPreviewNumber) {
+        console.log('📊 Using sequential preview number from currentPreview:', window.currentPreview.sequentialPreviewNumber);
+        return window.currentPreview.sequentialPreviewNumber;
+    }
+    
+    if (window.calculatorLogger?.getPreviewNumber && window.calculatorLogger.getPreviewNumber() !== '00000') {
+        const number = window.calculatorLogger.getPreviewNumber();
+        console.log('📊 Using sequential preview number from logger:', number);
+        return number;
+    }
+    
+    // Fallback - generate timestamp-based number
+    const fallback = Date.now().toString().slice(-5);
+    console.log('⚠️ Using fallback preview number:', fallback);
+    return fallback;
 }
 
 // Update download button state with different messages and styles
@@ -266,7 +289,7 @@ function calculateTotalContentHeight(pdf, maxWidth) {
     let totalHeight = headerHeight; // Title area
     
     // Pattern details section
-    totalHeight += lineHeight * 4; // Pattern name, SKU, dimensions, pattern type
+    totalHeight += lineHeight * 5; // Pattern name, SKU, dimensions, pattern type, preview number
     totalHeight += sectionSpacing;
     
     // Wall dimensions section
@@ -287,7 +310,7 @@ function calculateTotalContentHeight(pdf, maxWidth) {
     return totalHeight;
 }
 
-// Add enhanced text content to PDF with vertical centering
+// UPDATED: Add enhanced text content to PDF with sequential preview number
 async function addEnhancedTextContentToPDF(pdf, x, y, maxWidth, maxHeight) {
     const { pattern, calculations, formattedWidth, formattedHeight } = currentPreview;
     
@@ -333,6 +356,11 @@ async function addEnhancedTextContentToPDF(pdf, x, y, maxWidth, maxHeight) {
     pdf.text(`Dimensions: ${formattedWidth}w × ${formattedHeight}h`, x, currentY);
     currentY += lineHeight;
     pdf.text(`Match: ${pattern.patternMatch || 'straight'}`, x, currentY);
+    currentY += lineHeight;
+    
+    // UPDATED: Add sequential preview number to PDF content
+    const sequentialNumber = getSequentialPreviewNumber();
+    pdf.text(`Preview #: ${sequentialNumber}`, x, currentY);
     currentY += sectionSpacing;
     
     // Wall Dimensions Section
@@ -432,9 +460,10 @@ function resetCalculator() {
         resetQuoteForm();
     }
     
-    // Generate a new preview number for next use
+    // UPDATED: Reset the preview number in calculator logger
     if (window.calculatorLogger) {
-        window.calculatorLogger.generateNewPreviewNumber();
+        window.calculatorLogger.previewNumber = null;
+        console.log('🔄 Reset calculator logger preview number');
     }
     
     // Scroll back to the form for convenience
@@ -448,12 +477,12 @@ function resetCalculator() {
         if (window.autoResize) window.autoResize.updateHeight();
     }, 300);
     
-    console.log('✅ Calculator reset complete - ready for new preview');
+    console.log('✅ Calculator reset complete - ready for new preview with sequential numbering');
 }
 
 // Initialize PDF generation functionality
 function initializePDFGeneration() {
-    console.log('📄 PDF generation module initialized');
+    console.log('📄 PDF generation module initialized with sequential numbering');
     
     // Check if jsPDF is available
     if (typeof window.jspdf === 'undefined') {
@@ -469,5 +498,6 @@ window.pdfGenerationAPI = {
     updateDownloadButtonState,
     generateHighResCanvas,
     resetCalculator,
-    initializePDFGeneration
+    initializePDFGeneration,
+    getSequentialPreviewNumber
 };
