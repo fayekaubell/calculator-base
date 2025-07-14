@@ -1,5 +1,6 @@
 // Configuration for Wallpaper Calculator
 // Modify these settings to customize for your business
+// UPDATED: Added Google Sheets logging configuration for Faye Bell
 
 const CONFIG = {
   // Business Information
@@ -16,6 +17,31 @@ const CONFIG = {
     patternsCSV: "./data/patterns.csv",
     // Set to relative path if hosting images locally, or full URL if using external CDN
     imageBaseUrl: "https://fayekaubell.github.io/calculator-base/data/patterns/"
+  },
+
+  // Google Sheets Logging Configuration - FULLY CONFIGURED FOR FAYE BELL
+  logging: {
+    // Enable/disable logging system
+    enabled: true,
+    
+    // Google Apps Script webhook URL - CONFIGURED FOR FAYE BELL
+    webhookUrl: "https://script.google.com/macros/s/AKfycbyVL0PHMWEG8H-hNLMbzIiPTWNkRIlb-1cfdQKAAHwCnC81kc37cRcs7aMowfNCcvGzXw/exec",
+    
+    // Retry settings for webhook requests
+    retryAttempts: 3,
+    retryDelay: 1000, // milliseconds
+    
+    // Include browser user agent in logs (helps with analytics)
+    includeUserAgent: true,
+    
+    // Privacy settings - control which actions are logged
+    enablePreviewLogging: true,    // Log when previews are generated
+    enablePDFLogging: true,        // Log when PDFs are downloaded  
+    enableQuoteLogging: true,      // Log when quotes are submitted
+    
+    // Development/testing settings
+    debugMode: false,              // Extra console logging
+    testMode: false                // Use test webhook endpoint
   },
 
   // Calculator Settings
