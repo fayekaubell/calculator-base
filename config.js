@@ -25,7 +25,7 @@ const CONFIG = {
     enabled: true,
     
     // Google Apps Script webhook URL - UPDATED FOR NEW DEPLOYMENT
-    webhookUrl: "https://script.google.com/macros/s/AKfycbxSN0G1A3EsX1MDoYLz67UVqvroSCF-ojNZc3WtyNwrflWMeLUKNFkHCPQrzDMfVc-9mw/exec",
+    webhookUrl: "https://script.google.com/macros/s/AKfycbwiLGIV4hC3ubwGxFjosaaXf9QtBB8S-aV5IUC9TQ2JhbrtkdvOHO2eR-yOff8Jq4U1Wg/exec",
     
     // Retry settings for webhook requests
     retryAttempts: 3,
