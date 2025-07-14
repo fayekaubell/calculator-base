@@ -1,4 +1,5 @@
 // Logging Module - Google Sheets Integration for Wallpaper Calculator
+// UPDATED: Enhanced error handling and CORS support for GitHub Pages
 // UPDATED: Sequential preview numbers from Google Sheets
 
 class CalculatorLogger {
@@ -16,6 +17,11 @@ class CalculatorLogger {
         
         // UPDATED: Preview number will be assigned by Google Apps Script
         this.previewNumber = null; // Will be set when preview is generated
+        
+        // Error tracking
+        this.consecutiveErrors = 0;
+        this.maxConsecutiveErrors = 5;
+        this.temporarilyDisabled = false;
         
         this.init();
     }
@@ -40,31 +46,62 @@ class CalculatorLogger {
         });
         
         this.setupEventListeners();
+        
+        // Test webhook connection on initialization
+        this.testWebhookConnection();
     }
     
     setupEventListeners() {
         // Listen for preview generation
         document.addEventListener('previewGenerated', (event) => {
-            if (this.enablePreviewLogging) {
+            if (this.enablePreviewLogging && !this.temporarilyDisabled) {
                 this.logGeneratePreview(event.detail || {});
             }
         });
         
         // Listen for PDF downloads
         document.addEventListener('pdfDownloaded', (event) => {
-            if (this.enablePDFLogging) {
+            if (this.enablePDFLogging && !this.temporarilyDisabled) {
                 this.logDownloadPDF(event.detail || {});
             }
         });
         
         // Listen for quote submissions
         document.addEventListener('quoteSubmitted', (event) => {
-            if (this.enableQuoteLogging) {
+            if (this.enableQuoteLogging && !this.temporarilyDisabled) {
                 this.logSubmitQuote(event.detail || {});
             }
         });
         
         console.log('📊 Logging event listeners attached');
+    }
+    
+    // ADDED: Test webhook connection
+    async testWebhookConnection() {
+        try {
+            console.log('🔗 Testing webhook connection...');
+            
+            const response = await fetch(this.webhookUrl, {
+                method: 'GET',
+                mode: 'cors',
+                credentials: 'omit',
+                headers: {
+                    'Accept': 'application/json',
+                }
+            });
+            
+            if (response.ok) {
+                console.log('✅ Webhook connection test successful');
+                this.consecutiveErrors = 0;
+                this.temporarilyDisabled = false;
+            } else {
+                console.warn('⚠️ Webhook connection test failed with status:', response.status);
+            }
+            
+        } catch (error) {
+            console.warn('⚠️ Webhook connection test failed:', error.message);
+            // Don't disable logging on initial test failure - it might work for actual requests
+        }
     }
     
     getCurrentTimestamp() {
@@ -122,6 +159,11 @@ class CalculatorLogger {
     
     // UPDATED: Generate preview logging now gets sequential number from Google Apps Script
     async logGeneratePreview(eventData = {}) {
+        if (this.temporarilyDisabled) {
+            console.log('📊 Logging temporarily disabled due to errors, skipping preview log');
+            return;
+        }
+        
         try {
             const wallDimensions = this.getWallDimensions();
             const patternInfo = this.getPatternInfo();
@@ -156,15 +198,35 @@ class CalculatorLogger {
                     window.currentPreview.sequentialPreviewNumber = this.previewNumber;
                 }
             } else {
-                console.warn('⚠️ No preview number returned from webhook');
+                console.warn('⚠️ No preview number returned from webhook, using fallback');
+                this.previewNumber = this.generateFallbackPreviewNumber();
+                if (window.currentPreview) {
+                    window.currentPreview.sequentialPreviewNumber = this.previewNumber;
+                }
             }
+            
+            // Reset error counter on success
+            this.consecutiveErrors = 0;
+            this.temporarilyDisabled = false;
             
         } catch (error) {
             console.error('❌ Failed to log preview generation:', error);
+            this.handleLoggingError('preview generation');
+            
+            // Set fallback preview number
+            this.previewNumber = this.generateFallbackPreviewNumber();
+            if (window.currentPreview) {
+                window.currentPreview.sequentialPreviewNumber = this.previewNumber;
+            }
         }
     }
     
     async logDownloadPDF(eventData = {}) {
+        if (this.temporarilyDisabled) {
+            console.log('📊 Logging temporarily disabled due to errors, skipping PDF log');
+            return;
+        }
+        
         try {
             const wallDimensions = this.getWallDimensions();
             const patternInfo = this.getPatternInfo();
@@ -193,12 +255,22 @@ class CalculatorLogger {
             await this.sendToWebhook(logData);
             console.log('📊 PDF download logged:', pdfFilename);
             
+            // Reset error counter on success
+            this.consecutiveErrors = 0;
+            this.temporarilyDisabled = false;
+            
         } catch (error) {
             console.error('❌ Failed to log PDF download:', error);
+            this.handleLoggingError('PDF download');
         }
     }
     
     async logSubmitQuote(eventData = {}) {
+        if (this.temporarilyDisabled) {
+            console.log('📊 Logging temporarily disabled due to errors, skipping quote log');
+            return;
+        }
+        
         try {
             const wallDimensions = this.getWallDimensions();
             const patternInfo = this.getPatternInfo();
@@ -239,9 +311,33 @@ class CalculatorLogger {
             await this.sendToWebhook(logData);
             console.log('📊 Quote submission logged:', customerEmail);
             
+            // Reset error counter on success
+            this.consecutiveErrors = 0;
+            this.temporarilyDisabled = false;
+            
         } catch (error) {
             console.error('❌ Failed to log quote submission:', error);
+            this.handleLoggingError('quote submission');
         }
+    }
+    
+    // ADDED: Handle logging errors with backoff strategy
+    handleLoggingError(actionType) {
+        this.consecutiveErrors++;
+        
+        if (this.consecutiveErrors >= this.maxConsecutiveErrors) {
+            this.temporarilyDisabled = true;
+            console.warn(`⚠️ Logging temporarily disabled after ${this.consecutiveErrors} consecutive errors. Calculator will continue to function normally.`);
+            
+            // Re-enable after 10 minutes
+            setTimeout(() => {
+                this.temporarilyDisabled = false;
+                this.consecutiveErrors = 0;
+                console.log('📊 Logging re-enabled after temporary disable');
+            }, 10 * 60 * 1000);
+        }
+        
+        console.log(`📊 Calculator continues to function normally despite ${actionType} logging error`);
     }
     
     generatePDFFilename() {
@@ -249,11 +345,17 @@ class CalculatorLogger {
         
         const { pattern } = window.currentPreview;
         const sku = pattern.sku || 'unknown';
-        const previewNum = this.previewNumber || '00000';
+        const previewNum = this.previewNumber || this.generateFallbackPreviewNumber();
         return `Faye-Bell-Wallpaper-Preview-${sku}-${previewNum}.pdf`;
     }
     
-    // UPDATED: sendToWebhook now parses and returns JSON response
+    // ADDED: Generate fallback preview number when webhook fails
+    generateFallbackPreviewNumber() {
+        const timestamp = Date.now().toString();
+        return timestamp.slice(-5); // Last 5 digits of timestamp
+    }
+    
+    // UPDATED: Enhanced sendToWebhook with better CORS handling
     async sendToWebhook(data) {
         if (!this.webhookUrl) {
             console.warn('⚠️ No webhook URL configured, skipping log');
@@ -271,23 +373,38 @@ class CalculatorLogger {
                     timestamp: data.timestamp
                 });
                 
+                // IMPROVED: Better fetch configuration for CORS
                 const response = await fetch(this.webhookUrl, {
                     method: 'POST',
+                    mode: 'cors', // Explicitly set CORS mode
+                    credentials: 'omit', // Don't send credentials
                     headers: {
                         'Content-Type': 'application/json',
+                        'Accept': 'application/json',
                     },
                     body: JSON.stringify(data)
                 });
                 
+                // Check if response is ok
+                if (!response.ok) {
+                    throw new Error(`HTTP ${response.status}: ${response.statusText}`);
+                }
+                
                 // UPDATED: Try to parse the response to get preview number
                 try {
                     const responseText = await response.text();
-                    const responseData = JSON.parse(responseText);
-                    console.log('✅ Data sent to webhook successfully, response:', responseData);
-                    return responseData;
+                    
+                    if (responseText.trim()) {
+                        const responseData = JSON.parse(responseText);
+                        console.log('✅ Data sent to webhook successfully, response:', responseData);
+                        return responseData;
+                    } else {
+                        console.log('✅ Data sent to webhook successfully (empty response)');
+                        return { success: true };
+                    }
                 } catch (parseError) {
-                    console.log('✅ Data sent to webhook successfully (response not parseable)');
-                    return null;
+                    console.log('✅ Data sent to webhook successfully (response not JSON)');
+                    return { success: true };
                 }
                 
             } catch (error) {
@@ -295,6 +412,11 @@ class CalculatorLogger {
                 attempt++;
                 
                 console.warn(`⚠️ Webhook attempt ${attempt} failed:`, error.message);
+                
+                // Special handling for CORS errors
+                if (error.message.includes('CORS') || error.message.includes('fetch')) {
+                    console.warn('🌐 CORS or network issue detected - this may be due to webhook configuration');
+                }
                 
                 if (attempt < this.retryAttempts) {
                     console.log(`🔄 Retrying in ${this.retryDelay}ms...`);
@@ -326,13 +448,11 @@ class CalculatorLogger {
     
     // Utility methods
     getPreviewNumber() {
-        return this.previewNumber || '00000';
+        return this.previewNumber || this.generateFallbackPreviewNumber();
     }
     
-    // REMOVED: generateNewPreviewNumber - numbers now come from Google Sheets
-    
     isEnabled() {
-        return this.enabled && !!this.webhookUrl;
+        return this.enabled && !!this.webhookUrl && !this.temporarilyDisabled;
     }
     
     getConfig() {
@@ -343,8 +463,24 @@ class CalculatorLogger {
             pdfLogging: this.enablePDFLogging,
             quoteLogging: this.enableQuoteLogging,
             previewNumber: this.previewNumber,
-            sequentialNumbers: true
+            sequentialNumbers: true,
+            temporarilyDisabled: this.temporarilyDisabled,
+            consecutiveErrors: this.consecutiveErrors
         };
+    }
+    
+    // ADDED: Manual retry method
+    async retryLogging() {
+        if (this.temporarilyDisabled) {
+            console.log('🔄 Manually re-enabling logging...');
+            this.temporarilyDisabled = false;
+            this.consecutiveErrors = 0;
+            
+            // Test the connection
+            await this.testWebhookConnection();
+            
+            console.log('✅ Logging re-enabled manually');
+        }
     }
 }
 
@@ -384,7 +520,14 @@ document.addEventListener('DOMContentLoaded', function() {
     window.dispatchPDFDownloaded = dispatchPDFDownloaded;
     window.dispatchQuoteSubmitted = dispatchQuoteSubmitted;
     
-    console.log('📊 Calculator logging system initialized with sequential numbering');
+    // ADDED: Global function to retry logging
+    window.retryLogging = function() {
+        if (window.calculatorLogger) {
+            return window.calculatorLogger.retryLogging();
+        }
+    };
+    
+    console.log('📊 Calculator logging system initialized with sequential numbering and enhanced error handling');
 });
 
 // Export for use in other modules
