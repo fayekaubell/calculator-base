@@ -202,6 +202,50 @@
                     <div class="disclaimer">
                         <p><em id="resultsDisclaimer">Results take into consideration order minimums and at least 4" overage. We recommend adding 10-30% overage to prevent installation snafus.</em></p>
                     </div>
+
+                    <!-- Button Container for Download PDF and Submit Quote buttons -->
+                    <div class="button-container" id="buttonContainer" style="display: none;">
+                        <!-- Buttons will be added here by JavaScript -->
+                    </div>
+
+                    <!-- Quote Form (initially hidden) -->
+                    <div class="quote-form-container" id="quoteFormContainer" style="display: none;">
+                        <div class="quote-form">
+                            <h3>Request a Quote</h3>
+                            
+                            <div class="form-group">
+                                <label for="fullName">Full Name *</label>
+                                <input type="text" id="fullName" name="fullName" required>
+                            </div>
+
+                            <div class="form-group">
+                                <label for="emailAddress">Email Address *</label>
+                                <input type="email" id="emailAddress" name="emailAddress" required>
+                            </div>
+
+                            <div class="form-group">
+                                <label for="businessName">Business Name</label>
+                                <input type="text" id="businessName" name="businessName">
+                            </div>
+
+                            <div class="form-group">
+                                <label for="additionalNotes">Additional Notes</label>
+                                <textarea id="additionalNotes" name="additionalNotes" rows="4" placeholder="Any specific requirements, timeline, or questions..."></textarea>
+                            </div>
+
+                            <div class="form-group checkbox-group">
+                                <label class="checkbox-label">
+                                    <input type="checkbox" id="newsletterSignup" name="newsletterSignup">
+                                    <span class="checkmark"></span>
+                                    Check this box to sign up for our monthly newsletter.
+                                </label>
+                            </div>
+
+                            <button type="button" class="btn btn-primary" id="submitQuoteBtn">
+                                Submit Quote Request
+                            </button>
+                        </div>
+                    </div>
                 </div>
             </div>
         </div>
@@ -235,6 +279,7 @@
 <!-- End canvas drawing modules -->
 <script src="js/preview.js"></script>
 <script src="js/pdf-generation.js"></script>
+<script src="js/quote-form.js"></script>
     
     <script>
         // Enhanced initialization with auto-resize integration
@@ -250,6 +295,9 @@
                 
                 // Initialize PDF generation
                 initializePDFGeneration();
+                
+                // Initialize quote form
+                initializeQuoteForm();
                 
                 // Enhanced event listeners with auto-resize triggers
                 const generateBtn = document.getElementById('generatePreviewBtn');
@@ -280,11 +328,11 @@
                                     window.dispatchEvent(new CustomEvent('previewComplete'));
                                 }, 200);
                                 
-                                // Add download button after preview is generated
+                                // Add download and quote buttons after preview is generated
                                 setTimeout(() => {
-                                    addDownloadButton();
+                                    addDownloadAndQuoteButtons();
                                     
-                                    // Final resize after download button added
+                                    // Final resize after buttons added
                                     setTimeout(() => {
                                         if (window.autoResize) window.autoResize.updateHeight();
                                     }, 100);
