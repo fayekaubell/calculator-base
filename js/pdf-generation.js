@@ -1,6 +1,6 @@
 // Enhanced PDF Generation Module - Uses sequential preview numbers from Google Sheets
 // Requires jsPDF library to be loaded
-// UPDATED: Uses sequential preview numbers for PDF filename and content
+// UPDATED: Improved text formatting with centered alignment and consistent sizing
 
 // PDF generation function with sequential preview numbers
 async function generatePDF() {
@@ -282,35 +282,35 @@ async function loadLogoForPDF() {
 function calculateTotalContentHeight(pdf, maxWidth) {
     const { pattern, calculations, formattedWidth, formattedHeight } = currentPreview;
     
-    const lineHeight = 0.15;
-    const sectionSpacing = 0.3;
-    const headerHeight = 0.4;
+    const lineHeight = 0.18; // Increased for better spacing
+    const sectionSpacing = 0.25;
+    const headerHeight = 0.5;
     
     let totalHeight = headerHeight; // Title area
     
-    // Pattern details section
-    totalHeight += lineHeight * 5; // Pattern name, SKU, dimensions, pattern type, preview number
+    // Pattern details section (4 lines)
+    totalHeight += lineHeight * 4;
     totalHeight += sectionSpacing;
     
-    // Wall dimensions section
-    totalHeight += lineHeight * 2; // Width and height
+    // Wall dimensions section (2 lines)
+    totalHeight += lineHeight * 2;
     totalHeight += sectionSpacing;
     
-    // Order quantity section
+    // Order quantity section - count lines based on pattern type
     if (calculations.saleType === 'yard') {
-        totalHeight += lineHeight * 2; // Total yardage and overage
+        totalHeight += lineHeight * 6; // Order lines for yard patterns
     } else {
-        totalHeight += lineHeight * 4; // Panels, yardage per panel, total yardage, overage
+        totalHeight += lineHeight * 8; // Order lines for panel patterns
     }
     totalHeight += sectionSpacing;
     
-    // Footer/disclaimer
-    totalHeight += lineHeight * 3;
+    // Contact and disclaimer section (4 lines)
+    totalHeight += lineHeight * 4;
     
     return totalHeight;
 }
 
-// UPDATED: Add enhanced text content to PDF with sequential preview number
+// UPDATED: Add enhanced text content to PDF with centered alignment and consistent sizing
 async function addEnhancedTextContentToPDF(pdf, x, y, maxWidth, maxHeight) {
     const { pattern, calculations, formattedWidth, formattedHeight } = currentPreview;
     
@@ -322,12 +322,14 @@ async function addEnhancedTextContentToPDF(pdf, x, y, maxWidth, maxHeight) {
     const startY = y + (maxHeight - totalContentHeight) / 2;
     
     let currentY = startY;
-    const lineHeight = 0.15;
-    const sectionSpacing = 0.3;
+    const lineHeight = 0.18; // Consistent line height
+    const sectionSpacing = 0.25; // Spacing between sections
+    const bodyFontSize = 11; // Consistent body font size
+    const centerX = x + (maxWidth / 2); // Center position for all text
     
     // Add logo if available
     if (logoImg) {
-        const logoHeight = 0.4;
+        const logoHeight = 0.5;
         const logoWidth = (logoImg.width / logoImg.height) * logoHeight;
         const logoX = x + (maxWidth - logoWidth) / 2;
         
@@ -335,95 +337,99 @@ async function addEnhancedTextContentToPDF(pdf, x, y, maxWidth, maxHeight) {
         currentY += logoHeight + 0.2;
     } else {
         // Add business name as header
-        pdf.setFontSize(18);
+        pdf.setFontSize(16);
         pdf.setFont(undefined, 'bold');
-        pdf.text(CONFIG.business.name || 'Wallpaper Calculator', x + maxWidth / 2, currentY, { align: 'center' });
-        currentY += 0.4;
+        pdf.text(CONFIG.business.name || 'Wallpaper Calculator', centerX, currentY, { align: 'center' });
+        currentY += 0.3;
     }
     
     // Pattern Details Section
-    pdf.setFontSize(14);
-    pdf.setFont(undefined, 'bold');
-    pdf.text('Pattern Details', x, currentY);
-    currentY += lineHeight + 0.05;
-    
-    pdf.setFontSize(11);
+    pdf.setFontSize(bodyFontSize);
     pdf.setFont(undefined, 'normal');
-    pdf.text(`Name: ${pattern.name}`, x, currentY);
-    currentY += lineHeight;
-    pdf.text(`SKU: ${pattern.sku || 'N/A'}`, x, currentY);
-    currentY += lineHeight;
-    pdf.text(`Dimensions: ${formattedWidth}w × ${formattedHeight}h`, x, currentY);
-    currentY += lineHeight;
-    pdf.text(`Match: ${pattern.patternMatch || 'straight'}`, x, currentY);
+    
+    // Pattern name and SKU on same line
+    const patternDisplay = pattern.sku ? `${pattern.name} / ${pattern.sku}` : pattern.name;
+    pdf.text(patternDisplay, centerX, currentY, { align: 'center' });
     currentY += lineHeight;
     
-    // UPDATED: Add sequential preview number to PDF content
+    // Wall dimensions
+    pdf.text(`${formattedWidth}w × ${formattedHeight}h`, centerX, currentY, { align: 'center' });
+    currentY += lineHeight;
+    
+    // Preview number
     const sequentialNumber = getSequentialPreviewNumber();
-    pdf.text(`Preview #: ${sequentialNumber}`, x, currentY);
-    currentY += sectionSpacing;
-    
-    // Wall Dimensions Section
-    pdf.setFontSize(14);
-    pdf.setFont(undefined, 'bold');
-    pdf.text('Wall Dimensions', x, currentY);
-    currentY += lineHeight + 0.05;
-    
-    pdf.setFontSize(11);
-    pdf.setFont(undefined, 'normal');
-    pdf.text(`Width: ${formattedWidth}`, x, currentY);
+    pdf.text(`Preview Number: ${sequentialNumber}`, centerX, currentY, { align: 'center' });
     currentY += lineHeight;
-    pdf.text(`Height: ${formattedHeight}`, x, currentY);
+    
+    // Date
+    const currentDate = new Date().toLocaleDateString('en-US', { 
+        year: 'numeric', 
+        month: 'numeric', 
+        day: 'numeric' 
+    });
+    pdf.text(`Date: ${currentDate}`, centerX, currentY, { align: 'center' });
     currentY += sectionSpacing;
     
-    // Order Quantity Section
-    pdf.setFontSize(14);
-    pdf.setFont(undefined, 'bold');
-    pdf.text('Order Quantity', x, currentY);
-    currentY += lineHeight + 0.05;
-    
-    pdf.setFontSize(11);
-    pdf.setFont(undefined, 'normal');
-    
+    // Order Quantity Section - Centered
     if (calculations.saleType === 'yard') {
         // Yard-based calculations
         const totalYardage = calculations.totalYardage;
         const overageYardage = Math.ceil(totalYardage * 1.2);
         
-        pdf.text(`Total yardage: ${totalYardage} yds`, x, currentY);
+        pdf.text('Order quantity as shown:', centerX, currentY, { align: 'center' });
         currentY += lineHeight;
-        pdf.text(`With 20% overage: ${overageYardage} yds`, x, currentY);
+        pdf.text(`Total yardage: ${totalYardage} yds`, centerX, currentY, { align: 'center' });
+        currentY += lineHeight;
+        
+        pdf.text('Order quantity with 20% overage added:', centerX, currentY, { align: 'center' });
+        currentY += lineHeight;
+        pdf.text(`Total yardage: ${overageYardage} yds`, centerX, currentY, { align: 'center' });
+        currentY += lineHeight;
+        
     } else {
-        // Panel-based calculations
+        // Panel-based calculations - matching the screenshot format
         const panelLength = calculations.panelLength;
         const yardagePerPanel = Math.round(panelLength / 3);
         const totalYardage = calculations.panelsNeeded * yardagePerPanel;
         const overagePanels = Math.ceil(calculations.panelsNeeded * 1.2);
         const overageYardage = overagePanels * yardagePerPanel;
         
-        pdf.text(`Panels needed: ${calculations.panelsNeeded} × ${panelLength}'`, x, currentY);
+        // Order quantity as shown
+        pdf.text('Order quantity as shown:', centerX, currentY, { align: 'center' });
         currentY += lineHeight;
-        pdf.text(`Yardage per panel: ${yardagePerPanel} yds`, x, currentY);
+        pdf.text(`[x${calculations.panelsNeeded}] ${panelLength}' Panels`, centerX, currentY, { align: 'center' });
         currentY += lineHeight;
-        pdf.text(`Total yardage: ${totalYardage} yds`, x, currentY);
+        pdf.text(`Yardage per a panel: ${yardagePerPanel} yds`, centerX, currentY, { align: 'center' });
         currentY += lineHeight;
-        pdf.text(`With 20% overage: ${overageYardage} yds`, x, currentY);
+        pdf.text(`Total yardage: ${totalYardage} yds`, centerX, currentY, { align: 'center' });
+        currentY += lineHeight;
+        
+        // Order quantity with 20% overage
+        pdf.text('Order quantity with 20% overage added:', centerX, currentY, { align: 'center' });
+        currentY += lineHeight;
+        pdf.text(`[x${overagePanels}] ${panelLength}' Panels`, centerX, currentY, { align: 'center' });
+        currentY += lineHeight;
+        pdf.text(`Yardage per a panel: ${yardagePerPanel} yds`, centerX, currentY, { align: 'center' });
+        currentY += lineHeight;
+        pdf.text(`Total yardage: ${overageYardage} yds`, centerX, currentY, { align: 'center' });
+        currentY += lineHeight;
     }
     
     currentY += sectionSpacing;
     
-    // Footer/Disclaimer
-    pdf.setFontSize(9);
-    pdf.setFont(undefined, 'italic');
+    // Footer/Contact/Disclaimer - All centered and same font size
+    pdf.setFontSize(bodyFontSize); // Same size as body text
+    pdf.setFont(undefined, 'normal');
+    
+    // Disclaimer
     const disclaimerText = CONFIG.ui.text.disclaimers.results;
-    const splitText = pdf.splitTextToSize(disclaimerText, maxWidth);
-    pdf.text(splitText, x, currentY);
-    currentY += lineHeight * splitText.length;
+    pdf.text(disclaimerText, centerX, currentY, { align: 'center', maxWidth: maxWidth - 0.2 });
+    currentY += lineHeight * 2; // Account for text wrapping
     
     // Contact information
-    currentY += 0.1;
-    pdf.setFont(undefined, 'normal');
-    pdf.text(`${CONFIG.business.email} • ${CONFIG.business.website}`, x + maxWidth / 2, currentY, { align: 'center' });
+    pdf.text(`${CONFIG.business.email} • ${CONFIG.business.website}`, centerX, currentY, { align: 'center' });
+    currentY += lineHeight;
+    pdf.text(`${CONFIG.business.location}`, centerX, currentY, { align: 'center' });
 }
 
 // Reset the calculator to allow new previews - UPDATED to work with quote form
