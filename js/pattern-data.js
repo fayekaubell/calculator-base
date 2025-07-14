@@ -1,5 +1,5 @@
 // Pattern Data Module - Data loading, CSV parsing, and calculations
-// UPDATED: Fixed panel limitation calculations for proper red shading
+// UPDATED: Fixed to calculate uncovered wall area (not excess panel area)
 
 // Global variables for data
 let patterns = {};
@@ -141,7 +141,7 @@ function createPatternFromCSV(row) {
         imageUrl: imageUrl,
         thumbnailUrl: thumbnailUrl,
         saleType: row.sale_type || 'panel',
-        panelWidth: parseFloat(row.material_width_inches) || defaults.panelWidth,
+        panelWidth: parseFloat(row.material_width_inches) || 54,
         availableLengths: availableLengths,
         panelSequence: panelSequence,
         sequenceLength: sequenceLength,
@@ -185,7 +185,7 @@ function preloadPatternImage(pattern) {
     });
 }
 
-// Calculate panel requirements - FIXED: Proper limitation calculations
+// Calculate panel requirements - FIXED: Calculate uncovered wall area
 function calculatePanelRequirements(pattern, wallWidth, wallHeight) {
     if (!pattern || !pattern.saleType) {
         console.error('Invalid pattern data');
@@ -221,53 +221,45 @@ function calculatePanelRequirements(pattern, wallWidth, wallHeight) {
         requiredPanelLength = Math.max(...pattern.availableLengths);
     }
     
-    // FIXED: Proper limitation logic
+    // FIXED: Calculate uncovered wall area (not excess panel area)
     const maxAvailableLength = Math.max(...pattern.availableLengths);
-    const idealPanelLength = Math.ceil(totalHeight / 12); // What we would need ideally
+    const maxAvailableLengthInches = maxAvailableLength * 12;
     
     // Check if we exceed available lengths
-    const exceedsAvailableLength = idealPanelLength > maxAvailableLength;
+    const exceedsAvailableLength = totalHeight > maxAvailableLengthInches;
     
     // For non-repeating patterns, check against available lengths
     let exceedsLimit = false;
     let actualPanelLength = requiredPanelLength;
+    let uncoveredWallHeight = 0; // Height of wall that cannot be covered
     
     if (!pattern.hasRepeatHeight) {
         // Non-repeating patterns are limited by available_lengths_feet
-        if (idealPanelLength > maxAvailableLength) {
+        if (totalHeight > maxAvailableLengthInches) {
             exceedsLimit = true;
             actualPanelLength = maxAvailableLength;
+            // FIXED: Calculate uncovered wall area
+            uncoveredWallHeight = totalHeight - maxAvailableLengthInches;
         }
     } else {
         // Repeating patterns can theoretically go beyond available lengths
         // but are limited by the global height limit
-        const globalMaxHeight = CONFIG.calculator.limits.maxPanelHeight;
-        if (idealPanelLength > globalMaxHeight) {
+        const globalMaxHeightInches = CONFIG.calculator.limits.maxPanelHeight * 12;
+        if (totalHeight > globalMaxHeightInches) {
             exceedsLimit = true;
-            actualPanelLength = Math.min(requiredPanelLength, globalMaxHeight);
+            actualPanelLength = Math.min(requiredPanelLength, CONFIG.calculator.limits.maxPanelHeight);
+            // FIXED: Calculate uncovered wall area
+            uncoveredWallHeight = totalHeight - globalMaxHeightInches;
         }
     }
     
-    // FIXED: Calculate the uncovered area properly
-    // This is the height of panel that exceeds what's actually available
-    let uncoveredPanelHeight = 0; // Height of red area on each panel
-    
-    if (!pattern.hasRepeatHeight && idealPanelLength > maxAvailableLength) {
-        // For non-repeating patterns, the uncovered area is the portion of the 
-        // required panel that exceeds the maximum available length
-        uncoveredPanelHeight = (idealPanelLength - maxAvailableLength) * 12; // Convert to inches
-    } else if (pattern.hasRepeatHeight && idealPanelLength > CONFIG.calculator.limits.maxPanelHeight) {
-        // For repeating patterns, uncovered area is what exceeds the global limit
-        uncoveredPanelHeight = (idealPanelLength - CONFIG.calculator.limits.maxPanelHeight) * 12;
-    }
-    
-    console.log('🔴 Panel limitation calculation:', {
+    console.log('🔴 Panel limitation calculation (FIXED - wall area):', {
         pattern: pattern.name,
         hasRepeatHeight: pattern.hasRepeatHeight,
-        idealPanelLength: idealPanelLength,
-        maxAvailableLength: maxAvailableLength,
+        totalHeight: totalHeight,
+        maxAvailableLengthInches: maxAvailableLengthInches,
         actualPanelLength: actualPanelLength,
-        uncoveredPanelHeight: uncoveredPanelHeight,
+        uncoveredWallHeight: uncoveredWallHeight,
         exceedsLimit: exceedsLimit,
         exceedsAvailableLength: exceedsAvailableLength
     });
@@ -275,11 +267,10 @@ function calculatePanelRequirements(pattern, wallWidth, wallHeight) {
     return {
         panelsNeeded,
         panelLength: actualPanelLength,
-        idealPanelLength: idealPanelLength,
+        maxAvailableLength,
         exceedsLimit,
         exceedsAvailableLength,
-        maxAvailableLength,
-        uncoveredPanelHeight, // NEW: Height in inches of red area on each panel
+        uncoveredWallHeight, // FIXED: Height in inches of wall that cannot be covered
         totalWidth: panelsNeeded * pattern.panelWidth,
         totalHeight: actualPanelLength * 12,
         saleType: 'panel',
