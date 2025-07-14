@@ -4,7 +4,7 @@
 // Calculate the reference coordinate system for consistent pattern positioning
 function calculateReferenceCoordinates() {
     const canvas = document.getElementById('previewCanvas');
-    const { wallWidth, wallHeight, calculations } = currentPreview;
+    const { wallWidth, wallHeight, calculations, pattern } = currentPreview;
     
     // Use the same layout constants as the main drawing function
     const leftMargin = 120;
@@ -16,17 +16,25 @@ function calculateReferenceCoordinates() {
     const maxWidth = canvas.width - leftMargin - rightMargin;
     const maxHeight = canvas.height - topMargin - bottomMargin;
     
+    // Determine if we should use bottom-anchoring
+    const shouldBottomAnchor = pattern.saleType === 'panel' && 
+                               wallHeight + pattern.minOverage > calculations.panelLength * 12;
+    
     // Calculate dimensions for both sections - ensuring pattern alignment
     const wallOnlyHeight = wallHeight;
     
-    // For Section 1, use the actual panel height (not wall height)
+    // For Section 1, use the appropriate height based on anchoring
     let completeViewHeight = calculations.totalHeight;
     if (calculations.stripLengths && calculations.stripLengths.length > 0) {
         // Use the maximum strip length for layout calculation
         const maxStripLength = Math.max(...calculations.stripLengths);
         completeViewHeight = maxStripLength;
     }
-    // UPDATED: Don't use wall height as minimum - use actual panel coverage
+    
+    // For normal cases, ensure we show enough height to include wall + overage
+    if (!shouldBottomAnchor) {
+        completeViewHeight = Math.max(completeViewHeight, wallHeight + pattern.minOverage);
+    }
     
     const totalContentHeight = completeViewHeight + wallOnlyHeight + sectionGap;
     
@@ -51,14 +59,26 @@ function calculateReferenceCoordinates() {
     const section1OffsetX = leftMargin + (maxWidth - scaledTotalWidth) / 2;
     const section1OffsetY = section1StartY;
     
-    // UPDATED: Wall positioning - anchor panels to bottom of wall
-    // Calculate where the wall should be positioned within the panel area
-    const panelBottomY = section1OffsetY + scaledTotalHeight;
-    const wallBottomY = panelBottomY; // Anchor wall bottom to panel bottom
-    const wallTopY = wallBottomY - scaledWallHeight;
+    // CONDITIONAL: Wall positioning based on whether we need bottom anchoring
+    let section1WallOffsetX, section1WallOffsetY;
     
-    const section1WallOffsetX = section1OffsetX + (scaledTotalWidth - scaledWallWidth) / 2;
-    const section1WallOffsetY = wallTopY;
+    if (shouldBottomAnchor) {
+        // Bottom-anchored: Panel bottom aligns with wall bottom
+        const panelBottomY = section1OffsetY + scaledTotalHeight;
+        const wallBottomY = panelBottomY;
+        const wallTopY = wallBottomY - scaledWallHeight;
+        
+        section1WallOffsetX = section1OffsetX + (scaledTotalWidth - scaledWallWidth) / 2;
+        section1WallOffsetY = wallTopY;
+        
+        console.log('🔻 Using bottom-anchored positioning - panel too short for wall');
+    } else {
+        // Normal positioning: Wall centered within panel area with overage
+        section1WallOffsetX = section1OffsetX + (scaledTotalWidth - scaledWallWidth) / 2;
+        section1WallOffsetY = section1OffsetY + ((completeViewHeight * scale) - scaledWallHeight) / 2;
+        
+        console.log('📐 Using normal positioning - panel covers wall with overage');
+    }
     
     // Section 2 coordinates
     const section2StartY = section1StartY + completeViewHeight * scale + sectionGap;
@@ -67,6 +87,7 @@ function calculateReferenceCoordinates() {
     
     return {
         scale,
+        shouldBottomAnchor,
         section1: {
             patternStartX: section1OffsetX,
             patternStartY: section1OffsetY,
@@ -104,13 +125,13 @@ function drawOverageOverlay(ctx, panelStartX, panelStartY, panelTotalWidth, pane
         ctx.fillRect(overageStartX, panelStartY, overageWidth, panelTotalHeight);
     }
     
-    // Top overage - UPDATED: Only show if panel extends above wall
+    // Top overage - show if panel extends above wall
     if (wallStartY > panelStartY) {
         const overageHeight = wallStartY - panelStartY;
         ctx.fillRect(wallStartX, panelStartY, wallWidth, overageHeight);
     }
     
-    // Bottom overage - UPDATED: Only show if panel extends below wall (should not happen with bottom anchoring)
+    // Bottom overage - show if panel extends below wall
     if (wallStartY + wallHeight < panelStartY + panelTotalHeight) {
         const overageStartY = wallStartY + wallHeight;
         const overageHeight = (panelStartY + panelTotalHeight) - overageStartY;
