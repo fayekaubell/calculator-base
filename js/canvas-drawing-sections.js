@@ -1,10 +1,10 @@
 // Canvas Drawing Sections Module - Section 1 and Section 2 drawing
 // FIXED: Red shading shows uncovered wall area at top of wall (panels anchor to bottom)
 
-// Draw Complete View - pattern + overlay + annotations - UPDATED FOR PROPER RED SHADING
+// Draw Complete View - pattern + overlay + annotations - FIXED FOR BOTTOM ANCHORING
 function drawCompleteViewWithOverlay(ctx, referenceCoords) {
     const { pattern, calculations } = currentPreview;
-    const { scale, section1, dimensions } = referenceCoords;
+    const { scale, section1, dimensions, hasLimitation } = referenceCoords;
     
     const offsetX = section1.patternStartX;
     const offsetY = section1.patternStartY;
@@ -18,28 +18,34 @@ function drawCompleteViewWithOverlay(ctx, referenceCoords) {
     // Check if this is a half-drop pattern
     const isHalfDrop = pattern.patternMatch && pattern.patternMatch.toLowerCase() === 'half drop';
     
-    // Step 1: Draw pattern for each panel/strip individually with half-drop offset
+    // Step 1: Draw pattern for each panel/strip individually with bottom anchoring
     if (imageLoaded && patternImage) {
         ctx.globalAlpha = 1.0;
+        
+        // FIXED: Calculate panel drawing area with bottom anchoring
+        let panelHeight;
+        if (hasLimitation) {
+            // Use actual available panel height
+            panelHeight = section1.actualPanelHeight * scale;
+        } else {
+            // Use full height
+            panelHeight = scaledTotalHeight;
+        }
         
         for (let i = 0; i < calculations.panelsNeeded; i++) {
             const panelX = offsetX + (i * pattern.panelWidth * scale);
             const panelWidth = pattern.panelWidth * scale;
             
-            // Calculate visual offset for this panel
-            const halfDropOffset = isHalfDrop ? calculateHalfDropVisualOffset(pattern, i) * scale : 0;
-            
-            // For all patterns, maintain consistent height
-            let panelHeight = scaledTotalHeight;
-            
-            // Draw pattern for this specific panel
-            // For patterns that repeat within the strip width, don't offset the strip position
+            // Draw pattern for this specific panel with correct height
             drawPatternInArea(ctx, panelX, offsetY, panelWidth, panelHeight, referenceCoords, false, i);
         }
     }
     
     // Step 2: Draw semi-transparent overlay on overage areas (dims them to 50%)
-    drawOverageOverlay(ctx, offsetX, offsetY, scaledTotalWidth, scaledTotalHeight,
+    // FIXED: Use actual panel height for overlay calculation
+    const overlayPanelHeight = hasLimitation ? section1.actualPanelHeight * scale : scaledTotalHeight;
+    
+    drawOverageOverlay(ctx, offsetX, offsetY, scaledTotalWidth, overlayPanelHeight,
                       wallOffsetX, wallOffsetY, scaledWallWidth, scaledWallHeight);
     
     // Step 3: FIXED - Draw red shading for uncovered wall area at TOP of wall
@@ -68,14 +74,16 @@ function drawCompleteViewWithOverlay(ctx, referenceCoords) {
         );
     }
     
-    // Step 4: Draw outlines and annotations with half-drop adjustments
-    drawCompleteViewOutlines(ctx, offsetX, offsetY, scaledTotalWidth, scaledTotalHeight, 
+    // Step 4: Draw outlines and annotations with bottom anchoring
+    const outlineHeight = hasLimitation ? section1.actualPanelHeight * scale : scaledTotalHeight;
+    
+    drawCompleteViewOutlines(ctx, offsetX, offsetY, scaledTotalWidth, outlineHeight, 
                            scaledWallWidth, scaledWallHeight, wallOffsetX, wallOffsetY, scale, isHalfDrop);
     
-    drawCompleteDimensionLabels(ctx, offsetX, offsetY, scaledTotalWidth, scaledTotalHeight, 
+    drawCompleteDimensionLabels(ctx, offsetX, offsetY, scaledTotalWidth, outlineHeight, 
                               scaledWallWidth, scaledWallHeight, wallOffsetX, wallOffsetY, scale);
     
-    drawPanelLabels(ctx, offsetX, offsetY, scaledTotalWidth, scaledTotalHeight, scale);
+    drawPanelLabels(ctx, offsetX, offsetY, scaledTotalWidth, outlineHeight, scale);
 }
 
 // Draw outlines for complete view - UPDATED FOR HALF-DROP
