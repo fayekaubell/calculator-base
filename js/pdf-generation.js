@@ -284,12 +284,12 @@ function calculateTotalContentHeight(pdf, maxWidth) {
     
     const lineHeight = 0.2; // Increased for better spacing to prevent overlap
     const sectionSpacing = 0.3;
-    const headerHeight = 0.6;
+    const headerHeight = 0.7; // Increased to account for extra spacing after logo
     
     let totalHeight = headerHeight; // Title area
     
-    // Pattern details section (4 lines)
-    totalHeight += lineHeight * 4;
+    // Pattern details section (5 lines now - added repeat line)
+    totalHeight += lineHeight * 5;
     totalHeight += sectionSpacing;
     
     // Order quantity section - count lines based on pattern type (with extra spacing)
@@ -332,13 +332,13 @@ async function addEnhancedTextContentToPDF(pdf, x, y, maxWidth, maxHeight) {
         const logoX = x + (maxWidth - logoWidth) / 2;
         
         pdf.addImage(logoImg, 'PNG', logoX, currentY, logoWidth, logoHeight);
-        currentY += logoHeight + 0.25;
+        currentY += logoHeight + 0.35; // Increased spacing after logo
     } else {
         // Add business name as header
         pdf.setFontSize(16);
         pdf.setFont(undefined, 'bold');
         pdf.text(CONFIG.business.name || 'Wallpaper Calculator', centerX, currentY, { align: 'center' });
-        currentY += 0.35;
+        currentY += 0.45; // Increased spacing after business name
     }
     
     // Pattern Details Section
@@ -353,6 +353,11 @@ async function addEnhancedTextContentToPDF(pdf, x, y, maxWidth, maxHeight) {
     pdf.setFontSize(bodyFontSize);
     pdf.setFont(undefined, 'normal');
     pdf.text(`${formattedWidth}w × ${formattedHeight}h`, centerX, currentY, { align: 'center' });
+    currentY += lineHeight;
+    
+    // Pattern repeat information - add "Repeat:" prefix
+    const patternMatch = pattern.patternMatch || 'straight';
+    pdf.text(`Repeat: ${patternMatch}`, centerX, currentY, { align: 'center' });
     currentY += lineHeight;
     
     // Preview number
