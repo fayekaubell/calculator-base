@@ -1,6 +1,7 @@
 // Enhanced PDF Generation Module - Vertically centered layout with logo, download progress, and reset functionality
 // Requires jsPDF library to be loaded
 // UPDATED: Shows "Match:" instead of "Type:" in Pattern Details
+// UPDATED: Works with quote form and button container system
 
 // PDF generation function with improved layout and button feedback
 async function generatePDF() {
@@ -84,7 +85,7 @@ async function generatePDF() {
     }
 }
 
-// Reset the calculator to allow new previews
+// Reset the calculator to allow new previews - UPDATED to work with quote form
 function resetCalculator() {
     console.log('🔄 Resetting calculator for new preview...');
     
@@ -99,19 +100,6 @@ function resetCalculator() {
         previewSection.style.display = 'none';
     }
     
-    // Clear form inputs (optional - you might want to keep them)
-    // const patternSelect = document.getElementById('pattern');
-    // const widthFeet = document.getElementById('widthFeet');
-    // const widthInches = document.getElementById('widthInches');
-    // const heightFeet = document.getElementById('heightFeet');
-    // const heightInches = document.getElementById('heightInches');
-    // 
-    // if (patternSelect) patternSelect.value = '';
-    // if (widthFeet) widthFeet.value = '';
-    // if (widthInches) widthInches.value = '0';
-    // if (heightFeet) heightFeet.value = '';
-    // if (heightInches) heightInches.value = '0';
-    
     // Re-enable the generate preview button
     const generateBtn = document.getElementById('generatePreviewBtn');
     if (generateBtn) {
@@ -119,10 +107,16 @@ function resetCalculator() {
         generateBtn.textContent = 'Generate Preview';
     }
     
-    // Remove the download button entirely (it will be re-added when new preview is generated)
-    const downloadBtn = document.getElementById('downloadPdfBtn');
-    if (downloadBtn) {
-        downloadBtn.remove();
+    // Hide and clear the button container
+    const buttonContainer = document.getElementById('buttonContainer');
+    if (buttonContainer) {
+        buttonContainer.style.display = 'none';
+        buttonContainer.innerHTML = '';
+    }
+    
+    // Reset quote form if it exists
+    if (typeof resetQuoteForm === 'function') {
+        resetQuoteForm();
     }
     
     // Scroll back to the form for convenience
@@ -654,21 +648,15 @@ async function addEnhancedTextContentToPDF(pdf, startX, startY, maxWidth, availa
     }
 }
 
-// Add download button to the UI with enhanced state management
+// DEPRECATED: This function is now replaced by addDownloadAndQuoteButtons in quote-form.js
+// Keeping for backwards compatibility
 function addDownloadButton() {
-    const previewInfo = document.querySelector('.preview-info');
-    if (!previewInfo || document.getElementById('downloadPdfBtn')) {
-        return; // Button already exists or preview section not found
+    console.log('📄 addDownloadButton called - delegating to addDownloadAndQuoteButtons');
+    if (typeof addDownloadAndQuoteButtons === 'function') {
+        addDownloadAndQuoteButtons();
+    } else {
+        console.error('addDownloadAndQuoteButtons function not found');
     }
-    
-    const downloadBtn = document.createElement('button');
-    downloadBtn.id = 'downloadPdfBtn';
-    downloadBtn.className = 'btn btn-primary';
-    downloadBtn.textContent = 'Download PDF';
-    downloadBtn.style.marginTop = '20px';
-    downloadBtn.onclick = generatePDF;
-    
-    previewInfo.appendChild(downloadBtn);
 }
 
 // Initialize PDF functionality
@@ -685,7 +673,7 @@ function initializePDFGeneration() {
 // Export functions to global scope
 window.pdfAPI = {
     generatePDF,
-    addDownloadButton,
+    addDownloadButton, // Keep for compatibility
     initializePDFGeneration,
     updateDownloadButtonState,
     resetCalculator
