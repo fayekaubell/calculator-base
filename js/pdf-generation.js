@@ -1,4 +1,163 @@
-// Enhanced PDF Generation Module - Vertically centered layout with logo, download progress, and reset functionality
+// Update download button state with different messages and styles
+function updateDownloadButtonState(button, state) {
+    if (!button) return;
+    
+    // Remove any existing state classes
+    button.classList.remove('btn-processing', 'btn-success', 'btn-error');
+    
+    switch (state) {
+        case 'processing':
+            button.disabled = true;
+            button.textContent = 'Processing download...';
+            button.classList.add('btn-processing');
+            button.onclick = null; // Disable click during processing
+            break;
+            
+        case 'success':
+            button.disabled = false; // Enable the button for reset functionality
+            button.textContent = 'Successfully downloaded: Click here to reset';
+            button.classList.add('btn-success');
+            
+            // Change click handler to reset function
+            button.onclick = resetCalculator;
+            break;
+            
+        case 'error':
+            button.disabled = false;
+            button.textContent = 'Download failed - Try again';
+            button.classList.add('btn-error');
+            
+            // Restore original PDF generation function
+            button.onclick = generatePDF;
+            
+            // Reset to normal state after 5 seconds for errors
+            setTimeout(() => {
+                updateDownloadButtonState(button, 'ready');
+            }, 5000);
+            break;
+            
+        case 'ready':
+        default:
+            button.disabled = false;
+            button.textContent = 'Download PDF';
+            button.onclick = generatePDF; // Restore original function
+            break;
+    }
+}
+
+// Generate high-resolution canvas for PDF
+async function generateHighResCanvas(targetWidth, targetHeight) {
+    return new Promise((resolve) => {
+        try {
+            // Create high-resolution canvas
+            const hiResCanvas = document.createElement('canvas');
+            hiResCanvas.width = targetWidth;
+            hiResCanvas.height = targetHeight;
+            const hiResCtx = hiResCanvas.getContext('2d');
+            
+            // Enable high-quality rendering
+            hiResCtx.imageSmoothingEnabled = true;
+            hiResCtx.imageSmoothingQuality = 'high';
+            
+            // Calculate scale factor
+            const originalCanvas = document.getElementById('previewCanvas');
+            const scaleX = targetWidth / originalCanvas.width;
+            const scaleY = targetHeight / originalCanvas.height;
+            
+            // Use the smaller scale to maintain aspect ratio
+            const scale = Math.min(scaleX, scaleY);
+            
+            // Calculate centered position
+            const scaledWidth = originalCanvas.width * scale;
+            const scaledHeight = originalCanvas.height * scale;
+            const offsetX = (targetWidth - scaledWidth) / 2;
+            const offsetY = (targetHeight - scaledHeight) / 2;
+            
+            // Fill background
+            hiResCtx.fillStyle = '#ffffff';
+            hiResCtx.fillRect(0, 0, targetWidth, targetHeight);
+            
+            // Scale and render
+            hiResCtx.save();
+            hiResCtx.translate(offsetX, offsetY);
+            hiResCtx.scale(scale, scale);
+            
+            // Render the preview using existing functions
+            renderHighQualityPreviewForPDF(hiResCtx, originalCanvas.width, originalCanvas.height);
+            
+            hiResCtx.restore();
+            
+            // Convert to data URL
+            const dataUrl = hiResCanvas.toDataURL('image/png', 1.0);
+            resolve(dataUrl);
+            
+        } catch (error) {
+            console.error('Error generating high-res canvas:', error);
+            resolve(null);
+        }
+    });
+}
+
+// Render high-quality preview specifically for PDF
+function renderHighQualityPreviewForPDF(ctx, canvasWidth, canvasHeight) {
+    if (!currentPreview) return;
+    
+    // Temporarily override canvas reference for coordinate calculations
+    const tempCanvas = { width: canvasWidth, height: canvasHeight };
+    const originalGetElementById = document.getElementById;
+    document.getElementById = function(id) {
+        if (id === 'previewCanvas') return tempCanvas;
+        return originalGetElementById.call(document, id);
+    };
+    
+    try {
+        // Calculate reference coordinates
+        const referenceCoords = calculateReferenceCoordinates();
+        
+        // Draw both sections
+        drawCompleteViewWithOverlay(ctx, referenceCoords);
+        drawWallOnlyView(ctx, referenceCoords);
+        
+    } finally {
+        // Restore original function
+        document.getElementById = originalGetElementById;
+    }
+}
+
+// Load logo image for PDF
+async function loadLogoForPDF() {
+    return new Promise((resolve) => {
+        const logoUrl = CONFIG.business.logoUrl;
+        
+        if (!logoUrl || !logoUrl.trim()) {
+            console.log('No logo URL configured, skipping logo');
+            resolve(null);
+            return;
+        }
+        
+        const img = new Image();
+        img.crossOrigin = 'anonymous';
+        
+        img.onload = function() {
+            console.log('✅ Logo loaded successfully for PDF');
+            resolve(img);
+        };
+        
+        img.onerror = function() {
+            console.warn('⚠️ Failed to load logo for PDF, continuing without logo');
+            resolve(null);
+        };
+        
+        img.src = logoUrl;
+    });
+}
+
+// Calculate total content height for vertical centering
+function calculateTotalContentHeight(pdf, maxWidth) {
+    const { pattern, calculations, formattedWidth, formattedHeight } = currentPreview;
+    
+    const lineHeight = 0.15;
+    const s// Enhanced PDF Generation Module - Vertically centered layout with logo, download progress, and reset functionality
 // Requires jsPDF library to be loaded
 // UPDATED: Shows "Match:" instead of "Type:" in Pattern Details
 // UPDATED: Works with quote form and button container system
