@@ -247,7 +247,7 @@ function drawPanelLabels(ctx, offsetX, offsetY, scaledTotalWidth, scaledTotalHei
 // FIXED: Draw Wall Only View with red shading at top of wall dimensions
 function drawWallOnlyView(ctx, referenceCoords) {
     const { pattern, wallWidth, wallHeight, calculations, wallWidthFeet, wallWidthInches, wallHeightFeet, wallHeightInches } = currentPreview;
-    const { section2, dimensions, scale } = referenceCoords;
+    const { section2, dimensions, scale, hasLimitation } = referenceCoords;
     
     const wallOffsetX = section2.wallStartX;
     const wallOffsetY = section2.wallStartY;
@@ -260,10 +260,10 @@ function drawWallOnlyView(ctx, referenceCoords) {
     }
     
     // FIXED: Draw red shading at TOP of wall (same as Section 1)
-    const hasLimitation = (calculations.exceedsLimit || calculations.exceedsAvailableLength) && 
-                         calculations.uncoveredWallHeight > 0;
+    // Use hasLimitation from referenceCoords instead of declaring it again
+    const hasWallLimitation = hasLimitation && calculations.uncoveredWallHeight > 0;
     
-    if (hasLimitation) {
+    if (hasWallLimitation) {
         console.log('🔴 Drawing red uncovered wall area in Section 2 (wall-only):', {
             uncoveredWallHeight: calculations.uncoveredWallHeight,
             wallOffsetX: wallOffsetX,
