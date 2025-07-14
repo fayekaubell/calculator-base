@@ -93,10 +93,9 @@ function toggleQuoteForm() {
     const isCurrentlyVisible = quoteFormContainer.classList.contains('show');
     
     if (isCurrentlyVisible) {
-        // Hide the form
-        quoteFormContainer.classList.remove('show');
-        submitQuoteBtn.textContent = 'Submit for Quote';
-        console.log('📋 Quote form hidden');
+        // Don't hide the form - button should not toggle
+        console.log('📋 Quote form already visible - no action needed');
+        return;
     } else {
         // Show the form
         quoteFormContainer.style.display = 'block';
@@ -104,7 +103,7 @@ function toggleQuoteForm() {
         // Small delay to ensure display change takes effect before animation
         setTimeout(() => {
             quoteFormContainer.classList.add('show');
-            submitQuoteBtn.textContent = 'Hide Quote Form';
+            // Don't change button text - keep it as "Submit for Quote"
             
             // Scroll the form into view smoothly
             setTimeout(() => {
@@ -195,7 +194,7 @@ function resetQuoteForm() {
     
     if (quoteFormContainer && submitQuoteBtn) {
         quoteFormContainer.classList.remove('show');
-        submitQuoteBtn.textContent = 'Submit for Quote';
+        // Don't change button text - keep it as "Submit for Quote"
         
         setTimeout(() => {
             quoteFormContainer.style.display = 'none';
