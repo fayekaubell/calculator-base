@@ -19,13 +19,13 @@ const CONFIG = {
     imageBaseUrl: "https://fayekaubell.github.io/calculator-base/data/patterns/"
   },
 
-  // Google Sheets Logging Configuration - FULLY CONFIGURED FOR FAYE BELL
+  // Google Sheets Logging Configuration - UPDATED WITH NEW WEBHOOK URL
   logging: {
     // Enable/disable logging system
     enabled: true,
     
-    // Google Apps Script webhook URL - CONFIGURED FOR FAYE BELL
-    webhookUrl: "https://script.google.com/macros/s/AKfycbyVL0PHMWEG8H-hNLMbzIiPTWNkRIlb-1cfdQKAAHwCnC81kc37cRcs7aMowfNCcvGzXw/exec",
+    // Google Apps Script webhook URL - UPDATED FOR NEW DEPLOYMENT
+    webhookUrl: "https://script.google.com/macros/s/AKfycbwdr26Cr0QZ8KxqP1I7nMjwkmnwraUPkDu0qi2KUjwLAMSymz6TdJbasYUG-uyXIVuUSA/exec",
     
     // Retry settings for webhook requests
     retryAttempts: 3,
