@@ -2,6 +2,7 @@
 // Requires jsPDF library to be loaded
 // UPDATED: Shows "Match:" instead of "Type:" in Pattern Details
 // UPDATED: Works with quote form and button container system
+// UPDATED: Added Google Sheets logging integration
 
 // PDF generation function with improved layout and button feedback
 async function generatePDF() {
@@ -65,9 +66,24 @@ async function generatePDF() {
 
         // Generate filename with preview number
         const { pattern } = currentPreview;
-        const filename = `Faye-Bell-Wallpaper-Preview-${pattern.sku}-00000.pdf`;
+        const previewNumber = window.calculatorLogger ? window.calculatorLogger.getPreviewNumber() : '00000';
+        const filename = `Faye-Bell-Wallpaper-Preview-${pattern.sku}-${previewNumber}.pdf`;
 
-        console.log('💾 Saving PDF...');
+        // LOGGING: Dispatch logging event for PDF download
+        if (typeof window.dispatchPDFDownloaded === 'function') {
+            setTimeout(() => {
+                window.dispatchPDFDownloaded({
+                    filename: filename,
+                    patternName: pattern.name,
+                    patternSku: pattern.sku,
+                    wallDimensions: `${currentPreview.formattedWidth} x ${currentPreview.formattedHeight}`,
+                    generated: true,
+                    timestamp: new Date().toISOString()
+                });
+            }, 100);
+        }
+
+        console.log('💾 Saving PDF with logging enabled:', filename);
         // Save PDF
         pdf.save(filename);
         
@@ -119,6 +135,11 @@ function resetCalculator() {
         resetQuoteForm();
     }
     
+    // Generate a new preview number for next use
+    if (window.calculatorLogger) {
+        window.calculatorLogger.generateNewPreviewNumber();
+    }
+    
     // Scroll back to the form for convenience
     const calculatorSection = document.querySelector('.calculator-section');
     if (calculatorSection) {
@@ -145,36 +166,6 @@ function updateDownloadButtonState(button, state) {
             button.disabled = true;
             button.textContent = 'Processing download...';
             button.classList.add('btn-processing');
-            button.onclick = null; // Disable click during processing
-            break;
-            
-        case 'success':
-            button.disabled = false; // Enable the button for reset functionality
-            button.textContent = 'Successfully downloaded: Click here to reset';
-            button.classList.add('btn-success');
-            
-            // Change click handler to reset function
-            button.onclick = resetCalculator;
-            break;
-            
-        case 'error':
-            button.disabled = false;
-            button.textContent = 'Download failed - Try again';
-            button.classList.add('btn-error');
-            
-            // Restore original PDF generation function
-            button.onclick = generatePDF;
-            
-            // Reset to normal state after 5 seconds for errors
-            setTimeout(() => {
-                updateDownloadButtonState(button, 'ready');
-            }, 5000);
-            break;
-            
-        case 'ready':
-        default:
-            button.disabled = false;
-            button.textContent = 'Download PDF';
             button.onclick = generatePDF; // Restore original function
             break;
     }
@@ -544,7 +535,8 @@ async function addEnhancedTextContentToPDF(pdf, startX, startY, maxWidth, availa
     
     pdf.setFontSize(10);
     pdf.setFont(undefined, 'normal');
-    pdf.text('00000', centerX, currentY, { align: 'center' });
+    const previewNumber = window.calculatorLogger ? window.calculatorLogger.getPreviewNumber() : '00000';
+    pdf.text(previewNumber, centerX, currentY, { align: 'center' });
     
     currentY += lineHeight + sectionSpacing;
     
@@ -667,7 +659,7 @@ function initializePDFGeneration() {
         return;
     }
     
-    console.log('✅ Enhanced PDF generation module with download progress feedback and reset functionality initialized');
+    console.log('✅ Enhanced PDF generation module with download progress feedback, reset functionality, and logging initialized');
 }
 
 // Export functions to global scope
@@ -677,4 +669,34 @@ window.pdfAPI = {
     initializePDFGeneration,
     updateDownloadButtonState,
     resetCalculator
-};
+}; = null; // Disable click during processing
+            break;
+            
+        case 'success':
+            button.disabled = false; // Enable the button for reset functionality
+            button.textContent = 'Successfully downloaded: Click here to reset';
+            button.classList.add('btn-success');
+            
+            // Change click handler to reset function
+            button.onclick = resetCalculator;
+            break;
+            
+        case 'error':
+            button.disabled = false;
+            button.textContent = 'Download failed - Try again';
+            button.classList.add('btn-error');
+            
+            // Restore original PDF generation function
+            button.onclick = generatePDF;
+            
+            // Reset to normal state after 5 seconds for errors
+            setTimeout(() => {
+                updateDownloadButtonState(button, 'ready');
+            }, 5000);
+            break;
+            
+        case 'ready':
+        default:
+            button.disabled = false;
+            button.textContent = 'Download PDF';
+            button.onclick
