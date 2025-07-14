@@ -113,13 +113,19 @@ async function generatePreview() {
         // Draw the canvas preview (function now in canvas-drawing.js)
         drawPreview();
         
-        // UPDATED: Simplified warning display
+        // UPDATED: Simplified warning display with explicit red styling
         const warningElement = document.getElementById('panelLimitWarning');
         if (warningElement) {
             if (showWarning) {
                 warningElement.innerHTML = `<p><em>${warningMessage}</em></p>`;
                 warningElement.style.display = 'block';
                 warningElement.style.color = '#dc3545';
+                warningElement.style.backgroundColor = '#f8d7da';
+                warningElement.style.border = '1px solid #f5c6cb';
+                warningElement.style.borderRadius = '8px';
+                warningElement.style.padding = '15px';
+                warningElement.style.margin = '15px 0';
+                warningElement.style.fontWeight = '600';
             } else {
                 warningElement.style.display = 'none';
             }
