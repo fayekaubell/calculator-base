@@ -1,5 +1,5 @@
 // Logging Module - Google Sheets Integration for Wallpaper Calculator
-// Handles all data logging to Google Sheets via webhook
+// UPDATED: Sequential preview numbers from Google Sheets
 
 class CalculatorLogger {
     constructor() {
@@ -14,7 +14,8 @@ class CalculatorLogger {
         this.enablePDFLogging = this.config.enablePDFLogging !== false; // Default true  
         this.enableQuoteLogging = this.config.enableQuoteLogging !== false; // Default true
         
-        this.previewNumber = this.generatePreviewNumber();
+        // UPDATED: Preview number will be assigned by Google Apps Script
+        this.previewNumber = null; // Will be set when preview is generated
         
         this.init();
     }
@@ -35,7 +36,7 @@ class CalculatorLogger {
             previewLogging: this.enablePreviewLogging,
             pdfLogging: this.enablePDFLogging,
             quoteLogging: this.enableQuoteLogging,
-            previewNumber: this.previewNumber
+            sequentialNumbers: 'Enabled'
         });
         
         this.setupEventListeners();
@@ -64,13 +65,6 @@ class CalculatorLogger {
         });
         
         console.log('📊 Logging event listeners attached');
-    }
-    
-    generatePreviewNumber() {
-        // Generate a unique 5-digit preview number
-        const timestamp = Date.now().toString();
-        const random = Math.floor(Math.random() * 1000).toString().padStart(3, '0');
-        return (timestamp.slice(-2) + random).padStart(5, '0');
     }
     
     getCurrentTimestamp() {
@@ -126,6 +120,7 @@ class CalculatorLogger {
         }
     }
     
+    // UPDATED: Generate preview logging now gets sequential number from Google Apps Script
     async logGeneratePreview(eventData = {}) {
         try {
             const wallDimensions = this.getWallDimensions();
@@ -139,7 +134,7 @@ class CalculatorLogger {
                 wallHeight: wallDimensions.height,
                 patternSelected: patternInfo.display,
                 totalYardage: totalYardage,
-                previewNumber: this.previewNumber,
+                // DON'T send previewNumber - let Google Apps Script generate it
                 userAgent: this.getUserAgent(),
                 
                 // Additional data for debugging (not sent to sheet)
@@ -149,8 +144,20 @@ class CalculatorLogger {
                 }
             };
             
-            await this.sendToWebhook(logData);
-            console.log('📊 Preview generation logged:', logData.previewNumber);
+            const response = await this.sendToWebhook(logData);
+            
+            // UPDATED: Get the preview number from the response
+            if (response && response.previewNumber) {
+                this.previewNumber = response.previewNumber;
+                console.log('📊 Preview generation logged with sequential number:', this.previewNumber);
+                
+                // Store the preview number globally for PDF generation
+                if (window.currentPreview) {
+                    window.currentPreview.sequentialPreviewNumber = this.previewNumber;
+                }
+            } else {
+                console.warn('⚠️ No preview number returned from webhook');
+            }
             
         } catch (error) {
             console.error('❌ Failed to log preview generation:', error);
@@ -163,7 +170,7 @@ class CalculatorLogger {
             const patternInfo = this.getPatternInfo();
             const totalYardage = this.getTotalYardage();
             
-            // Generate PDF filename
+            // Generate PDF filename with sequential number
             const pdfFilename = eventData.filename || this.generatePDFFilename();
             
             const logData = {
@@ -174,7 +181,7 @@ class CalculatorLogger {
                 patternSelected: patternInfo.display,
                 totalYardage: totalYardage,
                 pdfFilename: pdfFilename,
-                previewNumber: this.previewNumber,
+                previewNumber: this.previewNumber || 'unknown', // Use sequential number
                 userAgent: this.getUserAgent(),
                 
                 _metadata: {
@@ -215,7 +222,7 @@ class CalculatorLogger {
                 patternSelected: patternInfo.display,
                 totalYardage: totalYardage,
                 pdfFilename: pdfFilename,
-                previewNumber: this.previewNumber,
+                previewNumber: this.previewNumber || 'unknown', // Use sequential number
                 userAgent: this.getUserAgent(),
                 customerName: customerName,
                 customerEmail: customerEmail,
@@ -242,13 +249,15 @@ class CalculatorLogger {
         
         const { pattern } = window.currentPreview;
         const sku = pattern.sku || 'unknown';
-        return `Faye-Bell-Wallpaper-Preview-${sku}-${this.previewNumber}.pdf`;
+        const previewNum = this.previewNumber || '00000';
+        return `Faye-Bell-Wallpaper-Preview-${sku}-${previewNum}.pdf`;
     }
     
+    // UPDATED: sendToWebhook now parses and returns JSON response
     async sendToWebhook(data) {
         if (!this.webhookUrl) {
             console.warn('⚠️ No webhook URL configured, skipping log');
-            return;
+            return null;
         }
         
         let attempt = 0;
@@ -267,14 +276,19 @@ class CalculatorLogger {
                     headers: {
                         'Content-Type': 'application/json',
                     },
-                    body: JSON.stringify(data),
-                    mode: 'no-cors' // Required for Google Apps Script webhooks
+                    body: JSON.stringify(data)
                 });
                 
-                // Note: With no-cors mode, we can't read the response
-                // But if fetch doesn't throw, the request was sent successfully
-                console.log('✅ Data sent to webhook successfully');
-                return;
+                // UPDATED: Try to parse the response to get preview number
+                try {
+                    const responseText = await response.text();
+                    const responseData = JSON.parse(responseText);
+                    console.log('✅ Data sent to webhook successfully, response:', responseData);
+                    return responseData;
+                } catch (parseError) {
+                    console.log('✅ Data sent to webhook successfully (response not parseable)');
+                    return null;
+                }
                 
             } catch (error) {
                 lastError = error;
@@ -312,13 +326,10 @@ class CalculatorLogger {
     
     // Utility methods
     getPreviewNumber() {
-        return this.previewNumber;
+        return this.previewNumber || '00000';
     }
     
-    generateNewPreviewNumber() {
-        this.previewNumber = this.generatePreviewNumber();
-        return this.previewNumber;
-    }
+    // REMOVED: generateNewPreviewNumber - numbers now come from Google Sheets
     
     isEnabled() {
         return this.enabled && !!this.webhookUrl;
@@ -331,7 +342,8 @@ class CalculatorLogger {
             previewLogging: this.enablePreviewLogging,
             pdfLogging: this.enablePDFLogging,
             quoteLogging: this.enableQuoteLogging,
-            previewNumber: this.previewNumber
+            previewNumber: this.previewNumber,
+            sequentialNumbers: true
         };
     }
 }
@@ -372,7 +384,7 @@ document.addEventListener('DOMContentLoaded', function() {
     window.dispatchPDFDownloaded = dispatchPDFDownloaded;
     window.dispatchQuoteSubmitted = dispatchQuoteSubmitted;
     
-    console.log('📊 Calculator logging system initialized');
+    console.log('📊 Calculator logging system initialized with sequential numbering');
 });
 
 // Export for use in other modules
