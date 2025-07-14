@@ -288,8 +288,12 @@ function calculateTotalContentHeight(pdf, maxWidth) {
     
     let totalHeight = headerHeight; // Title area
     
-    // Pattern details section (6 lines now - added repeat dimensions and match lines)
-    totalHeight += lineHeight * 6;
+    // Pattern details section - account for pattern name + SKU on separate lines
+    let patternDetailsLines = 5; // Base lines (name, wall dimensions, repeat, match, preview number, date)
+    if (pattern.sku) {
+        patternDetailsLines += 1; // Add line for SKU if it exists
+    }
+    totalHeight += lineHeight * patternDetailsLines;
     totalHeight += sectionSpacing;
     
     // Order quantity section - count lines based on pattern type (with extra spacing)
@@ -342,12 +346,17 @@ async function addEnhancedTextContentToPDF(pdf, x, y, maxWidth, maxHeight) {
     }
     
     // Pattern Details Section
-    // Pattern name and SKU in header font
+    // Pattern name in header font
     pdf.setFontSize(14);
     pdf.setFont(undefined, 'bold');
-    const patternDisplay = pattern.sku ? `${pattern.name} / ${pattern.sku}` : pattern.name;
-    pdf.text(patternDisplay, centerX, currentY, { align: 'center' });
+    pdf.text(pattern.name, centerX, currentY, { align: 'center' });
     currentY += lineHeight;
+    
+    // SKU on separate line in header font (if available)
+    if (pattern.sku) {
+        pdf.text(pattern.sku, centerX, currentY, { align: 'center' });
+        currentY += lineHeight;
+    }
     
     // Wall dimensions - back to body font with label
     pdf.setFontSize(bodyFontSize);
