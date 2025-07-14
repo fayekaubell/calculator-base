@@ -1,6 +1,5 @@
 // Preview Module - Main orchestration with new tab high-res view
-// Canvas drawing functions in canvas-drawing.js
-// High-res generation reuses existing PDF generation code
+// UPDATED: Simplified warning logic - removed red overlay complexity
 
 // Generate preview function - main coordination logic
 async function generatePreview() {
@@ -56,20 +55,23 @@ async function generatePreview() {
         console.log('🔢 Calculating requirements for:', { wallWidth, wallHeight });
         const calculations = calculatePanelRequirements(pattern, wallWidth, wallHeight);
         
-        // Check for special cases
-        if (!pattern.hasRepeatHeight && pattern.saleType === 'panel') {
+        // UPDATED: Simplified special case checking
+        let showWarning = false;
+        let warningMessage = '';
+        
+        if (pattern.saleType === 'panel') {
             const maxAvailableLength = Math.max(...pattern.availableLengths);
-            const calculatedPanelHeight = calculations.panelLength;
+            const totalHeightNeeded = wallHeight + pattern.minOverage;
             
-            if (calculatedPanelHeight > maxAvailableLength) {
-                calculations.exceedsAvailableLength = true;
-                calculations.maxAvailableLength = maxAvailableLength;
-                calculations.actualPanelLength = maxAvailableLength;
-            } else {
-                calculations.exceedsAvailableLength = false;
+            if (!pattern.hasRepeatHeight && calculations.panelLength === maxAvailableLength && totalHeightNeeded > (maxAvailableLength * 12)) {
+                // Non-repeating pattern that doesn't cover the full wall height
+                showWarning = true;
+                warningMessage = CONFIG.ui.text.disclaimers.noRepeatHeight;
+            } else if (totalHeightNeeded > (CONFIG.calculator.limits.maxPanelHeight * 12)) {
+                // Wall exceeds the general height limit
+                showWarning = true;
+                warningMessage = CONFIG.ui.text.disclaimers.panelLimit;
             }
-        } else {
-            calculations.exceedsAvailableLength = false;
         }
         
         const formattedWidth = widthInches > 0 ? `${widthFeet}'${widthInches}"` : `${widthFeet}'`;
@@ -111,15 +113,11 @@ async function generatePreview() {
         // Draw the canvas preview (function now in canvas-drawing.js)
         drawPreview();
         
-        // Show warnings if needed
+        // UPDATED: Simplified warning display
         const warningElement = document.getElementById('panelLimitWarning');
         if (warningElement) {
-            if (calculations.exceedsAvailableLength) {
-                warningElement.innerHTML = `<p><em>${CONFIG.ui.text.disclaimers.noRepeatHeight}</em></p>`;
-                warningElement.style.display = 'block';
-                warningElement.style.color = '#dc3545';
-            } else if (calculations.exceedsLimit) {
-                warningElement.innerHTML = `<p><em>${CONFIG.ui.text.disclaimers.panelLimit}</em></p>`;
+            if (showWarning) {
+                warningElement.innerHTML = `<p><em>${warningMessage}</em></p>`;
                 warningElement.style.display = 'block';
                 warningElement.style.color = '#dc3545';
             } else {
@@ -184,16 +182,15 @@ function updatePreviewInfo() {
         if (yardagePerPanelOverageEl) yardagePerPanelOverageEl.style.display = 'none';
         if (totalYardageOverageEl) totalYardageOverageEl.style.display = 'none';
     } else {
-        // Panel-based display
-        const actualPanelLength = calculations.exceedsAvailableLength ? 
-            calculations.actualPanelLength : calculations.panelLength;
-        const yardagePerPanelValue = Math.round(actualPanelLength / 3);
+        // Panel-based display - UPDATED: Simplified, no more complex length calculations
+        const panelLength = calculations.panelLength;
+        const yardagePerPanelValue = Math.round(panelLength / 3);
         const totalYardageValue = calculations.panelsNeeded * yardagePerPanelValue;
         const overagePanels = Math.ceil(calculations.panelsNeeded * 1.2);
         const overageTotalYardage = overagePanels * yardagePerPanelValue;
         
         if (orderQuantity) {
-            orderQuantity.textContent = `[x${calculations.panelsNeeded}] ${actualPanelLength}' Panels`;
+            orderQuantity.textContent = `[x${calculations.panelsNeeded}] ${panelLength}' Panels`;
         }
         
         // Show panel-specific lines for panel patterns
@@ -210,7 +207,7 @@ function updatePreviewInfo() {
         }
         
         if (orderQuantityWithOverage) {
-            orderQuantityWithOverage.textContent = `[x${overagePanels}] ${actualPanelLength}' Panels`;
+            orderQuantityWithOverage.textContent = `[x${overagePanels}] ${panelLength}' Panels`;
         }
         
         const yardagePerPanelOverageEl = yardagePerPanelOverage ? yardagePerPanelOverage.parentElement : null;
