@@ -1,5 +1,5 @@
 // Canvas Drawing Sections Module - Section 1 and Section 2 drawing
-// FIXED: Proper red shading for panel limitations
+// FIXED: Red shading shows uncovered wall area at top of wall (panels anchor to bottom)
 
 // Draw Complete View - pattern + overlay + annotations - UPDATED FOR PROPER RED SHADING
 function drawCompleteViewWithOverlay(ctx, referenceCoords) {
@@ -42,28 +42,30 @@ function drawCompleteViewWithOverlay(ctx, referenceCoords) {
     drawOverageOverlay(ctx, offsetX, offsetY, scaledTotalWidth, scaledTotalHeight,
                       wallOffsetX, wallOffsetY, scaledWallWidth, scaledWallHeight);
     
-    // Step 3: FIXED - Draw red shading for panel limitations
+    // Step 3: FIXED - Draw red shading for uncovered wall area at TOP of wall
     const hasLimitation = (calculations.exceedsLimit || calculations.exceedsAvailableLength) && 
-                         calculations.uncoveredPanelHeight > 0;
+                         calculations.uncoveredWallHeight > 0;
     
     if (hasLimitation) {
-        console.log('🔴 Drawing red limitation areas in Section 1:', {
-            uncoveredPanelHeight: calculations.uncoveredPanelHeight,
-            panelsNeeded: calculations.panelsNeeded,
+        console.log('🔴 Drawing red uncovered wall area in Section 1:', {
+            uncoveredWallHeight: calculations.uncoveredWallHeight,
+            wallOffsetX: wallOffsetX,
+            wallOffsetY: wallOffsetY,
+            scaledWallWidth: scaledWallWidth,
             scale: scale
         });
         
         ctx.fillStyle = 'rgba(255, 0, 0, 0.5)';
         
-        // Draw red area at the TOP of each panel
-        for (let i = 0; i < calculations.panelsNeeded; i++) {
-            const panelX = offsetX + (i * pattern.panelWidth * scale);
-            const panelWidth = pattern.panelWidth * scale;
-            const redAreaHeight = calculations.uncoveredPanelHeight * scale;
-            
-            // Red area at the very top of each panel
-            ctx.fillRect(panelX, offsetY, panelWidth, redAreaHeight);
-        }
+        // Draw red area at the TOP of the wall outline
+        const redAreaHeight = calculations.uncoveredWallHeight * scale;
+        
+        ctx.fillRect(
+            wallOffsetX, 
+            wallOffsetY, 
+            scaledWallWidth, 
+            redAreaHeight
+        );
     }
     
     // Step 4: Draw outlines and annotations with half-drop adjustments
@@ -234,7 +236,7 @@ function drawPanelLabels(ctx, offsetX, offsetY, scaledTotalWidth, scaledTotalHei
     }
 }
 
-// FIXED: Draw Wall Only View with proper red shading alignment
+// FIXED: Draw Wall Only View with red shading at top of wall dimensions
 function drawWallOnlyView(ctx, referenceCoords) {
     const { pattern, wallWidth, wallHeight, calculations, wallWidthFeet, wallWidthInches, wallHeightFeet, wallHeightInches } = currentPreview;
     const { section2, dimensions, scale } = referenceCoords;
@@ -249,55 +251,30 @@ function drawWallOnlyView(ctx, referenceCoords) {
         drawPatternInArea(ctx, wallOffsetX, wallOffsetY, scaledWallWidth, scaledWallHeight, referenceCoords, true);
     }
     
-    // FIXED: Draw red shading that matches Section 1 positioning within the wall area
+    // FIXED: Draw red shading at TOP of wall (same as Section 1)
     const hasLimitation = (calculations.exceedsLimit || calculations.exceedsAvailableLength) && 
-                         calculations.uncoveredPanelHeight > 0;
+                         calculations.uncoveredWallHeight > 0;
     
     if (hasLimitation) {
-        console.log('🔴 Drawing red limitation areas in Section 2 (wall-only):', {
-            uncoveredPanelHeight: calculations.uncoveredPanelHeight,
-            panelsNeeded: calculations.panelsNeeded,
+        console.log('🔴 Drawing red uncovered wall area in Section 2 (wall-only):', {
+            uncoveredWallHeight: calculations.uncoveredWallHeight,
+            wallOffsetX: wallOffsetX,
+            wallOffsetY: wallOffsetY,
+            scaledWallWidth: scaledWallWidth,
             scale: scale
         });
         
         ctx.fillStyle = 'rgba(255, 0, 0, 0.5)';
         
-        // Calculate how the panels align with the wall in Section 1
-        // We need to determine which part of the wall corresponds to each panel
+        // Draw red area at the TOP of the wall (exactly matching Section 1)
+        const redAreaHeight = calculations.uncoveredWallHeight * scale;
         
-        // Get the relative position of panels within the total pattern width
-        const totalPatternWidth = calculations.panelsNeeded * pattern.panelWidth;
-        const scaledTotalPatternWidth = totalPatternWidth * scale;
-        
-        // Calculate where each panel would intersect with the wall area
-        const wallLeftEdgeInPatternSpace = (scaledWallWidth < scaledTotalPatternWidth) ? 
-            (scaledTotalPatternWidth - scaledWallWidth) / 2 : 0;
-        const wallRightEdgeInPatternSpace = wallLeftEdgeInPatternSpace + scaledWallWidth;
-        
-        const redAreaHeight = calculations.uncoveredPanelHeight * scale;
-        
-        // Draw red areas only where panels intersect with the wall
-        for (let i = 0; i < calculations.panelsNeeded; i++) {
-            const panelLeftInPatternSpace = i * pattern.panelWidth * scale;
-            const panelRightInPatternSpace = (i + 1) * pattern.panelWidth * scale;
-            
-            // Check if this panel intersects with the wall area
-            const intersectionLeft = Math.max(panelLeftInPatternSpace, wallLeftEdgeInPatternSpace);
-            const intersectionRight = Math.min(panelRightInPatternSpace, wallRightEdgeInPatternSpace);
-            
-            if (intersectionLeft < intersectionRight) {
-                // This panel intersects with the wall - draw red area
-                const intersectionWidth = intersectionRight - intersectionLeft;
-                const wallXOffset = intersectionLeft - wallLeftEdgeInPatternSpace;
-                
-                ctx.fillRect(
-                    wallOffsetX + wallXOffset, 
-                    wallOffsetY, 
-                    intersectionWidth, 
-                    redAreaHeight
-                );
-            }
-        }
+        ctx.fillRect(
+            wallOffsetX, 
+            wallOffsetY, 
+            scaledWallWidth, 
+            redAreaHeight
+        );
     }
     
     // Draw wall outline
