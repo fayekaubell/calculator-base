@@ -1,5 +1,5 @@
 // Canvas Drawing Core Module - Core functions and coordinate calculations
-// FIXED: Panels and pattern anchor to bottom of wall when there are limitations
+// FIXED: Panel bottoms anchor to wall bottom
 
 // Calculate the reference coordinate system for consistent pattern positioning
 function calculateReferenceCoordinates() {
@@ -16,29 +16,10 @@ function calculateReferenceCoordinates() {
     const maxWidth = canvas.width - leftMargin - rightMargin;
     const maxHeight = canvas.height - topMargin - bottomMargin;
     
-    // FIXED: Calculate actual panel height (what's available vs what's needed)
-    const hasLimitation = (calculations.exceedsLimit || calculations.exceedsAvailableLength) && 
-                         calculations.uncoveredWallHeight > 0;
-    
-    let actualPanelHeight;
-    if (hasLimitation) {
-        // Use the actual available panel height (anchored to bottom)
-        const totalWallHeight = wallHeight + calculations.pattern?.minOverage || 4;
-        actualPanelHeight = totalWallHeight - calculations.uncoveredWallHeight;
-    } else {
-        // No limitation - use full height
-        actualPanelHeight = calculations.totalHeight;
-    }
-    
     // Calculate dimensions for both sections - ensuring pattern alignment
     const wallOnlyHeight = wallHeight;
-    // For Section 1, use the actual panel height that can be covered
-    let completeViewHeight = actualPanelHeight;
-    if (calculations.stripLengths && calculations.stripLengths.length > 0) {
-        // Use the maximum strip length for layout calculation
-        const maxStripLength = Math.max(...calculations.stripLengths);
-        completeViewHeight = Math.min(maxStripLength, actualPanelHeight);
-    }
+    // For Section 1, use the panel height (not strip height for yard patterns)
+    let completeViewHeight = calculations.totalHeight; // This is the actual panel height
     completeViewHeight = Math.max(completeViewHeight, wallHeight);
     const totalContentHeight = completeViewHeight + wallOnlyHeight + sectionGap;
     
@@ -55,45 +36,31 @@ function calculateReferenceCoordinates() {
     
     // Pattern coverage area in Section 1
     const scaledTotalWidth = calculations.totalWidth * scale;
-    const scaledActualPanelHeight = actualPanelHeight * scale;
+    const scaledTotalHeight = calculations.totalHeight * scale; // Panel height
     const scaledWallWidth = wallWidth * scale;
     const scaledWallHeight = wallHeight * scale;
     
-    // FIXED: Section 1 coordinates with bottom anchoring
+    // FIXED: Section 1 coordinates - panels anchor to wall bottom
     const section1OffsetX = leftMargin + (maxWidth - scaledTotalWidth) / 2;
-    
-    // Calculate where panels should be positioned (anchored to bottom of wall)
-    let section1OffsetY;
-    let section1WallOffsetY;
-    
-    if (hasLimitation) {
-        // Wall is positioned in the middle of the available space
-        section1WallOffsetY = section1StartY + ((completeViewHeight * scale) - scaledWallHeight) / 2;
-        
-        // Panels anchor to BOTTOM of wall
-        const wallBottomY = section1WallOffsetY + scaledWallHeight;
-        section1OffsetY = wallBottomY - scaledActualPanelHeight;
-    } else {
-        // No limitation - center everything as before
-        section1OffsetY = section1StartY;
-        section1WallOffsetY = section1OffsetY + ((completeViewHeight * scale) - scaledWallHeight) / 2;
-    }
-    
     const section1WallOffsetX = section1OffsetX + (scaledTotalWidth - scaledWallWidth) / 2;
+    const section1WallOffsetY = section1StartY + ((completeViewHeight * scale) - scaledWallHeight) / 2;
+    
+    // FIXED: Panels anchor to bottom of wall
+    const section1WallBottomY = section1WallOffsetY + scaledWallHeight;
+    const section1PanelBottomY = section1WallBottomY; // Panels anchor to wall bottom
+    const section1OffsetY = section1PanelBottomY - scaledTotalHeight; // Panel top
     
     // Section 2 coordinates
     const section2StartY = section1StartY + completeViewHeight * scale + sectionGap;
     const section2WallOffsetX = leftMargin + (maxWidth - scaledWallWidth) / 2;
     const section2WallOffsetY = section2StartY;
     
-    console.log('🔧 FIXED coordinate calculation:', {
-        hasLimitation: hasLimitation,
-        actualPanelHeight: actualPanelHeight,
-        wallHeight: wallHeight,
-        uncoveredWallHeight: calculations.uncoveredWallHeight,
+    console.log('📐 FIXED coordinate calculation (panels anchor to wall bottom):', {
+        section1WallBottomY: section1WallBottomY,
+        section1PanelBottomY: section1PanelBottomY,
         section1OffsetY: section1OffsetY,
-        section1WallOffsetY: section1WallOffsetY,
-        panelsAnchoredToBottom: hasLimitation
+        scaledTotalHeight: scaledTotalHeight,
+        scaledWallHeight: scaledWallHeight
     });
     
     return {
@@ -103,19 +70,20 @@ function calculateReferenceCoordinates() {
             patternStartY: section1OffsetY,
             wallStartX: section1WallOffsetX,
             wallStartY: section1WallOffsetY,
-            actualPanelHeight: actualPanelHeight // NEW: Pass actual panel height
+            wallBottomY: section1WallBottomY, // NEW: Wall bottom for anchoring
+            panelBottomY: section1PanelBottomY // NEW: Panel bottom anchor point
         },
         section2: {
             wallStartX: section2WallOffsetX,
-            wallStartY: section2WallOffsetY
+            wallStartY: section2WallOffsetY,
+            wallBottomY: section2WallOffsetY + scaledWallHeight // NEW: Section 2 wall bottom
         },
         dimensions: {
             scaledTotalWidth,
-            scaledTotalHeight: scaledActualPanelHeight, // FIXED: Use actual panel height
+            scaledTotalHeight,
             scaledWallWidth,
             scaledWallHeight
-        },
-        hasLimitation: hasLimitation // NEW: Pass limitation status
+        }
     };
 }
 
@@ -151,11 +119,11 @@ function drawOverageOverlay(ctx, panelStartX, panelStartY, panelTotalWidth, pane
     }
 }
 
-// Helper function to get wall position within Section 1 for consistent non-repeating pattern alignment
+// FIXED: Helper function to get wall position for consistent pattern alignment anchored from bottom
 function getWallPositionInSection1(referenceCoords) {
     const { wallHeight } = currentPreview;
     return {
-        wallStartY: referenceCoords.section1.wallStartY,
+        wallBottomY: referenceCoords.section1.wallBottomY,
         wallHeight: wallHeight
     };
 }
