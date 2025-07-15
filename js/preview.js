@@ -1,6 +1,7 @@
 // Preview Module - Main orchestration with new tab high-res view
 // UPDATED: Simplified warning logic - removed red overlay complexity
 // UPDATED: Added Google Sheets logging integration
+// UPDATED: Added product links below preview title
 
 // Generate preview function - main coordination logic
 async function generatePreview() {
@@ -96,6 +97,9 @@ async function generatePreview() {
             previewTitle.textContent = `${pattern.name}: ${pattern.sku || 'N/A'}: ${formattedWidth}w x ${formattedHeight}h Wall`;
         }
         
+        // NEW: Add product links below the preview title
+        addProductLinksToPreview(pattern);
+        
         if (loadingOverlay) {
             loadingOverlay.style.display = 'flex';
         }
@@ -164,6 +168,81 @@ async function generatePreview() {
             loadingOverlay.style.display = 'none';
         }
         alert('An error occurred: ' + error.message);
+    }
+}
+
+// NEW: Add product links below the preview title
+function addProductLinksToPreview(pattern) {
+    // Remove any existing product links container
+    const existingLinks = document.getElementById('productLinksContainer');
+    if (existingLinks) {
+        existingLinks.remove();
+    }
+    
+    // Create container for product links
+    const linksContainer = document.createElement('div');
+    linksContainer.id = 'productLinksContainer';
+    linksContainer.style.cssText = `
+        text-align: center;
+        margin: 15px 0 20px 0;
+        line-height: 1.6;
+    `;
+    
+    // Helper function to create a styled link
+    function createProductLink(url, text) {
+        const link = document.createElement('a');
+        link.href = url;
+        link.target = '_blank';
+        link.rel = 'noopener noreferrer';
+        link.textContent = text;
+        link.style.cssText = `
+            color: #333333;
+            text-decoration: none;
+            font-family: var(--font-heading-family, -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif);
+            font-weight: var(--font-heading-weight, 600);
+            font-style: var(--font-heading-style, normal);
+            font-size: calc(1rem * var(--font-heading-scale, 1));
+            display: block;
+            margin: 5px 0;
+            transition: color 0.3s ease;
+        `;
+        
+        // Add hover effect
+        link.addEventListener('mouseenter', function() {
+            this.style.color = '#666666';
+        });
+        
+        link.addEventListener('mouseleave', function() {
+            this.style.color = '#333333';
+        });
+        
+        return link;
+    }
+    
+    // Add links only if URLs exist and are not empty
+    if (pattern.product_tearsheet_url && pattern.product_tearsheet_url.trim()) {
+        const tearsheetLink = createProductLink(pattern.product_tearsheet_url, 'Product Tearsheet >');
+        linksContainer.appendChild(tearsheetLink);
+    }
+    
+    if (pattern.product_page_url && pattern.product_page_url.trim()) {
+        const pageLink = createProductLink(pattern.product_page_url, 'Product Page >');
+        linksContainer.appendChild(pageLink);
+    }
+    
+    if (pattern.product_360_url && pattern.product_360_url.trim()) {
+        const view360Link = createProductLink(pattern.product_360_url, '360 View >');
+        linksContainer.appendChild(view360Link);
+    }
+    
+    // Only add the container if there are links to show
+    if (linksContainer.children.length > 0) {
+        // Find the title container and add links after it
+        const titleContainer = document.querySelector('.title-container');
+        if (titleContainer) {
+            titleContainer.appendChild(linksContainer);
+            console.log('✅ Product links added to preview:', linksContainer.children.length, 'links');
+        }
     }
 }
 
@@ -279,6 +358,18 @@ async function openHighResInNewTab() {
         const { pattern, formattedWidth, formattedHeight } = currentPreview;
         const title = `${pattern.name} - ${pattern.sku} - ${formattedWidth}w x ${formattedHeight}h`;
         
+        // Create product links HTML for the new tab
+        let productLinksHTML = '';
+        if (pattern.product_tearsheet_url && pattern.product_tearsheet_url.trim()) {
+            productLinksHTML += `<a href="${pattern.product_tearsheet_url}" target="_blank" rel="noopener noreferrer">Product Tearsheet ></a><br>`;
+        }
+        if (pattern.product_page_url && pattern.product_page_url.trim()) {
+            productLinksHTML += `<a href="${pattern.product_page_url}" target="_blank" rel="noopener noreferrer">Product Page ></a><br>`;
+        }
+        if (pattern.product_360_url && pattern.product_360_url.trim()) {
+            productLinksHTML += `<a href="${pattern.product_360_url}" target="_blank" rel="noopener noreferrer">360 View ></a><br>`;
+        }
+        
         const htmlContent = `
 <!DOCTYPE html>
 <html lang="en">
@@ -323,7 +414,25 @@ async function openHighResInNewTab() {
         .header p {
             font-size: 16px;
             opacity: 0.8;
-            margin-bottom: 30px;
+            margin-bottom: 15px;
+        }
+        
+        .product-links {
+            margin-bottom: 15px;
+            line-height: 1.6;
+        }
+        
+        .product-links a {
+            color: #ffffff;
+            text-decoration: none;
+            font-weight: 600;
+            display: block;
+            margin: 5px 0;
+            transition: color 0.3s ease;
+        }
+        
+        .product-links a:hover {
+            color: #cccccc;
         }
         
         .image-container {
@@ -374,6 +483,7 @@ async function openHighResInNewTab() {
     <div class="header">
         <h1>${pattern.name}</h1>
         <p>${pattern.sku || 'N/A'} • ${formattedWidth}w x ${formattedHeight}h Wall</p>
+        ${productLinksHTML ? `<div class="product-links">${productLinksHTML}</div>` : ''}
     </div>
     
     <div class="image-container">
