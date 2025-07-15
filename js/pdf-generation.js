@@ -368,12 +368,29 @@ async function addEnhancedTextContentToPDF(pdf, x, y, maxWidth, maxHeight) {
         currentY += lineHeight;
     }
     
-    // NEW: Add product links after pattern name/SKU
+    // NEW: Add product links after pattern name/SKU with spacing and functional links
+    let hasProductLinks = false;
+    
+    // Check if we have any product links to add spacing
+    if ((pattern.product_tearsheet_url && pattern.product_tearsheet_url.trim()) ||
+        (pattern.product_page_url && pattern.product_page_url.trim()) ||
+        (pattern.product_360_url && pattern.product_360_url.trim())) {
+        hasProductLinks = true;
+        // Add spacing above the links
+        currentY += lineHeight * 0.5;
+    }
+    
     if (pattern.product_tearsheet_url && pattern.product_tearsheet_url.trim()) {
         pdf.setFontSize(12);
         pdf.setFont(undefined, 'bold');
         pdf.setTextColor(0, 0, 0); // Ensure black color
-        pdf.text('Product Tearsheet >', centerX, currentY, { align: 'center' });
+        
+        // Create clickable link
+        const linkText = 'Product Tearsheet >';
+        const textWidth = pdf.getTextWidth(linkText);
+        const linkX = centerX - (textWidth / 2);
+        
+        pdf.textWithLink(linkText, linkX, currentY, { url: pattern.product_tearsheet_url });
         currentY += lineHeight;
     }
     
@@ -381,7 +398,13 @@ async function addEnhancedTextContentToPDF(pdf, x, y, maxWidth, maxHeight) {
         pdf.setFontSize(12);
         pdf.setFont(undefined, 'bold');
         pdf.setTextColor(0, 0, 0); // Ensure black color
-        pdf.text('Product Page >', centerX, currentY, { align: 'center' });
+        
+        // Create clickable link
+        const linkText = 'Product Page >';
+        const textWidth = pdf.getTextWidth(linkText);
+        const linkX = centerX - (textWidth / 2);
+        
+        pdf.textWithLink(linkText, linkX, currentY, { url: pattern.product_page_url });
         currentY += lineHeight;
     }
     
@@ -389,8 +412,19 @@ async function addEnhancedTextContentToPDF(pdf, x, y, maxWidth, maxHeight) {
         pdf.setFontSize(12);
         pdf.setFont(undefined, 'bold');
         pdf.setTextColor(0, 0, 0); // Ensure black color
-        pdf.text('360 View >', centerX, currentY, { align: 'center' });
+        
+        // Create clickable link
+        const linkText = '360 View >';
+        const textWidth = pdf.getTextWidth(linkText);
+        const linkX = centerX - (textWidth / 2);
+        
+        pdf.textWithLink(linkText, linkX, currentY, { url: pattern.product_360_url });
         currentY += lineHeight;
+    }
+    
+    // Add spacing below the links if we had any
+    if (hasProductLinks) {
+        currentY += lineHeight * 0.5;
     }
     
     // Wall dimensions - back to body font with label
