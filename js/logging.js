@@ -1,6 +1,7 @@
 // Logging Module - Google Sheets Integration for Wallpaper Calculator
 // CORS-FREE VERSION: Uses GET requests with URL parameters to avoid CORS issues
 // UPDATED: Sequential preview numbers from Google Sheets
+// REMOVED: User Agent tracking for better compatibility and shorter URLs
 
 class CalculatorLogger {
     constructor() {
@@ -37,12 +38,13 @@ class CalculatorLogger {
             return;
         }
         
-        console.log('📊 Calculator logging initialized (CORS-free version):', {
+        console.log('📊 Calculator logging initialized (CORS-free version, no User Agent tracking):', {
             webhookUrl: this.webhookUrl ? 'Configured' : 'Missing',
             previewLogging: this.enablePreviewLogging,
             pdfLogging: this.enablePDFLogging,
             quoteLogging: this.enableQuoteLogging,
             sequentialNumbers: 'Enabled',
+            userAgentTracking: 'Disabled',
             method: 'GET (CORS-free)'
         });
         
@@ -74,15 +76,17 @@ class CalculatorLogger {
             }
         });
         
-        console.log('📊 Logging event listeners attached');
+        console.log('📊 Logging event listeners attached (no User Agent tracking)');
     }
     
     // ADDED: Test webhook connection using GET request
     async testWebhookConnection() {
         try {
-            console.log('🔗 Testing webhook connection (CORS-free)...');
+            console.log('🔗 Testing webhook connection (CORS-free, no User Agent)...');
             
             const testUrl = `${this.webhookUrl}?action=test&timestamp=${new Date().toISOString()}`;
+            
+            console.log('📏 Test URL length:', testUrl.length, 'characters');
             
             const response = await fetch(testUrl, {
                 method: 'GET',
@@ -91,7 +95,7 @@ class CalculatorLogger {
             
             if (response.ok) {
                 const result = await response.json();
-                console.log('✅ Webhook connection test successful:', result);
+                console.log('✅ Webhook connection test successful (no User Agent):', result);
                 this.consecutiveErrors = 0;
                 this.temporarilyDisabled = false;
             } else {
@@ -106,11 +110,6 @@ class CalculatorLogger {
     
     getCurrentTimestamp() {
         return new Date().toISOString();
-    }
-    
-    getUserAgent() {
-        if (!this.config.includeUserAgent) return '';
-        return navigator.userAgent || '';
     }
     
     getWallDimensions() {
@@ -175,9 +174,8 @@ class CalculatorLogger {
                 wallWidth: wallDimensions.width,
                 wallHeight: wallDimensions.height,
                 patternSelected: patternInfo.display,
-                totalYardage: totalYardage,
-                userAgent: this.getUserAgent()
-                // NOTE: No previewNumber sent - Google Apps Script will generate it
+                totalYardage: totalYardage
+                // REMOVED: userAgent parameter
             };
             
             const response = await this.sendToWebhook(params);
@@ -243,12 +241,12 @@ class CalculatorLogger {
                 patternSelected: patternInfo.display,
                 totalYardage: totalYardage,
                 pdfFilename: pdfFilename,
-                previewNumber: currentPreviewNumber, // REUSE existing number
-                userAgent: this.getUserAgent()
+                previewNumber: currentPreviewNumber
+                // REMOVED: userAgent parameter
             };
             
             await this.sendToWebhook(params);
-            console.log('📊 PDF download logged with EXISTING preview number:', currentPreviewNumber);
+            console.log('📊 PDF download logged with EXISTING preview number (no User Agent):', currentPreviewNumber);
             
             // Reset error counter on success
             this.consecutiveErrors = 0;
@@ -295,17 +293,17 @@ class CalculatorLogger {
                 patternSelected: patternInfo.display,
                 totalYardage: totalYardage,
                 pdfFilename: pdfFilename,
-                previewNumber: currentPreviewNumber, // REUSE existing number
-                userAgent: this.getUserAgent(),
+                previewNumber: currentPreviewNumber,
                 customerName: customerName,
                 customerEmail: customerEmail,
                 customerBusiness: customerBusiness,
                 additionalNotes: additionalNotes,
                 newsletter: newsletter.toString()
+                // REMOVED: userAgent parameter
             };
             
             await this.sendToWebhook(params);
-            console.log('📊 Quote submission logged with EXISTING preview number:', currentPreviewNumber);
+            console.log('📊 Quote submission logged with EXISTING preview number (no User Agent):', currentPreviewNumber);
             
             // Reset error counter on success
             this.consecutiveErrors = 0;
@@ -351,7 +349,7 @@ class CalculatorLogger {
         return timestamp.slice(-5); // Last 5 digits of timestamp
     }
     
-    // UPDATED: Enhanced sendToWebhook using GET requests (CORS-free)
+    // UPDATED: Enhanced sendToWebhook using GET requests (CORS-free, no User Agent)
     async sendToWebhook(params) {
         if (!this.webhookUrl) {
             console.warn('⚠️ No webhook URL configured, skipping log');
@@ -363,7 +361,7 @@ class CalculatorLogger {
         
         while (attempt < this.retryAttempts) {
             try {
-                console.log(`📤 Sending to webhook via GET (attempt ${attempt + 1}):`, {
+                console.log(`📤 Sending to webhook via GET (attempt ${attempt + 1}, no User Agent):`, {
                     action: params.action,
                     previewNumber: params.previewNumber,
                     timestamp: params.timestamp
@@ -377,10 +375,12 @@ class CalculatorLogger {
                     }
                 });
                 
-                console.log('🔗 GET URL:', url.toString().substring(0, 150) + '...');
+                const finalUrl = url.toString();
+                console.log('🔗 GET URL length (no User Agent):', finalUrl.length, 'characters');
+                console.log('🔗 GET URL preview:', finalUrl.substring(0, 150) + '...');
                 
                 // CORS-FREE: Use GET request
-                const response = await fetch(url.toString(), {
+                const response = await fetch(finalUrl, {
                     method: 'GET',
                     cache: 'no-cache'
                 });
@@ -396,14 +396,14 @@ class CalculatorLogger {
                     
                     if (responseText.trim()) {
                         const responseData = JSON.parse(responseText);
-                        console.log('✅ Data sent to webhook successfully via GET, response:', responseData);
+                        console.log('✅ Data sent to webhook successfully via GET (no User Agent), response:', responseData);
                         return responseData;
                     } else {
-                        console.log('✅ Data sent to webhook successfully (empty response)');
+                        console.log('✅ Data sent to webhook successfully (empty response, no User Agent)');
                         return { success: true };
                     }
                 } catch (parseError) {
-                    console.log('✅ Data sent to webhook successfully (response not JSON)');
+                    console.log('✅ Data sent to webhook successfully (response not JSON, no User Agent)');
                     return { success: true };
                 }
                 
@@ -411,7 +411,7 @@ class CalculatorLogger {
                 lastError = error;
                 attempt++;
                 
-                console.warn(`⚠️ Webhook attempt ${attempt} failed:`, error.message);
+                console.warn(`⚠️ Webhook attempt ${attempt} failed (no User Agent):`, error.message);
                 
                 if (attempt < this.retryAttempts) {
                     console.log(`🔄 Retrying in ${this.retryDelay}ms...`);
@@ -421,7 +421,7 @@ class CalculatorLogger {
         }
         
         // All retries failed
-        console.error(`❌ Failed to send to webhook after ${this.retryAttempts} attempts:`, lastError);
+        console.error(`❌ Failed to send to webhook after ${this.retryAttempts} attempts (no User Agent):`, lastError);
         throw new Error(`Webhook logging failed: ${lastError.message}`);
     }
     
@@ -461,7 +461,8 @@ class CalculatorLogger {
             sequentialNumbers: true,
             temporarilyDisabled: this.temporarilyDisabled,
             consecutiveErrors: this.consecutiveErrors,
-            method: 'GET (CORS-free)'
+            userAgentTracking: 'Disabled',
+            method: 'GET (CORS-free, no User Agent)'
         };
     }
     
@@ -475,7 +476,7 @@ class CalculatorLogger {
             // Test the connection
             await this.testWebhookConnection();
             
-            console.log('✅ Logging re-enabled manually');
+            console.log('✅ Logging re-enabled manually (no User Agent tracking)');
         }
     }
 }
@@ -488,7 +489,7 @@ function dispatchPreviewGenerated(eventData = {}) {
         detail: eventData
     });
     document.dispatchEvent(event);
-    console.log('📊 Preview generated event dispatched');
+    console.log('📊 Preview generated event dispatched (no User Agent)');
 }
 
 function dispatchPDFDownloaded(eventData = {}) {
@@ -496,7 +497,7 @@ function dispatchPDFDownloaded(eventData = {}) {
         detail: eventData
     });
     document.dispatchEvent(event);
-    console.log('📊 PDF downloaded event dispatched');
+    console.log('📊 PDF downloaded event dispatched (no User Agent)');
 }
 
 function dispatchQuoteSubmitted(eventData = {}) {
@@ -504,7 +505,7 @@ function dispatchQuoteSubmitted(eventData = {}) {
         detail: eventData
     });
     document.dispatchEvent(event);
-    console.log('📊 Quote submitted event dispatched');
+    console.log('📊 Quote submitted event dispatched (no User Agent)');
 }
 
 // Initialize logging system when DOM is ready
@@ -523,7 +524,7 @@ document.addEventListener('DOMContentLoaded', function() {
         }
     };
     
-    console.log('📊 Calculator logging system initialized with CORS-free GET requests and sequential numbering');
+    console.log('📊 Calculator logging system initialized with CORS-free GET requests, sequential numbering, and no User Agent tracking');
 });
 
 // Export for use in other modules
