@@ -1,6 +1,6 @@
 // Configuration for Wallpaper Calculator
 // Modify these settings to customize for your business
-// UPDATED: Added Google Sheets logging configuration for Faye Bell with NEW WEBHOOK URL
+// UPDATED: Removed User Agent tracking configuration for better compatibility
 
 const CONFIG = {
   // Business Information
@@ -19,20 +19,19 @@ const CONFIG = {
     imageBaseUrl: "https://fayekaubell.github.io/calculator-base/data/patterns/"
   },
 
-  // Google Sheets Logging Configuration - UPDATED WITH NEW WEBHOOK URL
+  // Google Sheets Logging Configuration - UPDATED: Removed User Agent tracking
   logging: {
     // Enable/disable logging system
     enabled: true,
     
     // Google Apps Script webhook URL - UPDATED FOR NEW DEPLOYMENT
-    webhookUrl: "https://script.google.com/macros/s/AKfycbwmpNTzocBZsGzqLJVtq7ReoV7o7T8Rgs9gt1z6dHLE35xZ64nDoJjxmqi2so38fkB1EA/exec",
+    webhookUrl: "https://script.google.com/macros/s/AKfycbxEkYbwZGtV5egJtQxwQN4YJs_pcXvXJFKL4zpkmBWww1vqRy_aMbsv7jj0vUZoPL3SfQ/exec",
     
     // Retry settings for webhook requests
     retryAttempts: 3,
     retryDelay: 1000, // milliseconds
     
-    // Include browser user agent in logs (helps with analytics)
-    includeUserAgent: true,
+    // REMOVED: includeUserAgent setting - User Agent tracking disabled for better compatibility
     
     // Privacy settings - control which actions are logged
     enablePreviewLogging: true,    // Log when previews are generated
