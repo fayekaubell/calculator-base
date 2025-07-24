@@ -1,5 +1,5 @@
 // Canvas Drawing Core Module - Core functions and coordinate calculations
-// UPDATED: Panel anchoring - panels now anchor to bottom of wall
+// UPDATED: Enhanced bottom anchoring for non-repeating patterns like Moon patterns
 
 // Calculate the reference coordinate system for consistent pattern positioning
 function calculateReferenceCoordinates() {
@@ -16,9 +16,22 @@ function calculateReferenceCoordinates() {
     const maxWidth = canvas.width - leftMargin - rightMargin;
     const maxHeight = canvas.height - topMargin - bottomMargin;
     
-    // Determine if we should use bottom-anchoring
-    const shouldBottomAnchor = pattern.saleType === 'panel' && 
-                               wallHeight + pattern.minOverage > calculations.panelLength * 12;
+    // UPDATED: Enhanced bottom anchoring logic for non-repeating patterns
+    let shouldBottomAnchor = false;
+    let anchorReason = '';
+    
+    if (pattern.saleType === 'panel') {
+        if (!pattern.hasRepeatHeight) {
+            // Non-repeating patterns (like Moon patterns) should always be bottom-anchored
+            // This ensures they extend upward from the panel bottom and get clipped at the top
+            shouldBottomAnchor = true;
+            anchorReason = 'non-repeating pattern - always bottom-anchor';
+        } else if (wallHeight + pattern.minOverage > calculations.panelLength * 12) {
+            // Repeating patterns that exceed panel length also get bottom-anchored
+            shouldBottomAnchor = true;
+            anchorReason = 'wall exceeds panel length';
+        }
+    }
     
     // Calculate dimensions for both sections - ensuring pattern alignment
     const wallOnlyHeight = wallHeight;
@@ -31,9 +44,16 @@ function calculateReferenceCoordinates() {
         completeViewHeight = maxStripLength;
     }
     
-    // For normal cases, ensure we show enough height to include wall + overage
-    if (!shouldBottomAnchor) {
-        completeViewHeight = Math.max(completeViewHeight, wallHeight + pattern.minOverage);
+    // UPDATED: For non-repeating patterns, always show the full pattern height
+    if (!pattern.hasRepeatHeight) {
+        // Use the pattern's full repeat height for layout
+        completeViewHeight = Math.max(completeViewHeight, pattern.repeatHeight);
+        console.log(`🌙 Non-repeating pattern: Using full pattern height ${pattern.repeatHeight}" for layout`);
+    } else {
+        // For normal cases, ensure we show enough height to include wall + overage
+        if (!shouldBottomAnchor) {
+            completeViewHeight = Math.max(completeViewHeight, wallHeight + pattern.minOverage);
+        }
     }
     
     const totalContentHeight = completeViewHeight + wallOnlyHeight + sectionGap;
@@ -54,40 +74,62 @@ function calculateReferenceCoordinates() {
     const scaledTotalHeight = calculations.totalHeight * scale;
     const scaledWallWidth = wallWidth * scale;
     const scaledWallHeight = wallHeight * scale;
+    const scaledCompleteViewHeight = completeViewHeight * scale;
     
     // Section 1 coordinates
     const section1OffsetX = leftMargin + (maxWidth - scaledTotalWidth) / 2;
     const section1OffsetY = section1StartY;
     
-    // CONDITIONAL: Wall positioning based on whether we need bottom anchoring
+    // UPDATED: Enhanced wall positioning logic
     let section1WallOffsetX, section1WallOffsetY;
     
     if (shouldBottomAnchor) {
-        // Bottom-anchored: Panel bottom aligns with wall bottom
-        const panelBottomY = section1OffsetY + scaledTotalHeight;
-        const wallBottomY = panelBottomY;
-        const wallTopY = wallBottomY - scaledWallHeight;
-        
-        section1WallOffsetX = section1OffsetX + (scaledTotalWidth - scaledWallWidth) / 2;
-        section1WallOffsetY = wallTopY;
-        
-        console.log('🔻 Using bottom-anchored positioning - panel too short for wall');
+        // Bottom-anchored: Panel bottom aligns with wall bottom (or pattern bottom if non-repeating)
+        if (!pattern.hasRepeatHeight) {
+            // Non-repeating patterns: Wall is positioned within the full pattern area
+            // Pattern extends from panel bottom upward, wall is positioned appropriately within it
+            const patternBottomY = section1OffsetY + scaledCompleteViewHeight;
+            const wallBottomY = patternBottomY;
+            const wallTopY = wallBottomY - scaledWallHeight;
+            
+            section1WallOffsetX = section1OffsetX + (scaledTotalWidth - scaledWallWidth) / 2;
+            section1WallOffsetY = wallTopY;
+            
+            console.log(`🌙 Non-repeating pattern bottom-anchoring:`, {
+                patternBottomY: patternBottomY,
+                wallBottomY: wallBottomY,
+                wallTopY: wallTopY,
+                scaledCompleteViewHeight: scaledCompleteViewHeight,
+                reason: anchorReason
+            });
+        } else {
+            // Standard bottom-anchoring for repeating patterns that exceed panel length
+            const panelBottomY = section1OffsetY + scaledTotalHeight;
+            const wallBottomY = panelBottomY;
+            const wallTopY = wallBottomY - scaledWallHeight;
+            
+            section1WallOffsetX = section1OffsetX + (scaledTotalWidth - scaledWallWidth) / 2;
+            section1WallOffsetY = wallTopY;
+            
+            console.log(`🔻 Standard bottom-anchoring - ${anchorReason}`);
+        }
     } else {
         // Normal positioning: Wall centered within panel area with overage
         section1WallOffsetX = section1OffsetX + (scaledTotalWidth - scaledWallWidth) / 2;
         section1WallOffsetY = section1OffsetY + ((completeViewHeight * scale) - scaledWallHeight) / 2;
         
-        console.log('📐 Using normal positioning - panel covers wall with overage');
+        console.log(`📐 Normal positioning - adequate panel coverage`);
     }
     
     // Section 2 coordinates
-    const section2StartY = section1StartY + completeViewHeight * scale + sectionGap;
+    const section2StartY = section1StartY + scaledCompleteViewHeight + sectionGap;
     const section2WallOffsetX = leftMargin + (maxWidth - scaledWallWidth) / 2;
     const section2WallOffsetY = section2StartY;
     
     return {
         scale,
         shouldBottomAnchor,
+        anchorReason,
         section1: {
             patternStartX: section1OffsetX,
             patternStartY: section1OffsetY,
@@ -102,7 +144,8 @@ function calculateReferenceCoordinates() {
             scaledTotalWidth,
             scaledTotalHeight,
             scaledWallWidth,
-            scaledWallHeight
+            scaledWallHeight,
+            scaledCompleteViewHeight: scaledCompleteViewHeight
         }
     };
 }
