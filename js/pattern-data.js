@@ -1,5 +1,6 @@
 // Pattern Data Module - Data loading, CSV parsing, and calculations
-// UPDATED: Simplified calculations - cap panels at max available length and anchor to bottom
+// UPDATED: Non-repeating patterns always draw at full height, bottom-anchored and clipped
+// FIXED: Moon patterns now always render at 15' height regardless of calculated panel length
 
 // Global variables for data
 let patterns = {};
@@ -105,14 +106,20 @@ function createPatternFromCSV(row) {
     const panelSequence = row.panel_sequence || (row.sale_type === 'yard' ? '' : 'AB');
     const sequenceLength = panelSequence.length;
     
-    // Handle repeat height - check for "none" values
+    // FIXED: Handle repeat height - for non-repeating patterns, always use max available length
     const repeatHeightValue = row.repeat_height_inches;
     let repeatHeight = 144;
     let hasRepeatHeight = true;
     
     if (repeatHeightValue === 'none' || repeatHeightValue === 'None' || repeatHeightValue === 'NONE') {
         hasRepeatHeight = false;
-        repeatHeight = 144; // Keep a default for calculations
+        // CORRECTED: Always use the maximum available panel length for drawing height
+        // This ensures Moon patterns are always drawn at 15' height regardless of calculated panel length
+        const maxLength = Math.max(...availableLengths);
+        repeatHeight = maxLength * 12; // Convert feet to inches
+        
+        console.log(`🌙 Non-repeating pattern detected: ${row.pattern_name}`);
+        console.log(`   Will always draw at max height: ${maxLength}' (${repeatHeight}") - bottom-anchored and clipped`);
     } else {
         repeatHeight = parseFloat(repeatHeightValue) || 144;
     }
@@ -135,7 +142,7 @@ function createPatternFromCSV(row) {
         name: row.pattern_name,
         sku: row.sku,
         repeatWidth: parseFloat(row.repeat_width_inches) || 108,
-        repeatHeight: repeatHeight,
+        repeatHeight: repeatHeight, // FIXED: Always set to max available length for non-repeating
         hasRepeatHeight: hasRepeatHeight,
         minOverage: defaults.minOverage,
         imageUrl: imageUrl,
@@ -185,7 +192,7 @@ function preloadPatternImage(pattern) {
     });
 }
 
-// Calculate panel requirements - UPDATED: Restore original logic for normal cases, cap at max for tall walls
+// Calculate panel requirements - standard logic (no changes needed here)
 function calculatePanelRequirements(pattern, wallWidth, wallHeight) {
     if (!pattern || !pattern.saleType) {
         console.error('Invalid pattern data');
@@ -207,7 +214,7 @@ function calculatePanelRequirements(pattern, wallWidth, wallHeight) {
     
     const panelsNeeded = Math.ceil(totalWidth / pattern.panelWidth);
     
-    // Find the appropriate panel length - RESTORED original logic
+    // Find the appropriate panel length
     let panelLength = 0;
     for (let length of pattern.availableLengths) {
         if (length * 12 >= totalHeight) {
@@ -217,10 +224,15 @@ function calculatePanelRequirements(pattern, wallWidth, wallHeight) {
     }
     
     // If no available length covers the wall, use the maximum available length
-    // This is the ONLY case where we cap the panel length
     if (panelLength === 0) {
         panelLength = Math.max(...pattern.availableLengths);
         console.log(`ℹ️ Wall height ${totalHeight}" exceeds max available panel length, capping at ${panelLength}' panels`);
+    }
+    
+    // REMOVED: No more pattern adjustment here - drawing system will handle it
+    console.log(`📏 Panel calculation: ${panelsNeeded} panels × ${panelLength}' each`);
+    if (!pattern.hasRepeatHeight) {
+        console.log(`🌙 Non-repeating pattern: Will draw at full ${pattern.repeatHeight}" height, bottom-anchored`);
     }
     
     return {
