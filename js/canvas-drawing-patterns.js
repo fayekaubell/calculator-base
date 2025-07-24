@@ -1,4 +1,5 @@
 // Canvas Drawing Patterns Module - UPDATED: Multi-repeat half-drop pattern support
+// FIXED: Non-repeating patterns always draw at full height, bottom-anchored and clipped
 
 function calculateHalfDropVisualOffset(pattern, panelIndex) {
     // Calculate half-drop offset for patterns that need it
@@ -75,10 +76,25 @@ function drawPatternInArea(ctx, areaX, areaY, areaWidth, areaHeight, referenceCo
         });
     }
     
+    // FIXED: For non-repeating patterns, ALWAYS use the pattern's full repeatHeight
+    // This ensures Moon patterns are always drawn at 15' height regardless of calculated panel length
+    const drawingRepeatHeight = pattern.repeatHeight; // Always use the full height (180" for Moon patterns)
+    
     // Calculate repeat size to fit perfectly within strip width
     const stripWidthPixels = pattern.panelWidth * scale;
     const repeatWidthPixels = stripWidthPixels / repeatsPerPanel; // EXACT fit, no rounding
-    const repeatHeightPixels = (pattern.repeatHeight / pattern.repeatWidth) * repeatWidthPixels; // Maintain aspect ratio
+    const repeatHeightPixels = (drawingRepeatHeight / pattern.repeatWidth) * repeatWidthPixels;
+    
+    // Log the scaling for non-repeating patterns
+    if (!pattern.hasRepeatHeight) {
+        console.log(`🌙 Non-repeating pattern ${pattern.name}: Always drawing at full height`, {
+            patternRepeatHeight: pattern.repeatHeight,
+            drawingRepeatHeight: drawingRepeatHeight,
+            repeatHeightPixels: repeatHeightPixels,
+            calculatedPanelLength: calculations.panelLength,
+            note: 'Pattern will be bottom-anchored and clipped by panel edges'
+        });
+    }
     
     // UNIVERSAL COORDINATE SYSTEM - THE KEY FIX
     // Create a universal pattern grid where the first panel's lower-left corner is always the pattern origin
@@ -210,11 +226,25 @@ function drawPatternInArea(ctx, areaX, areaY, areaWidth, areaHeight, referenceCo
                         }
                     }
                 } else {
-                    // Non-repeating pattern - position at bottom of pattern area with half-drop offset
+                    // FIXED: Non-repeating pattern - always draw at full height, bottom-anchored
+                    // The pattern is positioned so its bottom aligns with the panel bottom
+                    // and it extends upward to its full height, clipped by the panel edges
                     const drawY = patternStartY - repeatHeightPixels + halfDropOffset;
                     
                     if (drawY + repeatHeightPixels >= areaY && drawY < areaY + areaHeight) {
                         ctx.drawImage(patternImage, drawX, drawY, repeatWidthPixels, repeatHeightPixels);
+                        
+                        // Log the non-repeating pattern draw for debugging
+                        if (!pattern.hasRepeatHeight && i < 3) {
+                            console.log(`🌙 Non-repeating pattern draw ${i} (bottom-anchored):`, {
+                                drawX: drawX,
+                                drawY: drawY,
+                                repeatWidthPixels: repeatWidthPixels,
+                                repeatHeightPixels: repeatHeightPixels,
+                                fullPatternHeight: drawingRepeatHeight,
+                                note: 'Pattern extends upward from bottom, clipped at panel edges'
+                            });
+                        }
                     }
                 }
             }
@@ -291,11 +321,23 @@ function drawPatternInArea(ctx, areaX, areaY, areaWidth, areaHeight, referenceCo
                         }
                     }
                 } else {
-                    // Non-repeating pattern
+                    // FIXED: Non-repeating pattern in Section 2 - same bottom-anchored behavior
                     const drawY = patternStartY - repeatHeightPixels + halfDropOffset;
                     
                     if (drawY + repeatHeightPixels >= areaY && drawY < areaY + areaHeight) {
                         ctx.drawImage(patternImage, drawX, drawY, repeatWidthPixels, repeatHeightPixels);
+                        
+                        // Log the non-repeating pattern draw for debugging
+                        if (!pattern.hasRepeatHeight && i < 3) {
+                            console.log(`🌙 Non-repeating pattern Section 2 draw ${i} (bottom-anchored):`, {
+                                drawX: drawX,
+                                drawY: drawY,
+                                repeatWidthPixels: repeatWidthPixels,
+                                repeatHeightPixels: repeatHeightPixels,
+                                fullPatternHeight: drawingRepeatHeight,
+                                note: 'Pattern bottom-anchored in Section 2, clipped at wall edges'
+                            });
+                        }
                     }
                 }
             }
