@@ -431,7 +431,7 @@ async function addEnhancedTextContentToPDF(pdf, x, y, maxWidth, maxHeight) {
     
     // Pattern repeat dimensions - add "Repeat:" prefix
     const repeatWidthFeet = Math.floor(pattern.repeatWidth / 12);
-    const repeatWidthInches = Math.round(pattern.repeatWidth % 12);
+    const repeatWidthInches = parseFloat((pattern.repeatWidth % 12).toFixed(2));
     const repeatWidthDisplay = repeatWidthInches > 0 ?
         `${repeatWidthFeet}'-${repeatWidthInches}"` : `${repeatWidthFeet}'`;
 
@@ -440,7 +440,7 @@ async function addEnhancedTextContentToPDF(pdf, x, y, maxWidth, maxHeight) {
     // Add height if pattern has repeat height
     if (pattern.hasRepeatHeight && pattern.repeatHeight) {
         const repeatHeightFeet = Math.floor(pattern.repeatHeight / 12);
-        const repeatHeightInches = Math.round(pattern.repeatHeight % 12);
+        const repeatHeightInches = parseFloat((pattern.repeatHeight % 12).toFixed(2));
         const repeatHeightDisplay = repeatHeightInches > 0 ?
             `${repeatHeightFeet}'-${repeatHeightInches}"` : `${repeatHeightFeet}'`;
         repeatDisplay += ` × ${repeatHeightDisplay}h`;
