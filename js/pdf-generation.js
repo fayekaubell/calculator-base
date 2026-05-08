@@ -385,7 +385,10 @@ async function addEnhancedTextContentToPDF(pdf, x, y, maxWidth, maxHeight) {
         const textWidth = pdf.getTextWidth(linkText);
         const linkX = centerX - (textWidth / 2);
         
-        pdf.textWithLink(linkText, linkX, currentY, { url: pattern.product_tearsheet_url });
+        const tearsheetUrl = /^https?:\/\//i.test(pattern.product_tearsheet_url.trim())
+            ? pattern.product_tearsheet_url.trim()
+            : 'https://' + pattern.product_tearsheet_url.trim();
+        pdf.textWithLink(linkText, linkX, currentY, { url: tearsheetUrl });
         currentY += lineHeight;
     }
     
@@ -399,7 +402,10 @@ async function addEnhancedTextContentToPDF(pdf, x, y, maxWidth, maxHeight) {
         const textWidth = pdf.getTextWidth(linkText);
         const linkX = centerX - (textWidth / 2);
         
-        pdf.textWithLink(linkText, linkX, currentY, { url: pattern.product_page_url });
+        const productPageUrl = /^https?:\/\//i.test(pattern.product_page_url.trim())
+            ? pattern.product_page_url.trim()
+            : 'https://' + pattern.product_page_url.trim();
+        pdf.textWithLink(linkText, linkX, currentY, { url: productPageUrl });
         currentY += lineHeight;
     }
     
@@ -413,7 +419,10 @@ async function addEnhancedTextContentToPDF(pdf, x, y, maxWidth, maxHeight) {
         const textWidth = pdf.getTextWidth(linkText);
         const linkX = centerX - (textWidth / 2);
         
-        pdf.textWithLink(linkText, linkX, currentY, { url: pattern.product_360_url });
+        const view360Url = /^https?:\/\//i.test(pattern.product_360_url.trim())
+            ? pattern.product_360_url.trim()
+            : 'https://' + pattern.product_360_url.trim();
+        pdf.textWithLink(linkText, linkX, currentY, { url: view360Url });
         currentY += lineHeight;
     }
     
