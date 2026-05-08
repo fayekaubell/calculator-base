@@ -191,7 +191,7 @@ function addProductLinksToPreview(pattern) {
     // Helper function to create a styled link
     function createProductLink(url, text) {
         const link = document.createElement('a');
-        link.href = url;
+        link.href = /^https?:\/\//i.test(url.trim()) ? url.trim() : 'https://' + url.trim();
         link.target = '_blank';
         link.rel = 'noopener noreferrer';
         link.textContent = text;
@@ -312,14 +312,15 @@ async function openHighResInNewTab() {
         
         // Create product links HTML for the new tab
         let productLinksHTML = '';
+        const normalizeUrl = url => /^https?:\/\//i.test(url.trim()) ? url.trim() : 'https://' + url.trim();
         if (pattern.product_tearsheet_url && pattern.product_tearsheet_url.trim()) {
-            productLinksHTML += `<a href="${pattern.product_tearsheet_url}" target="_blank" rel="noopener noreferrer">Product Tearsheet ></a><br>`;
+            productLinksHTML += `<a href="${normalizeUrl(pattern.product_tearsheet_url)}" target="_blank" rel="noopener noreferrer">Product Tearsheet ></a><br>`;
         }
         if (pattern.product_page_url && pattern.product_page_url.trim()) {
-            productLinksHTML += `<a href="${pattern.product_page_url}" target="_blank" rel="noopener noreferrer">Product Page ></a><br>`;
+            productLinksHTML += `<a href="${normalizeUrl(pattern.product_page_url)}" target="_blank" rel="noopener noreferrer">Product Page ></a><br>`;
         }
         if (pattern.product_360_url && pattern.product_360_url.trim()) {
-            productLinksHTML += `<a href="${pattern.product_360_url}" target="_blank" rel="noopener noreferrer">360 View ></a><br>`;
+            productLinksHTML += `<a href="${normalizeUrl(pattern.product_360_url)}" target="_blank" rel="noopener noreferrer">360 View ></a><br>`;
         }
         
         const htmlContent = `
