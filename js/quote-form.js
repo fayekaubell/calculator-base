@@ -64,29 +64,26 @@ function addDownloadAndQuoteButtons() {
     // Clear any existing content
     buttonContainer.innerHTML = '';
     
-    // Create Submit Quote button (primary - full width)
+    // Create Download PDF button
+    const downloadBtn = document.createElement('button');
+    downloadBtn.id = 'downloadPdfBtn';
+    downloadBtn.className = 'btn btn-primary';
+    downloadBtn.textContent = 'Download PDF';
+    downloadBtn.onclick = generatePDF;
+    
+    // Create Submit Quote button
     const quoteBtn = document.createElement('button');
     quoteBtn.id = 'submitQuoteForPreviewBtn';
     quoteBtn.className = 'btn btn-primary';
-    quoteBtn.style.width = '100%';
-    quoteBtn.textContent = 'Request a Quote';
+    quoteBtn.textContent = 'Submit for Quote';
     quoteBtn.onclick = toggleQuoteForm;
-
-    // Create Download PDF button (secondary - smaller, below)
-    const downloadBtn = document.createElement('button');
-    downloadBtn.id = 'downloadPdfBtn';
-    downloadBtn.className = 'btn btn-secondary';
-    downloadBtn.textContent = 'Download as PDF';
-    downloadBtn.onclick = generatePDF;
-
-    // Add buttons to container (quote first, PDF second)
-    buttonContainer.appendChild(quoteBtn);
+    
+    // Add buttons to container
     buttonContainer.appendChild(downloadBtn);
-
-    // Stack vertically
+    buttonContainer.appendChild(quoteBtn);
+    
+    // Show the button container
     buttonContainer.style.display = 'flex';
-    buttonContainer.style.flexDirection = 'column';
-    buttonContainer.style.gap = '10px';
     
     // Dispatch event to notify that buttons have been added
     document.dispatchEvent(new CustomEvent('buttonsAdded'));
@@ -248,7 +245,6 @@ async function handleQuoteSubmission() {
             fullName: document.getElementById('fullName')?.value || '',
             emailAddress: document.getElementById('emailAddress')?.value || '',
             businessName: document.getElementById('businessName')?.value || '',
-            tradeDesigner: document.getElementById('tradeDesigner')?.checked || false,
             additionalNotes: document.getElementById('additionalNotes')?.value || '',
             newsletterSignup: document.getElementById('newsletterSignup')?.checked || false,
             
@@ -309,7 +305,6 @@ async function handleQuoteSubmission() {
                         fullName: formData.fullName,
                         emailAddress: formData.emailAddress,
                         businessName: formData.businessName,
-                        tradeDesigner: formData.tradeDesigner,
                         additionalNotes: formData.additionalNotes,
                         newsletter: formData.newsletterSignup,
                         previewData: formData.previewData,
@@ -412,17 +407,15 @@ function resetQuoteForm() {
     const fullNameInput = document.getElementById('fullName');
     const emailInput = document.getElementById('emailAddress');
     const businessInput = document.getElementById('businessName');
-    const tradeDesignerInput = document.getElementById('tradeDesigner');
     const notesInput = document.getElementById('additionalNotes');
     const newsletterInput = document.getElementById('newsletterSignup');
-
+    
     if (fullNameInput) fullNameInput.value = '';
     if (emailInput) emailInput.value = '';
     if (businessInput) businessInput.value = '';
-    if (tradeDesignerInput) tradeDesignerInput.checked = false;
     if (notesInput) notesInput.value = '';
     if (newsletterInput) newsletterInput.checked = false;
-
+    
     // Remove validation classes
     [fullNameInput, emailInput, businessInput, notesInput].forEach(input => {
         if (input) {

@@ -66,7 +66,7 @@ const CONFIG = {
     // Text customization
     text: {
       pageTitle: "",  // Empty - website's page title will be used
-      pageSubtitle: "See any of our patterns on your wall — and get an instant estimate of what to order. Submit for a quote and we'll be in touch within one business day. (probably sooner)",
+      pageSubtitle: "Introducing: our new and improved wallpaper calculator. Enter wall dimensions to generate a visualization of any of our patterns installed as well as an estimate of how much you'll need to purchase. Submit results if you'd like to receive a quote. We'll be in touch within one business day. (probably sooner)",
       
       // Measuring guide
       measuringGuide: {
