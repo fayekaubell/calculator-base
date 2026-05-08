@@ -155,6 +155,7 @@ function createPatternFromCSV(row) {
         rollWidth: row.sale_type === 'yard' ? defaults.rollWidth : null,
         minYardOrder: row.sale_type === 'yard' ? (row.min_yard_order || defaults.minYardOrder) : null,
         patternMatch: row.pattern_match || 'straight',
+        isPanelRoll: row.sale_type === 'panel' && parseFloat(row.material_width_inches) <= 30,
         handle: patternId,
         product_tearsheet_url: row.product_tearsheet_url || '',
         product_page_url: row.product_page_url || '',
@@ -229,18 +230,21 @@ function calculatePanelRequirements(pattern, wallWidth, wallHeight) {
         console.log(`ℹ️ Wall height ${totalHeight}" exceeds max available panel length, capping at ${panelLength}' panels`);
     }
     
-    // REMOVED: No more pattern adjustment here - drawing system will handle it
-    console.log(`📏 Panel calculation: ${panelsNeeded} panels × ${panelLength}' each`);
+    const rollsNeeded = pattern.isPanelRoll ? Math.ceil(panelsNeeded / 2) : panelsNeeded;
+
+    console.log(`📏 Panel calculation: ${panelsNeeded} panels → ${rollsNeeded} ${pattern.isPanelRoll ? 'rolls' : 'panels'} × ${panelLength}'`);
     if (!pattern.hasRepeatHeight) {
         console.log(`🌙 Non-repeating pattern: Will draw at full ${pattern.repeatHeight}" height, bottom-anchored`);
     }
-    
+
     return {
         panelsNeeded,
+        rollsNeeded,
         panelLength: panelLength,
         totalWidth: panelsNeeded * pattern.panelWidth,
         totalHeight: panelLength * 12,
         saleType: 'panel',
+        isPanelRoll: pattern.isPanelRoll || false,
         patternMatch: pattern.patternMatch || 'straight'
     };
 }
@@ -361,16 +365,19 @@ function calculateYardRequirements(pattern, wallWidth, wallHeight) {
     }
     
     const totalYardage = Math.max(Math.ceil(totalYardageRaw + extraYardage), pattern.minYardOrder || 5);
-    
+    const rollsNeeded = Math.ceil(totalYardage / 11);
+
     console.log(`✅ YARD CALCULATION COMPLETE:`, {
         totalYardageRaw: totalYardageRaw,
         extraYardage: extraYardage,
         finalTotalYardage: totalYardage,
+        rollsNeeded: rollsNeeded,
         maxStripLength: maxStripLength
     });
-    
+
     return {
         panelsNeeded: stripsNeeded,
+        rollsNeeded: rollsNeeded,
         panelLength: Math.floor(maxStripLength / 12),
         panelLengthInches: maxStripLength % 12,
         totalYardage: totalYardage,

@@ -249,77 +249,79 @@ function addProductLinksToPreview(pattern) {
 // Update preview info display - handles the order quantities section
 function updatePreviewInfo() {
     const { calculations } = currentPreview;
-    
+
     const orderQuantity = document.getElementById('orderQuantity');
     const orderQuantityWithOverage = document.getElementById('orderQuantityWithOverage');
     const yardagePerPanel = document.getElementById('yardagePerPanel');
     const totalYardage = document.getElementById('totalYardage');
     const yardagePerPanelOverage = document.getElementById('yardagePerPanelOverage');
     const totalYardageOverage = document.getElementById('totalYardageOverage');
-    
+
+    const yardagePerPanelEl = yardagePerPanel ? yardagePerPanel.parentElement : null;
+    const totalYardageEl = totalYardage ? totalYardage.parentElement : null;
+    const yardagePerPanelOverageEl = yardagePerPanelOverage ? yardagePerPanelOverage.parentElement : null;
+    const totalYardageOverageEl = totalYardageOverage ? totalYardageOverage.parentElement : null;
+
     if (calculations.saleType === 'yard') {
-        // Yard-based display
-        const totalYardageValue = calculations.totalYardage;
-        const overageTotalYardage = Math.ceil(totalYardageValue * 1.2);
-        
-        if (orderQuantity) {
-            orderQuantity.textContent = `Total yardage: ${totalYardageValue} yds`;
-        }
-        
-        // Hide panel-specific lines for yard patterns
-        const yardagePerPanelEl = yardagePerPanel ? yardagePerPanel.parentElement : null;
-        const totalYardageEl = totalYardage ? totalYardage.parentElement : null;
-        if (yardagePerPanelEl) yardagePerPanelEl.style.display = 'none';
-        if (totalYardageEl) totalYardageEl.style.display = 'none';
-        
-        if (orderQuantityWithOverage) {
-            orderQuantityWithOverage.textContent = `Total yardage: ${overageTotalYardage} yds`;
-        }
-        
-        const yardagePerPanelOverageEl = yardagePerPanelOverage ? yardagePerPanelOverage.parentElement : null;
-        const totalYardageOverageEl = totalYardageOverage ? totalYardageOverage.parentElement : null;
-        if (yardagePerPanelOverageEl) yardagePerPanelOverageEl.style.display = 'none';
-        if (totalYardageOverageEl) totalYardageOverageEl.style.display = 'none';
-    } else {
-        // Panel-based display - UPDATED: Simplified, no more complex length calculations
-        const panelLength = calculations.panelLength;
-        const yardagePerPanelValue = Math.round(panelLength / 3);
-        const totalYardageValue = calculations.panelsNeeded * yardagePerPanelValue;
-        const overagePanels = Math.ceil(calculations.panelsNeeded * 1.2);
-        const overageTotalYardage = overagePanels * yardagePerPanelValue;
-        
-        if (orderQuantity) {
-            orderQuantity.textContent = `[x${calculations.panelsNeeded}] ${panelLength}' Panels`;
-        }
-        
-        // Show panel-specific lines for panel patterns
-        const yardagePerPanelEl = yardagePerPanel ? yardagePerPanel.parentElement : null;
-        const totalYardageEl = totalYardage ? totalYardage.parentElement : null;
+        // Sold as 11-yard rolls
+        const rollsNeeded = calculations.rollsNeeded;
+        const overageRolls = Math.ceil(rollsNeeded * 1.2);
+
+        if (orderQuantity) orderQuantity.textContent = `[x${rollsNeeded}] 11-Yard Rolls`;
+        if (orderQuantityWithOverage) orderQuantityWithOverage.textContent = `[x${overageRolls}] 11-Yard Rolls`;
+
         if (yardagePerPanelEl) yardagePerPanelEl.style.display = 'block';
         if (totalYardageEl) totalYardageEl.style.display = 'block';
-        
-        if (yardagePerPanel) {
-            yardagePerPanel.textContent = `${yardagePerPanelValue} yds`;
-        }
-        if (totalYardage) {
-            totalYardage.textContent = `${totalYardageValue} yds`;
-        }
-        
-        if (orderQuantityWithOverage) {
-            orderQuantityWithOverage.textContent = `[x${overagePanels}] ${panelLength}' Panels`;
-        }
-        
-        const yardagePerPanelOverageEl = yardagePerPanelOverage ? yardagePerPanelOverage.parentElement : null;
-        const totalYardageOverageEl = totalYardageOverage ? totalYardageOverage.parentElement : null;
         if (yardagePerPanelOverageEl) yardagePerPanelOverageEl.style.display = 'block';
         if (totalYardageOverageEl) totalYardageOverageEl.style.display = 'block';
-        
+
+        if (yardagePerPanel) {
+            const label = yardagePerPanel.previousElementSibling;
+            if (label) label.textContent = 'Yardage per roll:';
+            yardagePerPanel.textContent = '11 yds';
+        }
+        if (totalYardage) totalYardage.textContent = `${rollsNeeded * 11} yds`;
+
         if (yardagePerPanelOverage) {
-            yardagePerPanelOverage.textContent = `${yardagePerPanelValue} yds`;
+            const label = yardagePerPanelOverage.previousElementSibling;
+            if (label) label.textContent = 'Yardage per roll:';
+            yardagePerPanelOverage.textContent = '11 yds';
         }
-        if (totalYardageOverage) {
-            totalYardageOverage.textContent = `${overageTotalYardage} yds`;
+        if (totalYardageOverage) totalYardageOverage.textContent = `${overageRolls * 11} yds`;
+
+    } else {
+        // Panel-based: either 2-panel rolls (27.5" panels) or individual panels (52" panels)
+        const panelLength = calculations.panelLength;
+        const isPanelRoll = calculations.isPanelRoll;
+        const displayCount = isPanelRoll ? calculations.rollsNeeded : calculations.panelsNeeded;
+        const unit = isPanelRoll ? 'Rolls' : 'Panels';
+        const unitLabel = isPanelRoll ? 'Yardage per roll:' : 'Yardage per panel:';
+        const yardagePerUnit = Math.round(panelLength / 3);
+        const totalYardageValue = displayCount * yardagePerUnit;
+        const overageCount = Math.ceil(displayCount * 1.2);
+        const overageTotalYardage = overageCount * yardagePerUnit;
+
+        if (orderQuantity) orderQuantity.textContent = `[x${displayCount}] ${panelLength}' ${unit}`;
+        if (orderQuantityWithOverage) orderQuantityWithOverage.textContent = `[x${overageCount}] ${panelLength}' ${unit}`;
+
+        if (yardagePerPanelEl) yardagePerPanelEl.style.display = 'block';
+        if (totalYardageEl) totalYardageEl.style.display = 'block';
+        if (yardagePerPanelOverageEl) yardagePerPanelOverageEl.style.display = 'block';
+        if (totalYardageOverageEl) totalYardageOverageEl.style.display = 'block';
+
+        if (yardagePerPanel) {
+            const label = yardagePerPanel.previousElementSibling;
+            if (label) label.textContent = unitLabel;
+            yardagePerPanel.textContent = `${yardagePerUnit} yds`;
         }
+        if (totalYardage) totalYardage.textContent = `${totalYardageValue} yds`;
+
+        if (yardagePerPanelOverage) {
+            const label = yardagePerPanelOverage.previousElementSibling;
+            if (label) label.textContent = unitLabel;
+            yardagePerPanelOverage.textContent = `${yardagePerUnit} yds`;
+        }
+        if (totalYardageOverage) totalYardageOverage.textContent = `${overageTotalYardage} yds`;
     }
 }
 
