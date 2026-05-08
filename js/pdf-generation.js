@@ -499,6 +499,7 @@ async function addEnhancedTextContentToPDF(pdf, x, y, maxWidth, maxHeight) {
         const panelLength = calculations.panelLength;
         const displayCount = calculations.isPanelRoll ? calculations.rollsNeeded : calculations.panelsNeeded;
         const unit = calculations.isPanelRoll ? 'Rolls' : 'Panels';
+        const rollNote = calculations.isPanelRoll ? ' (2 panels per roll)' : '';
         const overageCount = Math.ceil(displayCount * 1.2);
 
         pdf.setFontSize(14);
@@ -508,7 +509,7 @@ async function addEnhancedTextContentToPDF(pdf, x, y, maxWidth, maxHeight) {
 
         pdf.setFontSize(bodyFontSize);
         pdf.setFont(undefined, 'normal');
-        pdf.text(`[x${displayCount}] ${panelLength}' ${unit}`, centerX, currentY, { align: 'center' });
+        pdf.text(`[x${displayCount}] ${panelLength}' ${unit}${rollNote}`, centerX, currentY, { align: 'center' });
         currentY += lineHeight * 2;
 
         pdf.setFontSize(14);
@@ -520,7 +521,7 @@ async function addEnhancedTextContentToPDF(pdf, x, y, maxWidth, maxHeight) {
 
         pdf.setFontSize(bodyFontSize);
         pdf.setFont(undefined, 'normal');
-        pdf.text(`[x${overageCount}] ${panelLength}' ${unit}`, centerX, currentY, { align: 'center' });
+        pdf.text(`[x${overageCount}] ${panelLength}' ${unit}${rollNote}`, centerX, currentY, { align: 'center' });
         currentY += lineHeight;
     }
     

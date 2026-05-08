@@ -268,9 +268,10 @@ function updatePreviewInfo() {
         const panelLength = calculations.panelLength;
         const displayCount = calculations.isPanelRoll ? calculations.rollsNeeded : calculations.panelsNeeded;
         const unit = calculations.isPanelRoll ? 'Rolls' : 'Panels';
+        const rollNote = calculations.isPanelRoll ? ' (2 panels per roll)' : '';
         const overageCount = Math.ceil(displayCount * 1.2);
-        if (orderQuantity) orderQuantity.textContent = `[x${displayCount}] ${panelLength}' ${unit}`;
-        if (orderQuantityWithOverage) orderQuantityWithOverage.textContent = `[x${overageCount}] ${panelLength}' ${unit}`;
+        if (orderQuantity) orderQuantity.textContent = `[x${displayCount}] ${panelLength}' ${unit}${rollNote}`;
+        if (orderQuantityWithOverage) orderQuantityWithOverage.textContent = `[x${overageCount}] ${panelLength}' ${unit}${rollNote}`;
     }
 }
 
