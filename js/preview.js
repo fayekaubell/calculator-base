@@ -252,76 +252,25 @@ function updatePreviewInfo() {
 
     const orderQuantity = document.getElementById('orderQuantity');
     const orderQuantityWithOverage = document.getElementById('orderQuantityWithOverage');
-    const yardagePerPanel = document.getElementById('yardagePerPanel');
-    const totalYardage = document.getElementById('totalYardage');
-    const yardagePerPanelOverage = document.getElementById('yardagePerPanelOverage');
-    const totalYardageOverage = document.getElementById('totalYardageOverage');
 
-    const yardagePerPanelEl = yardagePerPanel ? yardagePerPanel.parentElement : null;
-    const totalYardageEl = totalYardage ? totalYardage.parentElement : null;
-    const yardagePerPanelOverageEl = yardagePerPanelOverage ? yardagePerPanelOverage.parentElement : null;
-    const totalYardageOverageEl = totalYardageOverage ? totalYardageOverage.parentElement : null;
+    // Hide yardage breakdown lines — not shown in new selling format
+    ['yardagePerPanel', 'totalYardage', 'yardagePerPanelOverage', 'totalYardageOverage'].forEach(id => {
+        const el = document.getElementById(id);
+        if (el?.parentElement) el.parentElement.style.display = 'none';
+    });
 
     if (calculations.saleType === 'yard') {
-        // Sold as 11-yard rolls
         const rollsNeeded = calculations.rollsNeeded;
         const overageRolls = Math.ceil(rollsNeeded * 1.2);
-
         if (orderQuantity) orderQuantity.textContent = `[x${rollsNeeded}] 11-Yard Rolls`;
         if (orderQuantityWithOverage) orderQuantityWithOverage.textContent = `[x${overageRolls}] 11-Yard Rolls`;
-
-        if (yardagePerPanelEl) yardagePerPanelEl.style.display = 'block';
-        if (totalYardageEl) totalYardageEl.style.display = 'block';
-        if (yardagePerPanelOverageEl) yardagePerPanelOverageEl.style.display = 'block';
-        if (totalYardageOverageEl) totalYardageOverageEl.style.display = 'block';
-
-        if (yardagePerPanel) {
-            const label = yardagePerPanel.previousElementSibling;
-            if (label) label.textContent = 'Yardage per roll:';
-            yardagePerPanel.textContent = '11 yds';
-        }
-        if (totalYardage) totalYardage.textContent = `${rollsNeeded * 11} yds`;
-
-        if (yardagePerPanelOverage) {
-            const label = yardagePerPanelOverage.previousElementSibling;
-            if (label) label.textContent = 'Yardage per roll:';
-            yardagePerPanelOverage.textContent = '11 yds';
-        }
-        if (totalYardageOverage) totalYardageOverage.textContent = `${overageRolls * 11} yds`;
-
     } else {
-        // Panel-based: either 2-panel rolls (27.5" panels) or individual panels (52" panels)
         const panelLength = calculations.panelLength;
-        const isPanelRoll = calculations.isPanelRoll;
-        const displayCount = isPanelRoll ? calculations.rollsNeeded : calculations.panelsNeeded;
-        const unit = isPanelRoll ? 'Rolls' : 'Panels';
-        const unitLabel = isPanelRoll ? 'Yardage per roll:' : 'Yardage per panel:';
-        const yardagePerUnit = Math.round(panelLength / 3);
-        const totalYardageValue = displayCount * yardagePerUnit;
+        const displayCount = calculations.isPanelRoll ? calculations.rollsNeeded : calculations.panelsNeeded;
+        const unit = calculations.isPanelRoll ? 'Rolls' : 'Panels';
         const overageCount = Math.ceil(displayCount * 1.2);
-        const overageTotalYardage = overageCount * yardagePerUnit;
-
         if (orderQuantity) orderQuantity.textContent = `[x${displayCount}] ${panelLength}' ${unit}`;
         if (orderQuantityWithOverage) orderQuantityWithOverage.textContent = `[x${overageCount}] ${panelLength}' ${unit}`;
-
-        if (yardagePerPanelEl) yardagePerPanelEl.style.display = 'block';
-        if (totalYardageEl) totalYardageEl.style.display = 'block';
-        if (yardagePerPanelOverageEl) yardagePerPanelOverageEl.style.display = 'block';
-        if (totalYardageOverageEl) totalYardageOverageEl.style.display = 'block';
-
-        if (yardagePerPanel) {
-            const label = yardagePerPanel.previousElementSibling;
-            if (label) label.textContent = unitLabel;
-            yardagePerPanel.textContent = `${yardagePerUnit} yds`;
-        }
-        if (totalYardage) totalYardage.textContent = `${totalYardageValue} yds`;
-
-        if (yardagePerPanelOverage) {
-            const label = yardagePerPanelOverage.previousElementSibling;
-            if (label) label.textContent = unitLabel;
-            yardagePerPanelOverage.textContent = `${yardagePerUnit} yds`;
-        }
-        if (totalYardageOverage) totalYardageOverage.textContent = `${overageTotalYardage} yds`;
     }
 }
 

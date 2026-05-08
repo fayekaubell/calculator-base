@@ -305,8 +305,8 @@ function calculateTotalContentHeight(pdf, maxWidth) {
     totalHeight += lineHeight * patternDetailsLines;
     totalHeight += sectionSpacing;
     
-    // Order quantity section - both sale types now show the same number of lines
-    totalHeight += lineHeight * 10;
+    // Order quantity section - header + 1 count line + spacing + overage header + 1 count line
+    totalHeight += lineHeight * 6;
     totalHeight += sectionSpacing;
     
     // Contact and disclaimer section - calculate actual wrapped text height
@@ -470,7 +470,6 @@ async function addEnhancedTextContentToPDF(pdf, x, y, maxWidth, maxHeight) {
     
     // Order Quantity Section
     if (calculations.saleType === 'yard') {
-        // Sold as 11-yard rolls
         const rollsNeeded = calculations.rollsNeeded;
         const overageRolls = Math.ceil(rollsNeeded * 1.2);
 
@@ -482,13 +481,7 @@ async function addEnhancedTextContentToPDF(pdf, x, y, maxWidth, maxHeight) {
         pdf.setFontSize(bodyFontSize);
         pdf.setFont(undefined, 'normal');
         pdf.text(`[x${rollsNeeded}] 11-Yard Rolls`, centerX, currentY, { align: 'center' });
-        currentY += lineHeight;
-        pdf.text(`Yardage per roll: 11 yds`, centerX, currentY, { align: 'center' });
-        currentY += lineHeight;
-        pdf.text(`Total yardage: ${rollsNeeded * 11} yds`, centerX, currentY, { align: 'center' });
-        currentY += lineHeight;
-
-        currentY += lineHeight;
+        currentY += lineHeight * 2;
 
         pdf.setFontSize(14);
         pdf.setFont(undefined, 'bold');
@@ -501,22 +494,12 @@ async function addEnhancedTextContentToPDF(pdf, x, y, maxWidth, maxHeight) {
         pdf.setFont(undefined, 'normal');
         pdf.text(`[x${overageRolls}] 11-Yard Rolls`, centerX, currentY, { align: 'center' });
         currentY += lineHeight;
-        pdf.text(`Yardage per roll: 11 yds`, centerX, currentY, { align: 'center' });
-        currentY += lineHeight;
-        pdf.text(`Total yardage: ${overageRolls * 11} yds`, centerX, currentY, { align: 'center' });
-        currentY += lineHeight;
 
     } else {
-        // Panel-based: either 2-panel rolls (27.5" panels) or individual panels (52" panels)
         const panelLength = calculations.panelLength;
-        const isPanelRoll = calculations.isPanelRoll;
-        const displayCount = isPanelRoll ? calculations.rollsNeeded : calculations.panelsNeeded;
-        const unit = isPanelRoll ? 'Rolls' : 'Panels';
-        const unitLabel = isPanelRoll ? 'Yardage per roll' : 'Yardage per panel';
-        const yardagePerUnit = Math.round(panelLength / 3);
-        const totalYardage = displayCount * yardagePerUnit;
+        const displayCount = calculations.isPanelRoll ? calculations.rollsNeeded : calculations.panelsNeeded;
+        const unit = calculations.isPanelRoll ? 'Rolls' : 'Panels';
         const overageCount = Math.ceil(displayCount * 1.2);
-        const overageYardage = overageCount * yardagePerUnit;
 
         pdf.setFontSize(14);
         pdf.setFont(undefined, 'bold');
@@ -526,13 +509,7 @@ async function addEnhancedTextContentToPDF(pdf, x, y, maxWidth, maxHeight) {
         pdf.setFontSize(bodyFontSize);
         pdf.setFont(undefined, 'normal');
         pdf.text(`[x${displayCount}] ${panelLength}' ${unit}`, centerX, currentY, { align: 'center' });
-        currentY += lineHeight;
-        pdf.text(`${unitLabel}: ${yardagePerUnit} yds`, centerX, currentY, { align: 'center' });
-        currentY += lineHeight;
-        pdf.text(`Total yardage: ${totalYardage} yds`, centerX, currentY, { align: 'center' });
-        currentY += lineHeight;
-
-        currentY += lineHeight;
+        currentY += lineHeight * 2;
 
         pdf.setFontSize(14);
         pdf.setFont(undefined, 'bold');
@@ -544,10 +521,6 @@ async function addEnhancedTextContentToPDF(pdf, x, y, maxWidth, maxHeight) {
         pdf.setFontSize(bodyFontSize);
         pdf.setFont(undefined, 'normal');
         pdf.text(`[x${overageCount}] ${panelLength}' ${unit}`, centerX, currentY, { align: 'center' });
-        currentY += lineHeight;
-        pdf.text(`${unitLabel}: ${yardagePerUnit} yds`, centerX, currentY, { align: 'center' });
-        currentY += lineHeight;
-        pdf.text(`Total yardage: ${overageYardage} yds`, centerX, currentY, { align: 'center' });
         currentY += lineHeight;
     }
     

@@ -105,11 +105,8 @@ function drawCompleteDimensionLabels(ctx, offsetX, offsetY, scaledTotalWidth, sc
     ctx.strokeStyle = '#333';
     ctx.lineWidth = 1;
     
-    // Panel dimensions formatting
-    const panelWidthFeet = Math.floor(pattern.panelWidth / 12);
-    const panelWidthInches = Math.round(pattern.panelWidth % 12);
-    const panelWidthDisplay = panelWidthInches > 0 ? 
-        `${panelWidthFeet}'-${panelWidthInches}"` : `${panelWidthFeet}'`;
+    // Panel dimensions formatting — show raw inches (e.g. 27.5" or 52")
+    const panelWidthDisplay = `${pattern.panelWidth}"`;
     
     // Individual panel width annotation
     if (calculations.panelsNeeded > 0) {

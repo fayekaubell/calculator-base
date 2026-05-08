@@ -213,8 +213,13 @@ function calculatePanelRequirements(pattern, wallWidth, wallHeight) {
     const totalWidth = wallWidth + pattern.minOverage;
     const totalHeight = wallHeight + pattern.minOverage;
     
-    const panelsNeeded = Math.ceil(totalWidth / pattern.panelWidth);
-    
+    let panelsNeeded = Math.ceil(totalWidth / pattern.panelWidth);
+
+    // For 2-panel rolls, always complete the last roll pair
+    if (pattern.isPanelRoll && panelsNeeded % 2 !== 0) {
+        panelsNeeded += 1;
+    }
+
     // Find the appropriate panel length
     let panelLength = 0;
     for (let length of pattern.availableLengths) {
@@ -230,7 +235,7 @@ function calculatePanelRequirements(pattern, wallWidth, wallHeight) {
         console.log(`ℹ️ Wall height ${totalHeight}" exceeds max available panel length, capping at ${panelLength}' panels`);
     }
     
-    const rollsNeeded = pattern.isPanelRoll ? Math.ceil(panelsNeeded / 2) : panelsNeeded;
+    const rollsNeeded = pattern.isPanelRoll ? panelsNeeded / 2 : panelsNeeded;
 
     console.log(`📏 Panel calculation: ${panelsNeeded} panels → ${rollsNeeded} ${pattern.isPanelRoll ? 'rolls' : 'panels'} × ${panelLength}'`);
     if (!pattern.hasRepeatHeight) {

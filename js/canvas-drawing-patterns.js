@@ -234,7 +234,7 @@ function drawPatternInArea(ctx, areaX, areaY, areaWidth, areaHeight, referenceCo
                         
                         // Only draw if this repeat is visible
                         if (drawY + repeatHeightPixels >= areaY && drawY < areaY + areaHeight) {
-                            ctx.drawImage(patternImage, drawX, drawY, repeatWidthPixels, repeatHeightPixels);
+                            ctx.drawImage(patternImage, Math.floor(drawX), Math.floor(drawY), Math.ceil(repeatWidthPixels) + 1, Math.ceil(repeatHeightPixels) + 1);
                         }
                     }
                 } else {
@@ -242,7 +242,7 @@ function drawPatternInArea(ctx, areaX, areaY, areaWidth, areaHeight, referenceCo
                     const drawY = patternStartY - repeatHeightPixels + halfDropOffset;
                     
                     if (drawY + repeatHeightPixels >= areaY && drawY < areaY + areaHeight) {
-                        ctx.drawImage(patternImage, drawX, drawY, repeatWidthPixels, repeatHeightPixels);
+                        ctx.drawImage(patternImage, Math.floor(drawX), Math.floor(drawY), Math.ceil(repeatWidthPixels) + 1, Math.ceil(repeatHeightPixels) + 1);
                         
                         // Log the non-repeating pattern draw for debugging
                         if (!pattern.hasRepeatHeight && i < 3) {
@@ -328,7 +328,7 @@ function drawPatternInArea(ctx, areaX, areaY, areaWidth, areaHeight, referenceCo
                         
                         // Only draw if this repeat is visible
                         if (drawY + repeatHeightPixels >= areaY && drawY < areaY + areaHeight) {
-                            ctx.drawImage(patternImage, drawX, drawY, repeatWidthPixels, repeatHeightPixels);
+                            ctx.drawImage(patternImage, Math.floor(drawX), Math.floor(drawY), Math.ceil(repeatWidthPixels) + 1, Math.ceil(repeatHeightPixels) + 1);
                         }
                     }
                 } else {
@@ -336,7 +336,7 @@ function drawPatternInArea(ctx, areaX, areaY, areaWidth, areaHeight, referenceCo
                     const drawY = patternStartY - repeatHeightPixels + halfDropOffset;
                     
                     if (drawY + repeatHeightPixels >= areaY && drawY < areaY + areaHeight) {
-                        ctx.drawImage(patternImage, drawX, drawY, repeatWidthPixels, repeatHeightPixels);
+                        ctx.drawImage(patternImage, Math.floor(drawX), Math.floor(drawY), Math.ceil(repeatWidthPixels) + 1, Math.ceil(repeatHeightPixels) + 1);
                         
                         // Log the non-repeating pattern draw for debugging
                         if (!pattern.hasRepeatHeight && i < 3) {
