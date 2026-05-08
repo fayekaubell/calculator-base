@@ -224,38 +224,30 @@ function drawPatternInArea(ctx, areaX, areaY, areaWidth, areaHeight, referenceCo
             
             // Only draw if this repeat intersects with the current area
             if (drawX + repeatWidthPixels >= areaX && drawX < areaX + areaWidth) {
+                // Integer tile boundaries: adjacent tiles share the exact same edge — no gap, no stretch seam
+                const tileLeft = Math.round(patternStartX + i * repeatWidthPixels);
+                const tileRight = Math.round(patternStartX + (i + 1) * repeatWidthPixels);
+                const tileW = tileRight - tileLeft;
+
                 if (pattern.hasRepeatHeight) {
-                    // Vertical repeating pattern with half-drop offset DOWN (eliminates bottom gap)
                     const numVerticalRepeats = Math.ceil(drawHeight / repeatHeightPixels) + 3;
-                    
+
                     for (let v = 0; v < numVerticalRepeats; v++) {
-                        const repeatY = v * repeatHeightPixels;
-                        const drawY = patternStartY - repeatY - repeatHeightPixels + halfDropOffset;
-                        
-                        // Only draw if this repeat is visible
+                        const drawY = patternStartY - v * repeatHeightPixels - repeatHeightPixels + halfDropOffset;
+
                         if (drawY + repeatHeightPixels >= areaY && drawY < areaY + areaHeight) {
-                            ctx.drawImage(patternImage, Math.floor(drawX), Math.floor(drawY), Math.ceil(repeatWidthPixels) + 1, Math.ceil(repeatHeightPixels) + 1);
+                            const tileTop = Math.round(patternStartY - (v + 1) * repeatHeightPixels + halfDropOffset);
+                            const tileBottom = Math.round(patternStartY - v * repeatHeightPixels + halfDropOffset);
+                            ctx.drawImage(patternImage, tileLeft, tileTop, tileW, tileBottom - tileTop);
                         }
                     }
                 } else {
-                    // FIXED: Non-repeating pattern - draw from panel bottom upward, clipped at panel top
                     const drawY = patternStartY - repeatHeightPixels + halfDropOffset;
-                    
+
                     if (drawY + repeatHeightPixels >= areaY && drawY < areaY + areaHeight) {
-                        ctx.drawImage(patternImage, Math.floor(drawX), Math.floor(drawY), Math.ceil(repeatWidthPixels) + 1, Math.ceil(repeatHeightPixels) + 1);
-                        
-                        // Log the non-repeating pattern draw for debugging
-                        if (!pattern.hasRepeatHeight && i < 3) {
-                            console.log(`🌙 Non-repeating pattern draw ${i} (anchored to panel bottom):`, {
-                                drawX: drawX,
-                                drawY: drawY,
-                                repeatWidthPixels: repeatWidthPixels,
-                                repeatHeightPixels: repeatHeightPixels,
-                                patternStartY: patternStartY,
-                                areaBottom: areaY + areaHeight,
-                                note: 'Pattern extends upward from panel bottom'
-                            });
-                        }
+                        const tileTop = Math.round(patternStartY - repeatHeightPixels + halfDropOffset);
+                        const tileBottom = Math.round(patternStartY + halfDropOffset);
+                        ctx.drawImage(patternImage, tileLeft, tileTop, tileW, tileBottom - tileTop);
                     }
                 }
             }
@@ -314,42 +306,32 @@ function drawPatternInArea(ctx, areaX, areaY, areaWidth, areaHeight, referenceCo
             
             // Only draw if this repeat intersects with the current area
             if (drawX + repeatWidthPixels >= areaX && drawX < areaX + areaWidth) {
+                // Integer tile boundaries: adjacent tiles share the exact same edge — no gap, no stretch seam
+                const tileLeft = Math.round(patternStartX + i * repeatWidthPixels);
+                const tileRight = Math.round(patternStartX + (i + 1) * repeatWidthPixels);
+                const tileW = tileRight - tileLeft;
+
                 if (pattern.hasRepeatHeight) {
-                    // Vertical repeating pattern with half-drop offset DOWN (consistent with Section 1)
                     const baseNumVerticalRepeats = Math.ceil(areaHeight / repeatHeightPixels) + 3;
-                    
-                    // For half-drop, we may need one extra repeat if the downward offset pushes pattern beyond area
                     const extraRepeatForOffset = (isHalfDrop && halfDropOffset > 0) ? 1 : 0;
                     const numVerticalRepeats = baseNumVerticalRepeats + extraRepeatForOffset;
-                    
+
                     for (let v = 0; v < numVerticalRepeats; v++) {
-                        const repeatY = v * repeatHeightPixels;
-                        const drawY = patternStartY - repeatY - repeatHeightPixels + halfDropOffset;
-                        
-                        // Only draw if this repeat is visible
+                        const drawY = patternStartY - v * repeatHeightPixels - repeatHeightPixels + halfDropOffset;
+
                         if (drawY + repeatHeightPixels >= areaY && drawY < areaY + areaHeight) {
-                            ctx.drawImage(patternImage, Math.floor(drawX), Math.floor(drawY), Math.ceil(repeatWidthPixels) + 1, Math.ceil(repeatHeightPixels) + 1);
+                            const tileTop = Math.round(patternStartY - (v + 1) * repeatHeightPixels + halfDropOffset);
+                            const tileBottom = Math.round(patternStartY - v * repeatHeightPixels + halfDropOffset);
+                            ctx.drawImage(patternImage, tileLeft, tileTop, tileW, tileBottom - tileTop);
                         }
                     }
                 } else {
-                    // FIXED: Non-repeating pattern in Section 2 - same bottom-anchored behavior
                     const drawY = patternStartY - repeatHeightPixels + halfDropOffset;
-                    
+
                     if (drawY + repeatHeightPixels >= areaY && drawY < areaY + areaHeight) {
-                        ctx.drawImage(patternImage, Math.floor(drawX), Math.floor(drawY), Math.ceil(repeatWidthPixels) + 1, Math.ceil(repeatHeightPixels) + 1);
-                        
-                        // Log the non-repeating pattern draw for debugging
-                        if (!pattern.hasRepeatHeight && i < 3) {
-                            console.log(`🌙 Non-repeating pattern Section 2 draw ${i} (anchored to area bottom):`, {
-                                drawX: drawX,
-                                drawY: drawY,
-                                repeatWidthPixels: repeatWidthPixels,
-                                repeatHeightPixels: repeatHeightPixels,
-                                patternStartY: patternStartY,
-                                areaBottom: areaY + areaHeight,
-                                note: 'Pattern anchored to wall area bottom in Section 2'
-                            });
-                        }
+                        const tileTop = Math.round(patternStartY - repeatHeightPixels + halfDropOffset);
+                        const tileBottom = Math.round(patternStartY + halfDropOffset);
+                        ctx.drawImage(patternImage, tileLeft, tileTop, tileW, tileBottom - tileTop);
                     }
                 }
             }
