@@ -11,7 +11,7 @@ function calculateReferenceCoordinates() {
     const rightMargin = 120;
     const topMargin = 140;
     const bottomMargin = 120;
-    const sectionGap = 60;
+    const sectionGap = 140;
     
     const maxWidth = canvas.width - leftMargin - rightMargin;
     const maxHeight = canvas.height - topMargin - bottomMargin;
@@ -41,23 +41,25 @@ function calculateReferenceCoordinates() {
     
     // Calculate vertical positioning
     const actualContentHeight = (completeViewHeight * scale) + (wallOnlyHeight * scale) + sectionGap;
-    const section1StartY = topMargin + (maxHeight - actualContentHeight) / 2;
-    
-    // Pattern coverage area in Section 1
+    const contentStartY = topMargin + (maxHeight - actualContentHeight) / 2;
+
+    // Pattern coverage area
     const scaledTotalWidth = calculations.totalWidth * scale;
     const scaledTotalHeight = completeViewHeight * scale;
     const scaledWallWidth = wallWidth * scale;
     const scaledWallHeight = wallHeight * scale;
-    
-    // Section 1 coordinates
+
+    // Section 2 (Wall Only) coordinates - on top
+    const section2WallOffsetX = leftMargin + (maxWidth - scaledWallWidth) / 2;
+    const section2WallOffsetY = contentStartY;
+
+    // Section 1 (Panel Layout) coordinates - below
+    const section1StartY = contentStartY + scaledWallHeight + sectionGap;
     const section1OffsetX = leftMargin + (maxWidth - scaledTotalWidth) / 2;
     const section1OffsetY = section1StartY;
-    
-    // FIXED: Always use normal positioning - panel centered over wall
-    // The pattern anchoring happens in the drawing functions, not here
     const section1WallOffsetX = section1OffsetX + (scaledTotalWidth - scaledWallWidth) / 2;
     const section1WallOffsetY = section1OffsetY + (scaledTotalHeight - scaledWallHeight) / 2;
-    
+
     console.log(`📐 Standard panel/wall positioning:`, {
         panelHeight: calculations.totalHeight,
         patternHeight: pattern.repeatHeight,
@@ -65,11 +67,6 @@ function calculateReferenceCoordinates() {
         wallCenteredInPanel: true,
         patternAnchoringHandledInDrawing: !pattern.hasRepeatHeight
     });
-    
-    // Section 2 coordinates
-    const section2StartY = section1StartY + scaledTotalHeight + sectionGap;
-    const section2WallOffsetX = leftMargin + (maxWidth - scaledWallWidth) / 2;
-    const section2WallOffsetY = section2StartY;
     
     return {
         scale,

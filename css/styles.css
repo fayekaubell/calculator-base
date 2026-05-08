@@ -413,6 +413,20 @@ body {
     background: #5a6268;
 }
 
+.btn-secondary {
+    background: transparent;
+    color: #6c757d;
+    border: 1px solid #6c757d;
+    font-size: 13px;
+    padding: 10px 20px;
+    letter-spacing: 0.5px;
+}
+
+.btn-secondary:hover {
+    background: #f5f5f5;
+    color: #4a4a4a;
+}
+
 /* Enhanced Button States for Download Progress - Consistent Gray Styling */
 .btn-processing {
     background: #6c757d !important;
