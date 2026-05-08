@@ -309,36 +309,33 @@ function calculateYardRequirements(pattern, wallWidth, wallHeight) {
     if (isHalfDrop) {
         if (repeatsPerPanel >= 2) {
             // UPDATED: Multi-repeat half-drop patterns
-            // Panels align straight, so no extra height needed for panel offset
-            // Just calculate enough height to cover the wall with proper repeats
             const repeatsNeeded = Math.ceil(totalHeight / pattern.repeatHeight);
-            const stripLengthInches = repeatsNeeded * pattern.repeatHeight;
-            
+            const stripLengthInches = Math.ceil(repeatsNeeded * pattern.repeatHeight);
+
             console.log(`📐 Multi-repeat half-drop calculation:`, {
                 repeatsNeeded: repeatsNeeded,
                 stripLengthInches: stripLengthInches,
                 patternHeight: pattern.repeatHeight
             });
-            
+
             for (let i = 0; i < stripsNeeded; i++) {
                 stripLengths.push(stripLengthInches);
             }
             maxStripLength = stripLengthInches;
         } else {
             // EXISTING: Single-repeat half-drop patterns (every other panel offset)
-            // Need extra height to accommodate the panel offset
             const baseHeight = totalHeight;
             const withOffset = baseHeight + (pattern.repeatHeight / 2);
             const repeatsNeeded = Math.ceil(withOffset / pattern.repeatHeight);
-            const stripLengthInches = repeatsNeeded * pattern.repeatHeight;
-            
+            const stripLengthInches = Math.ceil(repeatsNeeded * pattern.repeatHeight);
+
             console.log(`📐 Single-repeat half-drop calculation:`, {
                 baseHeight: baseHeight,
                 withOffset: withOffset,
                 repeatsNeeded: repeatsNeeded,
                 stripLengthInches: stripLengthInches
             });
-            
+
             for (let i = 0; i < stripsNeeded; i++) {
                 stripLengths.push(stripLengthInches);
             }
@@ -347,37 +344,39 @@ function calculateYardRequirements(pattern, wallWidth, wallHeight) {
     } else {
         // Straight match patterns
         const repeatsNeeded = Math.ceil(totalHeight / pattern.repeatHeight);
-        const stripLengthInches = repeatsNeeded * pattern.repeatHeight;
-        
+        const stripLengthInches = Math.ceil(repeatsNeeded * pattern.repeatHeight);
+
         for (let i = 0; i < stripsNeeded; i++) {
             stripLengths.push(stripLengthInches);
         }
         maxStripLength = stripLengthInches;
     }
-    
+
     const totalInches = stripLengths.reduce((sum, length) => sum + length, 0);
     const totalYardageRaw = totalInches / 36;
-    
-    // UPDATED: Extra yardage logic for half-drop patterns
+
+    // Extra yardage for single-repeat half-drop patterns
     let extraYardage = 0;
     if (isHalfDrop && repeatsPerPanel <= 1) {
-        // Only add extra yardage for single-repeat half-drop patterns
         extraYardage = 1;
-        console.log(`🔄 Adding extra yardage for single-repeat half-drop pattern`);
-    } else if (isHalfDrop && repeatsPerPanel >= 2) {
-        // Multi-repeat half-drop patterns don't need extra yardage since panels align
-        console.log(`📐 No extra yardage needed for multi-repeat half-drop pattern`);
     }
-    
+
     const totalYardage = Math.max(Math.ceil(totalYardageRaw + extraYardage), pattern.minYardOrder || 5);
-    const rollsNeeded = Math.ceil(totalYardage / 11);
+
+    // Calculate rolls based on how many complete strips fit per roll
+    const rollLengthInches = 11 * 36; // 396 inches per roll
+    const stripsPerRoll = Math.max(1, Math.floor(rollLengthInches / maxStripLength));
+    const rollsNeeded = Math.ceil(stripsNeeded / stripsPerRoll);
 
     console.log(`✅ YARD CALCULATION COMPLETE:`, {
         totalYardageRaw: totalYardageRaw,
         extraYardage: extraYardage,
         finalTotalYardage: totalYardage,
-        rollsNeeded: rollsNeeded,
-        maxStripLength: maxStripLength
+        maxStripLength: maxStripLength,
+        rollLengthInches: rollLengthInches,
+        stripsPerRoll: stripsPerRoll,
+        stripsNeeded: stripsNeeded,
+        rollsNeeded: rollsNeeded
     });
 
     return {
